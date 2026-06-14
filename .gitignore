@@ -87,3 +87,6 @@ ehthumbs.db
 .settings
 .springBeans
 .sts4-cache
+
+.claudeignore
+CLAUDE.md

@@ -1,0 +1,35 @@
+# IDE & Version Control
+.git/
+.idea/
+backend/.idea/
+backend/.gitignore
+backend/.gitattributes
+
+# Frontend (React/Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/public/
+frontend/package-lock.json
+frontend/src/assets/
+
+# Backend Build & Boilerplate
+backend/target/
+backend/mvn/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/HELP.md
+backend/src/test
+backend/src/main/resources/static/
+backend/src/main/resources/templates/
+
+# Media, Binaries, & Non-Code Data
+captured_fingerprints/
+database/
+docs/
+build/
+*.bmp
+
+# General exclusions
+*.log
+*.tmp

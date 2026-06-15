@@ -1,12 +1,15 @@
 package com.feirs.backend.fingerprint;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.feirs.backend.models.Person;
-import com.feirs.backend.models.PersonRepository;
+// import com.feirs.backend.models.Person;              // ╔══════════════════════════╗
+// import com.feirs.backend.models.PersonRepository;    // ║  LEGACY PoC REFERENCES  ║
+                                                        // ║  Commented out — will   ║
+                                                        // ║  be rebuilt on top of   ║
+                                                        // ║  the new Citizen entity ║
+                                                        // ╚══════════════════════════╝
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +18,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.*;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -27,8 +29,14 @@ public class FingerprintService {
     @Value("${fingerprint.save.path}")
     private String savePath;
 
-    @Autowired
-    private PersonRepository personRepository;
+    // @Autowired
+    // private PersonRepository personRepository;   // ╔══════════════════════════╗
+                                                    // ║  LEGACY PoC — removed   ║
+                                                    // ║  to enforce strict 7-   ║
+                                                    // ║  table architecture.    ║
+                                                    // ║  Will be rebuilt with   ║
+                                                    // ║  CitizenRepository.     ║
+                                                    // ╚══════════════════════════╝
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -107,61 +115,82 @@ public class FingerprintService {
     }
 
     // ── ENROLL ────────────────────────────────────────────
+    // ╔══════════════════════════════════════════════════════════╗
+    // ║  LEGACY PoC — commented out.                           ║
+    // ║  Will be rebuilt on the new citizens table (Step 5)     ║
+    // ║  with full multi-tenant institution binding.            ║
+    // ╚══════════════════════════════════════════════════════════╝
     public Map<String, Object> enroll(String name,
                                        String isoTemplate,
                                        String bmpBase64) throws Exception {
-        Person person = new Person(name, isoTemplate, bmpBase64);
-        person = personRepository.save(person);
+        // Person person = new Person(name, isoTemplate, bmpBase64);
+        // person = personRepository.save(person);
+        //
+        // if (bmpBase64 != null && !bmpBase64.isBlank()) {
+        //     try { saveBmpFile(bmpBase64, name + "_" + person.getId()); }
+        //     catch (Exception e) { log.warn("BMP file save skipped: {}", e.getMessage()); }
+        // }
+        //
+        // log.info("Enrolled: '{}' (ID={})", name, person.getId());
+        //
+        // Map<String, Object> result = new HashMap<>();
+        // result.put("success", true);
+        // result.put("id",      person.getId());
+        // result.put("name",    person.getName());
+        // result.put("message", "Fingerprint enrolled successfully!");
+        // return result;
 
-        if (bmpBase64 != null && !bmpBase64.isBlank()) {
-            try { saveBmpFile(bmpBase64, name + "_" + person.getId()); }
-            catch (Exception e) { log.warn("BMP file save skipped: {}", e.getMessage()); }
-        }
-
-        log.info("Enrolled: '{}' (ID={})", name, person.getId());
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("success", true);
-        result.put("id",      person.getId());
-        result.put("name",    person.getName());
-        result.put("message", "Fingerprint enrolled successfully!");
-        return result;
+        // Temporary stub — enrollment will be rebuilt on citizens table
+        log.warn("Enroll endpoint is being rebuilt on the new citizens table (Step 5).");
+        return Map.of("success", false,
+                      "message", "Enrollment is being migrated to the enterprise citizens table. Available in Step 5.");
     }
 
     // ── IDENTIFY ──────────────────────────────────────────
+    // ╔══════════════════════════════════════════════════════════╗
+    // ║  LEGACY PoC — commented out.                           ║
+    // ║  Will be rebuilt on the new citizens table (Step 5)     ║
+    // ║  with 1:N biometric matching via SourceAFIS.            ║
+    // ║  callMFS100Verify() is PRESERVED below.                 ║
+    // ╚══════════════════════════════════════════════════════════╝
     public Map<String, Object> identify(String probeTemplate) throws Exception {
-        List<Person> all = personRepository.findAll();
+        // List<Person> all = personRepository.findAll();
+        //
+        // if (all.isEmpty()) {
+        //     return Map.of("found", false,
+        //         "message", "No fingerprints enrolled yet. Use Enroll tab first.");
+        // }
+        //
+        // log.info("Identifying probe against {} enrolled fingerprints...", all.size());
+        //
+        // for (Person person : all) {
+        //     if (person.getIsoTemplate() == null || person.getIsoTemplate().isBlank()) continue;
+        //
+        //     boolean matched = callMFS100Verify(probeTemplate, person.getIsoTemplate());
+        //     if (matched) {
+        //         log.info("Match found: '{}' (ID={})", person.getName(), person.getId());
+        //
+        //         String enrolledAt = person.getEnrolledAt() != null
+        //             ? person.getEnrolledAt().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
+        //             : "Unknown";
+        //
+        //         Map<String, Object> r = new HashMap<>();
+        //         r.put("found",      true);
+        //         r.put("id",         person.getId());
+        //         r.put("name",       person.getName());
+        //         r.put("enrolledAt", enrolledAt);
+        //         r.put("bmpBase64",  person.getBmpBase64());
+        //         return r;
+        //     }
+        // }
+        //
+        // log.info("No match found among {} enrolled fingerprints.", all.size());
+        // return Map.of("found", false, "message", "No matching fingerprint found in the database.");
 
-        if (all.isEmpty()) {
-            return Map.of("found", false,
-                "message", "No fingerprints enrolled yet. Use Enroll tab first.");
-        }
-
-        log.info("Identifying probe against {} enrolled fingerprints...", all.size());
-
-        for (Person person : all) {
-            if (person.getIsoTemplate() == null || person.getIsoTemplate().isBlank()) continue;
-
-            boolean matched = callMFS100Verify(probeTemplate, person.getIsoTemplate());
-            if (matched) {
-                log.info("Match found: '{}' (ID={})", person.getName(), person.getId());
-
-                String enrolledAt = person.getEnrolledAt() != null
-                    ? person.getEnrolledAt().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm"))
-                    : "Unknown";
-
-                Map<String, Object> r = new HashMap<>();
-                r.put("found",      true);
-                r.put("id",         person.getId());
-                r.put("name",       person.getName());
-                r.put("enrolledAt", enrolledAt);
-                r.put("bmpBase64",  person.getBmpBase64());
-                return r;
-            }
-        }
-
-        log.info("No match found among {} enrolled fingerprints.", all.size());
-        return Map.of("found", false, "message", "No matching fingerprint found in the database.");
+        // Temporary stub — identification will be rebuilt on citizens table
+        log.warn("Identify endpoint is being rebuilt on the new citizens table (Step 5).");
+        return Map.of("found", false,
+                      "message", "Identification is being migrated to the enterprise citizens table. Available in Step 5.");
     }
 
     // ══════════════════════════════════════════════════════
@@ -238,8 +267,13 @@ public class FingerprintService {
     }
 
     // ── COUNT ─────────────────────────────────────────────
+    // ╔══════════════════════════════════════════════════════════╗
+    // ║  LEGACY PoC — returns 0 until rebuilt on citizens table ║
+    // ╚══════════════════════════════════════════════════════════╝
     public long countEnrolled() {
-        return personRepository.count();
+        // return personRepository.count();
+        log.info("Count requested — returning 0 (awaiting citizens table migration).");
+        return 0L;
     }
 
     // ── SAVE BMP FILE ─────────────────────────────────────

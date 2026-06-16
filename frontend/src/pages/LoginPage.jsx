@@ -1,66 +1,50 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { Shield, Building2, Stethoscope, ArrowLeft, Fingerprint } from 'lucide-react';
+import { Shield, Building2, Stethoscope, Fingerprint, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const roleConfig = {
+const roleConfigs = {
   'super-admin': {
     title: 'Super Admin Authentication',
-    subtitle: 'Global Overwatch Authorization Required',
+    subtitle: 'GLOBAL OVERWATCH AUTHORIZATION REQUIRED',
     icon: Shield,
-    iconColor: 'text-cyan-400',
-    iconBg: 'bg-cyan-900/40 border-cyan-500/40',
-    focusRing: 'focus:border-cyan-500 focus:ring-cyan-500/20',
-    buttonBg: 'bg-cyan-600 hover:bg-cyan-500',
-    buttonGlow: 'shadow-[0_0_30px_rgba(8,145,178,0.4)] hover:shadow-[0_0_50px_rgba(8,145,178,0.6)]',
-    placeholderId: 'FEIRS-SA-ROOT',
-    accent: 'text-cyan-400',
-    bgGlow: 'bg-cyan-500/10'
+    color: 'text-cyan-400',
+    bgGlow: 'bg-cyan-900/20',
+    borderColor: 'border-cyan-500/50',
+    buttonColor: 'bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_20px_rgba(8,145,178,0.4)]',
+    idPlaceholder: 'FEIRS-SA-ROOT',
   },
-  institution: {
+  'institution': {
     title: 'Institution Authentication',
-    subtitle: 'Facility Command Center Login',
+    subtitle: 'FACILITY COMMAND CENTER LOGIN',
     icon: Building2,
-    iconColor: 'text-emerald-400',
-    iconBg: 'bg-emerald-900/40 border-emerald-500/40',
-    focusRing: 'focus:border-emerald-500 focus:ring-emerald-500/20',
-    buttonBg: 'bg-emerald-600 hover:bg-emerald-500',
-    buttonGlow: 'shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:shadow-[0_0_50px_rgba(16,185,129,0.6)]',
-    placeholderId: 'FEIRS-INST-XXXXXX',
-    accent: 'text-emerald-400',
-    bgGlow: 'bg-emerald-500/10'
+    color: 'text-emerald-400',
+    bgGlow: 'bg-emerald-900/20',
+    borderColor: 'border-emerald-500/50',
+    buttonColor: 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)]',
+    idPlaceholder: 'FEIRS-INST-XXXXXX',
   },
-  operator: {
+  'operator': {
     title: 'Operator Authentication',
-    subtitle: 'Emergency Medical Scanner Access',
+    subtitle: 'EMERGENCY MEDICAL SCANNER ACCESS',
     icon: Stethoscope,
-    iconColor: 'text-red-400',
-    iconBg: 'bg-red-900/40 border-red-500/40',
-    focusRing: 'focus:border-red-500 focus:ring-red-500/20',
-    buttonBg: 'bg-red-600 hover:bg-red-500',
-    buttonGlow: 'shadow-[0_0_30px_rgba(239,68,68,0.4)] hover:shadow-[0_0_50px_rgba(239,68,68,0.6)]',
-    placeholderId: 'FEIRS-OP-XXXXXX',
-    accent: 'text-red-400',
-    bgGlow: 'bg-red-500/10'
+    color: 'text-red-400',
+    bgGlow: 'bg-red-900/20',
+    borderColor: 'border-red-500/50',
+    buttonColor: 'bg-red-600 hover:bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4)]',
+    idPlaceholder: 'FEIRS-OP-XXXXXX',
   },
 };
 
 export default function LoginPage() {
   const { role } = useParams();
   const navigate = useNavigate();
-  const config = roleConfig[role];
+
+  const config = roleConfigs[role];
 
   if (!config) {
     return (
-      <div className="flex-grow flex items-center justify-center p-8">
-        <div className="text-center bg-slate-900 border border-slate-700 p-12 rounded-3xl">
-          <p className="text-slate-400 text-2xl mb-8">Unknown portal: <span className="text-white font-bold">{role}</span></p>
-          <button
-            onClick={() => navigate('/')}
-            className="px-8 py-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition-all"
-          >
-            Return to Home
-          </button>
-        </div>
+      <div className="flex-grow flex items-center justify-center">
+        <h2 className="text-white">Invalid Role</h2>
       </div>
     );
   }
@@ -68,86 +52,67 @@ export default function LoginPage() {
   const Icon = config.icon;
 
   return (
-    <div className="min-h-[100vh] w-full flex flex-col items-center justify-center relative overflow-hidden py-20 px-6">
+    <div className="flex-grow w-full flex flex-col items-center justify-center relative overflow-hidden py-10 px-4">
       
       {/* Background Ambient Glow */}
       <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full ${config.bgGlow} blur-[120px] pointer-events-none`} />
 
-      <motion.div
-        initial={{ opacity: 0, y: 30, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-[550px] relative z-10"
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="relative z-10 w-full max-w-[500px]"
       >
-        {/* Back Navigation */}
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-3 text-slate-400 hover:text-white transition-colors mb-8 group font-bold text-lg"
+          className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8 text-sm font-bold tracking-wide"
         >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-2 transition-transform" />
+          <ArrowLeft className="w-4 h-4" />
           Back to Platform Home
         </button>
 
-        {/* Massive Premium Login Box */}
-        <div className="w-full bg-slate-900/80 backdrop-blur-2xl border-2 border-slate-700/80 rounded-[2.5rem] p-12 shadow-2xl flex flex-col items-center">
+        <div className={`w-full bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-10 shadow-2xl relative overflow-hidden`}>
           
-          {/* Icon */}
-          <div className={`w-24 h-24 ${config.iconBg} border border-slate-600 rounded-[2rem] flex items-center justify-center mb-8 shadow-xl`}>
-            <Icon className={`w-12 h-12 ${config.iconColor}`} />
+          {/* Top Line Accent */}
+          <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-${config.color.replace('text-', '')} to-transparent opacity-50`} />
+
+          <div className="flex flex-col items-center text-center mb-10">
+            <div className={`w-20 h-20 rounded-2xl flex items-center justify-center bg-slate-800/50 border ${config.borderColor} ${config.color} mb-6 shadow-lg`}>
+              <Icon className="w-10 h-10" />
+            </div>
+            <h2 className="text-3xl font-black text-white mb-2">{config.title}</h2>
+            <p className={`text-xs font-bold tracking-[0.2em] uppercase ${config.color}`}>{config.subtitle}</p>
           </div>
 
-          {/* Title */}
-          <h2 className="text-3xl sm:text-4xl font-black text-white mb-3 text-center leading-tight">
-            {config.title}
-          </h2>
-          <p className={`text-lg font-bold ${config.accent} mb-10 text-center tracking-wide uppercase`}>
-            {config.subtitle}
-          </p>
-
-          {/* Form */}
-          <form
-            className="w-full flex flex-col gap-6"
-            onSubmit={(e) => {
-              e.preventDefault();
-            }}
-          >
+          <form className="flex flex-col gap-6" onSubmit={(e) => e.preventDefault()}>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-slate-400 tracking-wide uppercase px-2">
-                System ID / Official Email
-              </label>
-              <input
-                type="text"
-                className={`w-full bg-slate-950/50 border-2 border-slate-700 text-white px-6 py-5 rounded-2xl text-lg font-medium ${config.focusRing} focus:outline-none focus:ring-4 transition-all placeholder:text-slate-600`}
-                placeholder={config.placeholderId}
+              <label className="text-xs font-bold text-slate-400 tracking-wide uppercase">System ID / Official Email</label>
+              <input 
+                type="text" 
+                placeholder={config.idPlaceholder}
+                className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-4 py-3 text-white outline-none transition-colors"
               />
             </div>
-
+            
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-slate-400 tracking-wide uppercase px-2">
-                Authorization Password
-              </label>
-              <input
-                type="password"
-                className={`w-full bg-slate-950/50 border-2 border-slate-700 text-white px-6 py-5 rounded-2xl text-lg font-medium ${config.focusRing} focus:outline-none focus:ring-4 transition-all placeholder:text-slate-600`}
+              <label className="text-xs font-bold text-slate-400 tracking-wide uppercase">Authorization Password</label>
+              <input 
+                type="password" 
                 placeholder="••••••••••••"
+                className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-4 py-3 text-white outline-none transition-colors"
               />
             </div>
 
-            <button
-              type="button"
-              className={`w-full mt-6 py-5 ${config.buttonBg} text-white rounded-2xl font-black text-xl ${config.buttonGlow} transition-all duration-300 hover:-translate-y-1`}
-            >
+            <button className={`w-full ${config.buttonColor} text-white font-bold text-lg rounded-xl py-4 mt-4 transition-all duration-300`}>
               Authenticate & Enter
             </button>
+            
+            <div className="flex items-center justify-center gap-2 mt-4 opacity-50">
+              <Fingerprint className="w-4 h-4 text-slate-400" />
+              <span className="text-xs text-slate-400 font-bold tracking-widest uppercase">Secure Biometric Link</span>
+            </div>
           </form>
 
-          {/* Footer branding inside login */}
-          <div className="mt-12 pt-8 border-t border-slate-800/80 w-full flex items-center justify-center gap-3">
-            <Fingerprint className="w-5 h-5 text-slate-500" />
-            <span className="text-sm font-bold text-slate-500 tracking-widest uppercase">
-              Secure Biometric Link
-            </span>
-          </div>
         </div>
       </motion.div>
     </div>

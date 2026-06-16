@@ -1,28 +1,17 @@
 @import "tailwindcss";
 
-/* ══════════════════════════════════════════════════════════════
-   FEIRS — Fingerprint-based Emergency Identity Retrieval System
-   Enterprise Dark-Mode Design System
-   ══════════════════════════════════════════════════════════════ */
-
 /* ── Base: Deep Sleek Dark Foundation ─────────────────────────── */
 :root {
-  --accent-primary: #06b6d4;    /* cyan-500 — primary actions, links */
-  --accent-emergency: #ef4444;  /* red-500 — emergency medical data only */
-  --accent-success: #10b981;    /* emerald-500 — matched/success states */
-  --surface-deep: #020617;      /* slate-950 — deepest background */
-  --surface-panel: rgba(15, 23, 42, 0.5); /* slate-900/50 — frosted glass */
-  --surface-hover: rgba(30, 41, 59, 0.7); /* slate-800/70 */
-  --text-primary: #f1f5f9;      /* slate-100 */
-  --text-muted: #94a3b8;        /* slate-400 */
-  --text-dim: #64748b;          /* slate-500 */
-  --border-subtle: rgba(51, 65, 85, 0.5); /* slate-700/50 */
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  --accent-primary: #06b6d4;
+  --accent-emergency: #ef4444;
+  --accent-success: #10b981;
+  --surface-deep: #020617;
+  --surface-panel: rgba(15, 23, 42, 0.5);
+  --surface-hover: rgba(30, 41, 59, 0.7);
+  --text-primary: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border-subtle: rgba(51, 65, 85, 0.5);
 }
 
 html {

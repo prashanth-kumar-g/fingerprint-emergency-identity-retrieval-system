@@ -79,7 +79,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="w-full flex flex-col items-center overflow-x-hidden pb-32">
+    <div className="w-full flex flex-col items-center gap-6 overflow-x-hidden pt-12 pb-20">
       {/* ── Background Ambient Lights ────────────────────────────── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 flex justify-center">
         <div className="absolute top-[-20%] w-[1000px] h-[800px] rounded-[100%] bg-cyan-900/10 blur-[150px]" />
@@ -89,14 +89,14 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════════════
           HERO SECTION
           ════════════════════════════════════════════════════ */}
-      <section className="relative z-10 w-full flex flex-col items-center justify-center text-center px-6 pt-24 pb-12 max-w-[1200px]">
+      <section className="relative z-10 w-full flex flex-col items-center justify-center text-center px-4 max-w-[1200px] gap-4">
         
-        {/* Title — Smaller, Centered, Wraps Naturally */}
+        {/* Title — Tiny, One-Line Forced */}
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-white mb-6 w-full text-center leading-tight"
+          className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white w-full text-center whitespace-nowrap overflow-hidden text-ellipsis"
         >
           Fingerprint-based Emergency{' '}
           <span className="bg-gradient-to-r from-cyan-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
@@ -109,20 +109,20 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1 }}
-          className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-slate-900 border border-slate-700 shadow-xl mb-10"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 border border-slate-700 shadow-xl"
         >
-          <Fingerprint className="w-4 h-4 text-cyan-400" />
-          <span className="text-xs font-bold text-slate-300 tracking-[0.2em] uppercase">
+          <Fingerprint className="w-3 h-3 text-cyan-400" />
+          <span className="text-[10px] sm:text-xs font-bold text-slate-300 tracking-[0.2em] uppercase">
             Next-Gen Emergency Platform
           </span>
         </motion.div>
 
-        {/* Subtitle - Smaller font, larger margins */}
+        {/* Subtitle - Very compact */}
         <motion.p 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-sm md:text-base text-slate-400 font-medium max-w-4xl mx-auto leading-relaxed mb-12"
+          className="text-xs sm:text-sm text-slate-400 font-medium max-w-3xl mx-auto leading-relaxed"
         >
           Instantly identify unconscious patients. Scan a fingerprint to retrieve critical medical history, blood type, and severe medical conditions in milliseconds. Automatic emergency alerts are instantly dispatched to registered emergency contacts for immediate response.
         </motion.p>
@@ -132,15 +132,15 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-8 w-full"
+          className="flex flex-col sm:flex-row items-center justify-center w-full mt-2"
         >
           <button
             onClick={() => navigate('/login/operator')}
-            className="group flex items-center justify-center gap-3 px-8 py-4 bg-red-600 hover:bg-red-500 text-white font-bold text-lg rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] hover:-translate-y-1 w-full sm:w-auto"
+            className="group flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-base rounded-xl transition-all duration-300 shadow-[0_0_15px_rgba(239,68,68,0.4)] hover:shadow-[0_0_25px_rgba(239,68,68,0.6)] hover:-translate-y-1 w-full sm:w-auto"
           >
-            <Activity className="w-6 h-6" />
+            <Activity className="w-5 h-5" />
             Launch Emergency Scanner
-            <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+            <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </button>
         </motion.div>
       </section>
@@ -152,23 +152,23 @@ export default function LandingPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.5 }}
-        className="relative z-10 w-full max-w-[1000px] mx-auto px-6 mb-16"
+        className="relative z-10 w-full max-w-[1000px] mx-auto px-4 mt-2"
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { icon: Zap, label: 'Sub-Second Biometric Match', value: '< 1 second', color: 'text-cyan-400', bg: 'bg-cyan-900/30' },
-            { icon: HeartPulse, label: 'Lifesaving Medical Data', value: 'Instant Retrieval', color: 'text-red-400', bg: 'bg-red-900/30' },
-            { icon: AlertCircle, label: 'Emergency Contact Alerts', value: 'Automatic Dispatch', color: 'text-emerald-400', bg: 'bg-emerald-900/30' },
+            { icon: Zap, label: 'Sub-Second Match', value: '< 1 second', color: 'text-cyan-400', bg: 'bg-cyan-900/30' },
+            { icon: HeartPulse, label: 'Medical Data', value: 'Instant Retrieval', color: 'text-red-400', bg: 'bg-red-900/30' },
+            { icon: AlertCircle, label: 'Contact Alerts', value: 'Automatic Dispatch', color: 'text-emerald-400', bg: 'bg-emerald-900/30' },
           ].map((stat, i) => (
             <div
               key={i}
-              className="flex flex-col items-center justify-center text-center p-8 rounded-3xl bg-slate-900/80 backdrop-blur-xl border border-slate-800 shadow-lg transition-all duration-300"
+              className="flex flex-col items-center justify-center text-center p-4 rounded-2xl bg-slate-900/80 backdrop-blur-xl border border-slate-800 shadow-lg transition-all duration-300"
             >
-              <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color} mb-4`}>
-                <stat.icon className="w-8 h-8" />
+              <div className={`p-3 rounded-xl ${stat.bg} ${stat.color} mb-2`}>
+                <stat.icon className="w-6 h-6" />
               </div>
-              <p className="text-2xl font-black text-white mb-1">{stat.value}</p>
-              <p className="text-sm font-medium text-slate-400">{stat.label}</p>
+              <p className="text-lg font-black text-white mb-0.5">{stat.value}</p>
+              <p className="text-xs font-medium text-slate-400">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -177,17 +177,17 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════════════
           ROLE PORTALS
           ════════════════════════════════════════════════════ */}
-      <section className="relative z-10 w-full max-w-[1200px] mx-auto px-6 flex flex-col items-center">
+      <section className="relative z-10 w-full max-w-[1200px] mx-auto px-4 flex flex-col items-center gap-6 mt-4">
         
-        <div className="w-full flex items-center justify-center mb-12">
-          <div className="h-[1px] w-full max-w-[150px] bg-gradient-to-r from-transparent to-slate-700" />
-          <h2 className="text-3xl md:text-4xl font-black text-white px-8 text-center">
+        <div className="w-full flex items-center justify-center">
+          <div className="h-[1px] w-full max-w-[100px] bg-gradient-to-r from-transparent to-slate-700" />
+          <h2 className="text-2xl font-black text-white px-6 text-center">
             Choose Your Portal
           </h2>
-          <div className="h-[1px] w-full max-w-[150px] bg-gradient-to-l from-transparent to-slate-700" />
+          <div className="h-[1px] w-full max-w-[100px] bg-gradient-to-l from-transparent to-slate-700" />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
           {roles.map((role, i) => {
             const c = colorMap[role.color];
             const Icon = role.icon;
@@ -195,40 +195,40 @@ export default function LandingPage() {
             return (
               <motion.div
                 key={role.key}
-                initial={{ opacity: 0, y: 40 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.15 }}
-                whileHover={{ y: -8 }}
-                className={`group cursor-pointer bg-slate-900/80 backdrop-blur-xl border ${c.border} rounded-[2rem] p-10 shadow-xl ${c.glow} transition-all duration-300 flex flex-col items-center text-center`}
+                whileHover={{ y: -4 }}
+                className={`group cursor-pointer bg-slate-900/80 backdrop-blur-xl border ${c.border} rounded-2xl p-6 shadow-xl ${c.glow} transition-all duration-300 flex flex-col items-center text-center`}
                 onClick={() => navigate(role.path)}
               >
                 {/* Icon */}
-                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${c.iconBg} border border-slate-700/50 ${c.icon} mb-6 transition-transform group-hover:scale-110 duration-300`}>
-                  <Icon className="w-10 h-10" />
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${c.iconBg} border border-slate-700/50 ${c.icon} mb-4 transition-transform group-hover:scale-110 duration-300`}>
+                  <Icon className="w-7 h-7" />
                 </div>
 
                 {/* Badge */}
-                <span className={`inline-block px-4 py-1.5 rounded-full text-xs font-bold border ${c.badge} mb-6 tracking-wide`}>
+                <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-bold border ${c.badge} mb-4 tracking-wide`}>
                   {role.subtitle}
                 </span>
 
                 {/* Title */}
-                <h3 className="text-2xl font-black text-white mb-4">
+                <h3 className="text-xl font-black text-white mb-2">
                   {role.title}
                 </h3>
 
                 {/* Description */}
-                <p className="text-slate-400 text-base leading-relaxed mb-10 flex-grow">
+                <p className="text-slate-400 text-sm leading-relaxed mb-6 flex-grow">
                   {role.description}
                 </p>
 
                 {/* Action Button */}
                 <button
-                  className={`w-full py-4 rounded-xl font-bold text-white text-base bg-slate-800 border border-slate-700 group-hover:bg-slate-700 transition-all duration-300 flex items-center justify-center gap-3`}
+                  className={`w-full py-3 rounded-lg font-bold text-white text-sm bg-slate-800 border border-slate-700 group-hover:bg-slate-700 transition-all duration-300 flex items-center justify-center gap-2`}
                 >
                   Enter Portal
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </motion.div>
             );

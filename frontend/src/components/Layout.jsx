@@ -7,7 +7,7 @@ export default function Layout() {
       
       {/* ── PREMIUM NAVIGATION BAR ── */}
       <nav className="w-full border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-[1600px] mx-auto px-6 py-5 flex items-center justify-between">
           
           <Link to="/" className="flex items-center gap-3 group">
             <div className="p-2 rounded-xl bg-cyan-900/50 border border-cyan-400/50 group-hover:bg-cyan-800 transition-colors">

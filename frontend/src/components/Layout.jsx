@@ -3,7 +3,7 @@ import { Fingerprint, Shield, Building2, Stethoscope, Mail, Phone, MapPin } from
 
 export default function Layout() {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 font-sans text-slate-200">
+    <div className="min-h-screen flex flex-col bg-slate-950 font-sans text-slate-200 overflow-x-hidden">
       
       {/* ── PREMIUM NAVIGATION BAR ── */}
       <nav className="w-full border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-50">

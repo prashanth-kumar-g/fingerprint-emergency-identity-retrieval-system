@@ -7,14 +7,17 @@ import InstitutionRegistrationPage from './pages/InstitutionRegistrationPage';
 // Super Admin Layouts and Pages
 import SuperAdminLayout from './components/layout/SuperAdminLayout';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
+import SuperAdminStatistics from './pages/SuperAdminStatistics';
 
 // Institution Layouts and Pages
 import InstitutionLayout from './components/layout/InstitutionLayout';
 import InstitutionDashboard from './pages/InstitutionDashboard';
+import InstitutionStatistics from './pages/InstitutionStatistics';
 
 // Operator Layouts and Pages
 import OperatorLayout from './components/layout/OperatorLayout';
 import OperatorDashboard from './pages/OperatorDashboard';
+import OperatorStatistics from './pages/OperatorStatistics';
 
 import PlaceholderPage from './pages/PlaceholderPage';
 
@@ -35,7 +38,7 @@ function App() {
           <Route path="/super-admin/registrations" element={<PlaceholderPage title="Pending Registrations" />} />
           <Route path="/super-admin/data-changes" element={<PlaceholderPage title="Data Change Requests" />} />
           <Route path="/super-admin/institutions" element={<PlaceholderPage title="Manage Registered Institutions" />} />
-          <Route path="/super-admin/statistics" element={<PlaceholderPage title="Statistics & Logs" />} />
+          <Route path="/super-admin/statistics" element={<SuperAdminStatistics />} />
           <Route path="/super-admin/settings" element={<PlaceholderPage title="Settings & Profile" />} />
         </Route>
 
@@ -45,7 +48,7 @@ function App() {
           <Route path="/institution/enroll-operators" element={<PlaceholderPage title="Enroll Operators" />} />
           <Route path="/institution/manage-operators" element={<PlaceholderPage title="Manage Operators" />} />
           <Route path="/institution/data-change" element={<PlaceholderPage title="Request Data Change" />} />
-          <Route path="/institution/statistics" element={<PlaceholderPage title="Statistics & Logs" />} />
+          <Route path="/institution/statistics" element={<InstitutionStatistics />} />
           <Route path="/institution/settings" element={<PlaceholderPage title="Settings & Profile" />} />
         </Route>
 
@@ -55,7 +58,7 @@ function App() {
           <Route path="/operator/enroll-citizens" element={<PlaceholderPage title="Enroll Citizens" />} />
           <Route path="/operator/manage-citizens" element={<PlaceholderPage title="Manage Citizens" />} />
           <Route path="/operator/emergency-scan" element={<PlaceholderPage title="Emergency Scan" />} />
-          <Route path="/operator/statistics" element={<PlaceholderPage title="Statistics & Logs" />} />
+          <Route path="/operator/statistics" element={<OperatorStatistics />} />
           <Route path="/operator/settings" element={<PlaceholderPage title="Settings & Profile" />} />
         </Route>
       </Routes>

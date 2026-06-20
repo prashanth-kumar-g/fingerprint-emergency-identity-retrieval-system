@@ -156,15 +156,15 @@ export default function LandingPage() {
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { icon: Zap, label: 'Sub-Second Match', value: '< 1 second', color: 'text-cyan-400', bg: 'bg-cyan-900/30' },
-            { icon: HeartPulse, label: 'Medical Data', value: 'Instant Retrieval', color: 'text-red-400', bg: 'bg-red-900/30' },
-            { icon: AlertCircle, label: 'Contact Alerts', value: 'Automatic Dispatch', color: 'text-emerald-400', bg: 'bg-emerald-900/30' },
+            { icon: Zap, label: 'Sub-Second Match', value: '< 1 second', color: 'text-cyan-400', bg: 'bg-cyan-900/30', glow: 'shadow-[0_0_20px_rgba(8,145,178,0.1)] hover:shadow-[0_0_30px_rgba(8,145,178,0.3)]', borderHover: 'hover:border-cyan-500/50' },
+            { icon: HeartPulse, label: 'Medical Data', value: 'Instant Retrieval', color: 'text-red-400', bg: 'bg-red-900/30', glow: 'shadow-[0_0_20px_rgba(239,68,68,0.1)] hover:shadow-[0_0_30px_rgba(239,68,68,0.3)]', borderHover: 'hover:border-red-500/50' },
+            { icon: AlertCircle, label: 'Contact Alerts', value: 'Automatic Dispatch', color: 'text-emerald-400', bg: 'bg-emerald-900/30', glow: 'shadow-[0_0_20px_rgba(16,185,129,0.1)] hover:shadow-[0_0_30px_rgba(16,185,129,0.3)]', borderHover: 'hover:border-emerald-500/50' },
           ].map((stat, i) => (
             <div
               key={i}
-              className="flex flex-col items-center justify-center text-center p-4 rounded-2xl bg-slate-900/80 backdrop-blur-xl border border-slate-800 shadow-lg transition-all duration-300"
+              className={`flex flex-col items-center justify-center text-center p-4 rounded-2xl bg-slate-900/80 backdrop-blur-xl border border-slate-800 transition-all duration-300 hover:-translate-y-1 cursor-default group ${stat.glow} ${stat.borderHover}`}
             >
-              <div className={`p-3 rounded-xl ${stat.bg} ${stat.color} mb-2`}>
+              <div className={`p-3 rounded-xl ${stat.bg} ${stat.color} mb-2 transition-transform duration-300 group-hover:scale-110`}>
                 <stat.icon className="w-6 h-6" />
               </div>
               <p className="text-lg font-black text-white mb-0.5">{stat.value}</p>

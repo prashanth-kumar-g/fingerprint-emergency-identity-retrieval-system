@@ -21,6 +21,9 @@ import OperatorStatistics from './pages/OperatorStatistics';
 
 import PlaceholderPage from './pages/PlaceholderPage';
 
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+
 function App() {
   return (
     <BrowserRouter>
@@ -30,6 +33,8 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login/:role" element={<LoginPage />} />
           <Route path="/register/institution" element={<InstitutionRegistrationPage />} />
+          <Route path="/forgot-password/:role" element={<ForgotPassword />} />
+          <Route path="/reset-password/:role" element={<ResetPassword />} />
         </Route>
 
         {/* Super Admin Protected Routes */}

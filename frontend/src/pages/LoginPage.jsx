@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Shield, Building2, Stethoscope, Fingerprint, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Shield, Building2, Stethoscope, Fingerprint, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const roleConfigs = {
@@ -57,26 +57,39 @@ export default function LoginPage() {
     );
   }
 
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
   const handleLogin = (e) => {
     e.preventDefault();
     setError('');
 
-    if (role === 'super-admin') {
-      const isValidId = idValue === 'admin.feirs@gmail.com' || idValue === 'FEIRS-SA-ROOT';
-      const isValidPassword = passwordValue === 'FeirsRoot@2026';
-
-      if (isValidId && isValidPassword) {
-        navigate('/super-admin/dashboard');
-      } else {
-        setError('Invalid Super Admin credentials. Authorization denied.');
-      }
-    } else if (role?.toLowerCase() === 'institution') {
-      navigate('/institution/dashboard');
-    } else if (role?.toLowerCase() === 'operator') {
-      navigate('/operator/dashboard'); // Future proofing
-    } else {
-      navigate(`/${role}/dashboard`); // Fallback bypass
+    if (!idValue || !passwordValue) {
+      setError('Please provide both ID / Email and Password.');
+      return;
     }
+
+    setIsAuthenticating(true);
+
+    // Simulate Network Delay
+    setTimeout(() => {
+      setIsAuthenticating(false);
+      
+      if (idValue === '0' || passwordValue === '0') {
+        setError('Invalid credentials. Please verify your ID / Email or Password and try again.');
+      } else if (idValue === '1' && passwordValue === '1') {
+        // Navigate on success
+        if (role === 'super-admin') navigate('/super-admin/dashboard');
+        else if (role === 'institution') navigate('/institution/dashboard');
+        else if (role === 'operator') navigate('/operator/dashboard');
+        else navigate(`/${role}/dashboard`);
+      } else {
+        // Default behavior for other inputs during dev
+        if (role === 'super-admin') navigate('/super-admin/dashboard');
+        else if (role === 'institution') navigate('/institution/dashboard');
+        else if (role === 'operator') navigate('/operator/dashboard');
+        else navigate(`/${role}/dashboard`);
+      }
+    }, 1200);
   };
 
   const Icon = config.icon;
@@ -143,10 +156,27 @@ export default function LoginPage() {
                 placeholder="••••••••••••"
                 className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-4 py-3 text-white outline-none transition-colors"
               />
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/forgot-password/${role}`)}
+                  className={`text-xs font-bold transition-colors ${config.color} opacity-80 hover:opacity-100`}
+                >
+                  Forgot Password?
+                </button>
+              </div>
             </div>
 
-            <button type="submit" className={`w-full ${config.buttonColor} text-white font-bold text-lg rounded-xl py-4 mt-4 transition-all duration-300`}>
-              Authenticate & Enter
+            <button 
+              type="submit" 
+              disabled={isAuthenticating}
+              className={`w-full ${config.buttonColor} flex items-center justify-center text-white font-bold text-lg rounded-xl py-4 mt-4 transition-all duration-300 disabled:opacity-70`}
+            >
+              {isAuthenticating ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                'Authenticate & Enter'
+              )}
             </button>
             
             {role === 'institution' && (

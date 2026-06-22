@@ -155,7 +155,7 @@ export default function InstitutionRegistrationPage() {
           Back to Login
         </button>
         
-        <div className="flex items-center gap-4 mb-2">
+        <div className="flex items-center justify-center gap-4 mb-2 text-left">
           <div className="p-3 bg-emerald-900/30 rounded-xl border border-emerald-500/30">
             <Building2 className="w-8 h-8 text-emerald-400" />
           </div>
@@ -173,6 +173,33 @@ export default function InstitutionRegistrationPage() {
         className="relative z-10 w-full max-w-4xl bg-slate-900/60 backdrop-blur-2xl border border-slate-800 rounded-3xl p-6 md:p-10 shadow-2xl"
       >
         <form className="flex flex-col gap-10">
+
+          {/* Top Section: Facility Logo Upload */}
+          <div className="w-full flex flex-col items-center">
+            <div className="relative group cursor-pointer mb-2 mt-4" onClick={() => logoInputRef.current?.click()}>
+              <div className={`w-[200px] h-[200px] rounded-full border-2 flex flex-col items-center justify-center overflow-hidden shadow-xl transition-colors ${logoFile ? 'border-emerald-500 bg-emerald-900/10' : 'border-slate-700 bg-slate-800 group-hover:border-emerald-500/50'}`}>
+                {logoFile ? (
+                  <>
+                    <CheckCircle2 className="w-16 h-16 text-emerald-400 mb-2" />
+                    <span className="text-sm text-emerald-200/70 font-bold max-w-[150px] truncate px-2 text-center">{logoFile.name}</span>
+                  </>
+                ) : (
+                  <Building2 className="w-20 h-20 text-slate-500 group-hover:text-emerald-400 transition-colors" />
+                )}
+              </div>
+              <div className="absolute bottom-2 right-2 p-3 bg-slate-800 border border-slate-700 rounded-full shadow-lg text-slate-400 group-hover:text-emerald-400 group-hover:border-emerald-500/50 transition-all">
+                <Upload className="w-5 h-5" />
+              </div>
+            </div>
+            {!logoFile && <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-3">Upload Facility Logo</span>}
+            <input 
+              type="file" 
+              className="hidden" 
+              ref={logoInputRef}
+              accept=".jpg,.jpeg,.png"
+              onChange={(e) => handleFileUpload(e, setLogoFile)}
+            />
+          </div>
 
           {/* Section 1: Legal Facility Data */}
           <section>
@@ -380,7 +407,7 @@ export default function InstitutionRegistrationPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="w-full">
               
               {/* License Upload */}
               <div 
@@ -393,7 +420,7 @@ export default function InstitutionRegistrationPage() {
                       <CheckCircle2 className="w-6 h-6 text-emerald-400" />
                     </div>
                     <h3 className="text-sm font-bold text-emerald-400 mb-1">License Uploaded</h3>
-                    <p className="text-xs text-emerald-200/70 max-w-[200px] truncate">{licenseFile.name}</p>
+                    <p className="text-xs text-emerald-200/70 max-w-full truncate px-4">{licenseFile.name}</p>
                   </>
                 ) : (
                   <>
@@ -401,7 +428,7 @@ export default function InstitutionRegistrationPage() {
                       <Upload className="w-6 h-6 text-emerald-400" />
                     </div>
                     <h3 className="text-sm font-bold text-white mb-1">Upload Registration License</h3>
-                    <p className="text-xs text-slate-400 max-w-[200px]">JPG, PNG, or PDF (Max 5MB)</p>
+                    <p className="text-xs text-slate-400 max-w-sm">JPG, PNG, or PDF (Max 5MB)</p>
                   </>
                 )}
                 <input 
@@ -410,37 +437,6 @@ export default function InstitutionRegistrationPage() {
                   ref={licenseInputRef}
                   accept=".jpg,.jpeg,.png,.pdf"
                   onChange={(e) => handleFileUpload(e, setLicenseFile)}
-                />
-              </div>
-
-              {/* Logo Upload */}
-              <div 
-                onClick={() => logoInputRef.current?.click()}
-                className={`bg-slate-950 border border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer group ${logoFile ? 'border-emerald-500 bg-emerald-900/10' : 'border-slate-700 hover:border-emerald-500/50 hover:bg-slate-900/50'}`}
-              >
-                {logoFile ? (
-                  <>
-                    <div className="p-3 bg-emerald-900/50 rounded-full mb-3">
-                      <CheckCircle2 className="w-6 h-6 text-emerald-400" />
-                    </div>
-                    <h3 className="text-sm font-bold text-emerald-400 mb-1">Logo Uploaded</h3>
-                    <p className="text-xs text-emerald-200/70 max-w-[200px] truncate">{logoFile.name}</p>
-                  </>
-                ) : (
-                  <>
-                    <div className="p-3 bg-slate-800 rounded-full mb-3 group-hover:scale-110 transition-transform">
-                      <Upload className="w-6 h-6 text-slate-400" />
-                    </div>
-                    <h3 className="text-sm font-bold text-white mb-1">Upload Facility Logo</h3>
-                    <p className="text-xs text-slate-400 max-w-[200px]">(Optional) Square JPG or PNG (Max 5MB)</p>
-                  </>
-                )}
-                <input 
-                  type="file" 
-                  className="hidden" 
-                  ref={logoInputRef}
-                  accept=".jpg,.jpeg,.png"
-                  onChange={(e) => handleFileUpload(e, setLogoFile)}
                 />
               </div>
 

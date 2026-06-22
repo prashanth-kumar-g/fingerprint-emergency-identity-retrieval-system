@@ -72,7 +72,11 @@ export default function OperatorLayout() {
           
           <button 
             onClick={() => navigate('/operator/settings')}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors text-sm font-bold border border-transparent"
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold ${
+              location.pathname === '/operator/settings'
+                ? 'bg-red-900/20 text-red-400 border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.15)]' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
+            }`}
             title="Settings & Profile"
           >
             <Settings className="w-5 h-5" />

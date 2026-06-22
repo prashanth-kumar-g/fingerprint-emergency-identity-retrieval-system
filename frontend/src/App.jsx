@@ -16,6 +16,8 @@ import InstitutionDashboard from './pages/InstitutionDashboard';
 import InstitutionStatistics from './pages/InstitutionStatistics';
 import InstitutionProfile from './pages/InstitutionProfile';
 import EnrollOperator from './pages/EnrollOperator';
+import ManageOperators from './pages/ManageOperators';
+import OperatorConfiguration from './pages/OperatorConfiguration';
 
 // Operator Layouts and Pages
 import OperatorLayout from './components/layout/OperatorLayout';
@@ -57,7 +59,8 @@ function App() {
         <Route element={<InstitutionLayout />}>
           <Route path="/institution/dashboard" element={<InstitutionDashboard />} />
           <Route path="/institution/enroll-operators" element={<EnrollOperator />} />
-          <Route path="/institution/manage-operators" element={<PlaceholderPage title="Manage Operators" />} />
+          <Route path="/institution/manage-operators" element={<ManageOperators />} />
+          <Route path="/institution/manage-operators/:id" element={<OperatorConfiguration />} />
           <Route path="/institution/data-change" element={<PlaceholderPage title="Request Data Change" />} />
           <Route path="/institution/statistics" element={<InstitutionStatistics />} />
           <Route path="/institution/settings" element={<InstitutionProfile />} />

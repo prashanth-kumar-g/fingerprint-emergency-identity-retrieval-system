@@ -9,6 +9,12 @@ import SuperAdminLayout from './components/layout/SuperAdminLayout';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import SuperAdminStatistics from './pages/SuperAdminStatistics';
 import SuperAdminProfile from './pages/SuperAdminProfile';
+import PendingRegistrations from './pages/PendingRegistrations';
+import PendingRegistrationDetails from './pages/PendingRegistrationDetails';
+import DataChangeRequests from './pages/DataChangeRequests';
+import DataChangeRequestDetails from './pages/DataChangeRequestDetails';
+import ManageInstitutionsList from './pages/ManageInstitutionsList';
+import InstitutionConfiguration from './pages/InstitutionConfiguration';
 
 // Institution Layouts and Pages
 import InstitutionLayout from './components/layout/InstitutionLayout';
@@ -48,9 +54,12 @@ function App() {
         {/* Super Admin Protected Routes */}
         <Route element={<SuperAdminLayout />}>
           <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
-          <Route path="/super-admin/registrations" element={<PlaceholderPage title="Pending Registrations" />} />
-          <Route path="/super-admin/data-changes" element={<PlaceholderPage title="Data Change Requests" />} />
-          <Route path="/super-admin/institutions" element={<PlaceholderPage title="Manage Registered Institutions" />} />
+          <Route path="/super-admin/pending-registrations" element={<PendingRegistrations />} />
+          <Route path="/super-admin/pending-registrations/:id" element={<PendingRegistrationDetails />} />
+          <Route path="/super-admin/data-change-requests" element={<DataChangeRequests />} />
+          <Route path="/super-admin/data-change-requests/:id" element={<DataChangeRequestDetails />} />
+          <Route path="/super-admin/manage-institutions" element={<ManageInstitutionsList />} />
+          <Route path="/super-admin/manage-institutions/:id" element={<InstitutionConfiguration />} />
           <Route path="/super-admin/statistics" element={<SuperAdminStatistics />} />
           <Route path="/super-admin/settings" element={<SuperAdminProfile />} />
         </Route>

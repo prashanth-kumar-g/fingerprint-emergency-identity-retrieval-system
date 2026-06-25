@@ -179,6 +179,25 @@ const EmailExpander = ({ isSaving, email }) => {
 export default function SuperAdminProfile() {
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  
+  const [adminName, setAdminName] = useState("System Architect");
+  const [isNameEditing, setIsNameEditing] = useState(false);
+  const nameInputRef = useRef(null);
+
+  const handleNameEditToggle = () => {
+    if (isNameEditing) {
+      setIsNameEditing(false);
+    } else {
+      setIsNameEditing(true);
+      setTimeout(() => nameInputRef.current?.focus(), 0);
+    }
+  };
+
+  useEffect(() => {
+    if (isSaving) {
+      setIsNameEditing(false);
+    }
+  }, [isSaving]);
 
   const handleSave = () => {
     setIsSaving(true);
@@ -231,13 +250,30 @@ export default function SuperAdminProfile() {
             </div>
 
             {/* Admin Name */}
-            <div className="w-full relative group mb-6">
+            <div className="w-full relative mb-6 flex justify-center items-center group/name">
               <input 
+                ref={nameInputRef}
                 type="text" 
-                defaultValue="System Architect"
-                className="w-full bg-transparent text-2xl font-black text-white text-center outline-none border-b border-transparent focus:border-cyan-500/50 transition-colors px-6 py-1"
+                size={Math.max(adminName.length || 1, 2)}
+                value={adminName}
+                onChange={(e) => setAdminName(e.target.value)}
+                readOnly={!isNameEditing}
+                className={`bg-transparent text-2xl font-black text-center outline-none border-b-2 transition-colors px-1 py-1 ${
+                  isNameEditing 
+                    ? 'text-white border-cyan-500/50' 
+                    : 'text-white border-transparent hover:border-slate-700'
+                }`}
               />
-              <Pencil className="w-3.5 h-3.5 text-slate-600 absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative flex items-center ml-3">
+                <button 
+                  onClick={handleNameEditToggle}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    isNameEditing ? 'text-cyan-400 bg-cyan-500/20' : 'text-slate-500 hover:text-cyan-400 hover:bg-slate-800'
+                  }`}
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Read-Only Meta */}

@@ -227,7 +227,7 @@ export default function OperatorProfile() {
                 <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 bg-slate-800 text-white text-xs font-medium p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 pointer-events-none border border-slate-700 text-left">
                   <div className="flex gap-2 items-start">
                     <Lock className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
-                    <p leading-relaxed>{tooltipMsg}</p>
+                    <p className="leading-relaxed">{tooltipMsg}</p>
                   </div>
                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
                 </div>

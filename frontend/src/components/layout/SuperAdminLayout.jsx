@@ -16,9 +16,9 @@ export default function SuperAdminLayout() {
   const location = useLocation();
 
   const navLinks = [
-    { name: 'Pending Registrations', path: '/super-admin/registrations', icon: FileCheck },
-    { name: 'Data Change Requests', path: '/super-admin/data-changes', icon: DatabaseBackup },
-    { name: 'Manage Institutions', path: '/super-admin/institutions', icon: Building2 },
+    { name: 'Pending Registrations', path: '/super-admin/pending-registrations', icon: FileCheck },
+    { name: 'Data Change Requests', path: '/super-admin/data-change-requests', icon: DatabaseBackup },
+    { name: 'Manage Institutions', path: '/super-admin/manage-institutions', icon: Building2 },
     { name: 'Statistics & Logs', path: '/super-admin/statistics', icon: Activity },
   ];
 

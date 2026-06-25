@@ -263,25 +263,24 @@ export default function InstitutionProfile() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <EditableField 
-                label="Admin Name" 
+                label="Institution Contact Number" 
+                value="+91 98765 43210" 
+                icon={Phone} 
+                isSaving={isSaving}
+              />
+              <div className="hidden md:block"></div>
+              <EditableField 
+                label="Primary Officer Name" 
                 value="Dr. Rakesh Sharma" 
                 icon={User} 
                 isSaving={isSaving}
               />
               <EditableField 
-                label="Admin Phone Number" 
-                value="+91 98765 43210" 
-                icon={Phone} 
+                label="Officer Designation" 
+                value="Chief Medical Officer" 
+                icon={Briefcase} 
                 isSaving={isSaving}
               />
-              <div className="md:col-span-2">
-                <EditableField 
-                  label="Facility Contact Email" 
-                  value="admin@apollohospital.com" 
-                  icon={Mail} 
-                  isSaving={isSaving}
-                />
-              </div>
               <PasswordExpander isSaving={isSaving} />
             </div>
           </div>

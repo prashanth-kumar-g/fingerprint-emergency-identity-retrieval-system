@@ -12,9 +12,9 @@ import SuperAdminProfile from './pages/SuperAdminProfile';
 import PendingRegistrations from './pages/PendingRegistrations';
 import PendingRegistrationDetails from './pages/PendingRegistrationDetails';
 import DataChangeRequests from './pages/DataChangeRequests';
-import DataChangeRequestDetails from './pages/DataChangeRequestDetails';
+import ReviewDataChangeRequest from './pages/ReviewDataChangeRequest';
 import ManageInstitutionsList from './pages/ManageInstitutionsList';
-import InstitutionConfiguration from './pages/InstitutionConfiguration';
+import ManageInstitutionDetails from './pages/ManageInstitutionDetails';
 
 // Institution Layouts and Pages
 import InstitutionLayout from './components/layout/InstitutionLayout';
@@ -24,6 +24,7 @@ import InstitutionProfile from './pages/InstitutionProfile';
 import EnrollOperator from './pages/EnrollOperator';
 import ManageOperators from './pages/ManageOperators';
 import OperatorConfiguration from './pages/OperatorConfiguration';
+import RequestDataChange from './pages/RequestDataChange';
 
 // Operator Layouts and Pages
 import OperatorLayout from './components/layout/OperatorLayout';
@@ -57,9 +58,9 @@ function App() {
           <Route path="/super-admin/pending-registrations" element={<PendingRegistrations />} />
           <Route path="/super-admin/pending-registrations/:id" element={<PendingRegistrationDetails />} />
           <Route path="/super-admin/data-change-requests" element={<DataChangeRequests />} />
-          <Route path="/super-admin/data-change-requests/:id" element={<DataChangeRequestDetails />} />
+          <Route path="/super-admin/data-change-requests/:id" element={<ReviewDataChangeRequest />} />
           <Route path="/super-admin/manage-institutions" element={<ManageInstitutionsList />} />
-          <Route path="/super-admin/manage-institutions/:id" element={<InstitutionConfiguration />} />
+          <Route path="/super-admin/manage-institutions/:id" element={<ManageInstitutionDetails />} />
           <Route path="/super-admin/statistics" element={<SuperAdminStatistics />} />
           <Route path="/super-admin/settings" element={<SuperAdminProfile />} />
         </Route>
@@ -70,7 +71,7 @@ function App() {
           <Route path="/institution/enroll-operators" element={<EnrollOperator />} />
           <Route path="/institution/manage-operators" element={<ManageOperators />} />
           <Route path="/institution/manage-operators/:id" element={<OperatorConfiguration />} />
-          <Route path="/institution/data-change" element={<PlaceholderPage title="Request Data Change" />} />
+          <Route path="/institution/request-data-change" element={<RequestDataChange />} />
           <Route path="/institution/statistics" element={<InstitutionStatistics />} />
           <Route path="/institution/settings" element={<InstitutionProfile />} />
         </Route>

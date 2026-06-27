@@ -210,8 +210,11 @@ export default function InstitutionProfile() {
             </div>
 
             {/* Role Badge */}
-            <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 mb-4">
-              <span className="text-[10px] font-bold tracking-widest text-emerald-400 uppercase">Facility Manager</span>
+            <div className="px-4 py-1.5 rounded-full border mb-4 transition-colors duration-500 flex items-center gap-2 bg-emerald-500/10 border-emerald-500/30 text-emerald-400">
+              <span className="w-2 h-2 rounded-full animate-pulse bg-emerald-400"></span>
+              <span className="text-[11px] font-black tracking-widest uppercase">
+                Status: ACTIVE
+              </span>
             </div>
 
             {/* Institution Name (Managed) */}

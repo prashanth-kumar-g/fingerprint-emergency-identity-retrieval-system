@@ -16,7 +16,7 @@ export default function InstitutionLayout() {
   const navLinks = [
     { name: 'Enroll Operators', path: '/institution/enroll-operators', icon: UserPlus },
     { name: 'Manage Operators', path: '/institution/manage-operators', icon: Users },
-    { name: 'Request Data Change', path: '/institution/data-change', icon: DatabaseBackup },
+    { name: 'Request Data Change', path: '/institution/request-data-change', icon: DatabaseBackup },
     { name: 'Statistics & Logs', path: '/institution/statistics', icon: Activity },
   ];
 

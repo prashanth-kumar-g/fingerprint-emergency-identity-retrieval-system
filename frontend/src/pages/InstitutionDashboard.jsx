@@ -41,7 +41,7 @@ const cards = [
     subtitle: 'Legal Updates',
     description: 'Submit official requests to the Super Admin to update your facility address or legal name.',
     icon: DatabaseBackup,
-    path: '/institution/data-change',
+    path: '/institution/request-data-change',
     glow: 'shadow-[0_0_30px_rgba(168,85,247,0.15)] hover:shadow-[0_0_40px_rgba(168,85,247,0.3)]',
     border: 'border-slate-800 hover:border-purple-500/60',
     badge: 'bg-purple-500/10 text-purple-400 border-purple-500/30',

@@ -59,29 +59,31 @@ export default function Layout() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 border-b border-slate-800 pb-6">
             
             {/* Brand Column */}
-            <div className="flex flex-col items-center md:items-start text-center md:text-left">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="flex flex-col items-center text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
                 <Fingerprint className="w-5 h-5 text-cyan-400" />
                 <span className="text-lg font-black text-white">FEIRS</span>
               </div>
-              <p className="text-slate-400 leading-relaxed text-xs max-w-sm">
-                A life-saving biometric platform designed for instant medical data retrieval during critical emergencies.
+              <p className="text-slate-400 leading-relaxed text-xs max-w-sm text-center">
+                A life-saving biometric platform<br />
+                designed for instant medical data<br />
+                retrieval during critical emergencies.
               </p>
             </div>
 
             {/* Support Column */}
-            <div className="flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="flex flex-col items-center text-center">
               <h4 className="text-white font-bold text-xs mb-3 tracking-wide">SYSTEM SUPPORT</h4>
               <ul className="flex flex-col gap-2 text-slate-400 text-xs">
-                <li className="flex items-center gap-2 hover:text-cyan-400 cursor-pointer transition-colors">
+                <li className="flex items-center justify-center gap-2 hover:text-cyan-400 cursor-pointer transition-colors">
                   <Mail className="w-3 h-3" />
-                  support@feirs-platform.system
+                  prashantkumarrrg777@gmail.com
                 </li>
-                <li className="flex items-center gap-2 hover:text-cyan-400 cursor-pointer transition-colors">
+                <li className="flex items-center justify-center gap-2 hover:text-cyan-400 cursor-pointer transition-colors">
                   <Phone className="w-3 h-3" />
-                  1-800-EMERGENCY-BIO
+                  +91 8904764085
                 </li>
-                <li className="flex items-center gap-2 hover:text-cyan-400 cursor-pointer transition-colors">
+                <li className="flex items-center justify-center gap-2 hover:text-cyan-400 cursor-pointer transition-colors">
                   <MapPin className="w-3 h-3" />
                   Global Medical Datacenter
                 </li>
@@ -89,7 +91,7 @@ export default function Layout() {
             </div>
 
             {/* Legal Column */}
-            <div className="flex flex-col items-center md:items-start text-center md:text-left">
+            <div className="flex flex-col items-center text-center">
               <h4 className="text-white font-bold text-xs mb-3 tracking-wide">COMPLIANCE</h4>
               <ul className="flex flex-col gap-2 text-slate-400 text-xs">
                 <li className="hover:text-white cursor-pointer transition-colors">HIPAA Privacy Policy</li>
@@ -101,9 +103,9 @@ export default function Layout() {
           </div>
 
           <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-slate-500 font-semibold text-[10px]">
-            <p>© 2026 FEIRS Multi-Tenant Platform. All rights reserved.</p>
+            <p>© 2026 FEIRS. All rights reserved.</p>
             <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,1)]"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,1)]"></div>
               <span>All Systems Operational</span>
             </div>
           </div>

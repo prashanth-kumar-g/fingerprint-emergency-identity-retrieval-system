@@ -38,7 +38,7 @@ const roles = [
   {
     key: 'operator',
     title: 'Operator',
-    subtitle: 'Lifesaver / Emergency Scan',
+    subtitle: 'Emergency Scan',
     description:
       'The frontline responder. Enroll citizens and perform emergency identity retrievals that alert contacts.',
     icon: Stethoscope,

@@ -289,7 +289,7 @@ export default function ManageOperators() {
                     <td className="p-4 align-middle text-left">
                       <button 
                         onClick={() => navigate(`/institution/manage-operators/${op.id}`)}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-bold text-slate-300 hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-all"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-700/50 text-xs font-bold text-emerald-400 hover:text-white hover:border-emerald-500/80 hover:bg-emerald-500/20 transition-all"
                       >
                         View / Edit <ArrowRight className="w-3.5 h-3.5" />
                       </button>

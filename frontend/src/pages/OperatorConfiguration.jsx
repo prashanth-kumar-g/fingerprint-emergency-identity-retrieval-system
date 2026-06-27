@@ -255,7 +255,8 @@ export default function OperatorConfiguration() {
             </div>
 
             {/* Status Badge */}
-            <div className={`px-4 py-1.5 rounded-full border mb-6 transition-colors duration-500 ${operatorStatus === 'ACTIVE' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+            <div className={`px-4 py-1.5 rounded-full border mb-6 transition-colors duration-500 flex items-center gap-2 ${operatorStatus === 'ACTIVE' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+              <span className={`w-2 h-2 rounded-full animate-pulse ${operatorStatus === 'ACTIVE' ? 'bg-emerald-400' : 'bg-red-400'}`}></span>
               <span className="text-[11px] font-black tracking-widest uppercase">
                 Status: {operatorStatus}
               </span>

@@ -11,44 +11,29 @@ import {
   Mail,
   MapPin,
   Building,
-  AlertCircle,
-  X,
-  Loader2
+  Loader2,
+  Ban,
+  ShieldCheck
 } from 'lucide-react';
 
-export default function PendingRegistrationDetails() {
+export default function ManageInstitutionDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const [isApproving, setIsApproving] = useState(false);
-  const [showApproveSuccess, setShowApproveSuccess] = useState(false);
+  const [status, setStatus] = useState('ACTIVE');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
-  const [showRejectInput, setShowRejectInput] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [isRejecting, setIsRejecting] = useState(false);
-  const [showRejectSuccess, setShowRejectSuccess] = useState(false);
-
-  const [status, setStatus] = useState('PENDING VERIFICATION');
-
-  const handleApprove = () => {
-    setIsApproving(true);
+  const handleToggleStatus = () => {
+    setIsProcessing(true);
     setTimeout(() => {
-      setIsApproving(false);
-      setStatus('APPROVED');
-      setShowApproveSuccess(true);
-      setTimeout(() => setShowApproveSuccess(false), 3000);
-    }, 1500);
-  };
-
-  const handleReject = () => {
-    if (!rejectionReason.trim()) return;
-    setIsRejecting(true);
-    setTimeout(() => {
-      setIsRejecting(false);
-      setShowRejectInput(false);
-      setStatus('REJECTED');
-      setShowRejectSuccess(true);
-      setTimeout(() => setShowRejectSuccess(false), 3000);
+      setIsProcessing(false);
+      const newStatus = status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+      setStatus(newStatus);
+      setSuccessMessage(newStatus === 'ACTIVE' ? 'Facility access restored.' : 'Facility access suspended.');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
     }, 1500);
   };
 
@@ -58,11 +43,11 @@ export default function PendingRegistrationDetails() {
       {/* Header Section */}
       <div className="w-full relative flex flex-col items-start justify-center mt-2 mb-4 max-w-[1400px] mx-auto px-4 lg:px-0">
         <button 
-          onClick={() => navigate('/super-admin/pending-registrations')}
+          onClick={() => navigate('/super-admin/manage-institutions')}
           className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4 group"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="font-bold text-sm">Back to Pending Registrations</span>
+          <span className="font-bold text-sm">Back to Manage Institutions</span>
         </button>
       </div>
 
@@ -74,7 +59,7 @@ export default function PendingRegistrationDetails() {
           
           {/* Card 1: Identity Plate */}
           <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center text-center relative overflow-hidden">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-yellow-500/10 blur-[50px] pointer-events-none" />
+            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 blur-[50px] pointer-events-none transition-colors duration-500 ${status === 'ACTIVE' ? 'bg-cyan-500/10' : 'bg-red-500/10'}`} />
             
             <div className="relative mb-6 mt-4 group">
               <div className="w-56 h-56 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-xl">
@@ -82,26 +67,22 @@ export default function PendingRegistrationDetails() {
               </div>
             </div>
             
-            <div className={`px-4 py-1.5 rounded-full border mb-6 transition-colors duration-500 flex items-center gap-2 ${
-              status === 'APPROVED' ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' :
-              status === 'REJECTED' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
-              'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
-            }`}>
-              <span className={`w-2 h-2 rounded-full animate-pulse ${
-                status === 'APPROVED' ? 'bg-cyan-400' :
-                status === 'REJECTED' ? 'bg-red-400' :
-                'bg-yellow-400'
-              }`}></span>
+            <div className={`px-4 py-1.5 rounded-full border mb-6 transition-colors duration-500 flex items-center gap-2 ${status === 'ACTIVE' ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+              <span className={`w-2 h-2 rounded-full animate-pulse ${status === 'ACTIVE' ? 'bg-cyan-400' : 'bg-red-400'}`}></span>
               <span className="text-[11px] font-black tracking-widest uppercase">
                 Status: {status}
               </span>
             </div>
 
-            <h2 className="text-2xl font-black text-white mb-4">City General Hospital</h2>
+            <h2 className="text-2xl font-black text-white mb-4">Apollo Hospital</h2>
 
             <div className="w-full flex flex-col gap-3 pt-6 border-t border-slate-800/50 text-center items-center">
               <div className="flex flex-wrap justify-center gap-1.5 text-sm">
-                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Submitted At:</span>
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">System ID:</span>
+                <span className="font-medium text-slate-300 font-mono text-center">FEIRS-INST-1011</span>
+              </div>
+              <div className="flex flex-wrap justify-center gap-1.5 text-sm">
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Account Created:</span>
                 <span className="font-medium text-slate-300 text-center">Oct 24, 2026</span>
               </div>
             </div>
@@ -124,7 +105,7 @@ export default function PendingRegistrationDetails() {
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Institution Contact Number</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><Phone className="w-4 h-4" /></div>
-                  <input type="text" value="+1 (555) 293-4811" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value="+91 98765 43210" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
               <div className="hidden md:block"></div>
@@ -132,7 +113,7 @@ export default function PendingRegistrationDetails() {
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Primary Officer Name</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><User className="w-4 h-4" /></div>
-                  <input type="text" value="Dr. Sarah Jenkins" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value="Dr. Rakesh Sharma" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 w-full">
@@ -169,21 +150,21 @@ export default function PendingRegistrationDetails() {
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Sector Type</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><Briefcase className="w-4 h-4" /></div>
-                  <input type="text" value="Government" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value="Private" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 w-full md:col-span-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Official Email</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><Mail className="w-4 h-4" /></div>
-                  <input type="text" value="admin@citygeneral.gov.health" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value="apollo@hospital.com" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 w-full md:col-span-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Full Registered Address</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><MapPin className="w-4 h-4" /></div>
-                  <input type="text" value="101 Wellness Blvd, Health District, NY 10001, United States" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value="154/11, Bannerghatta Road, Bangalore, Karnataka - 560076, India" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
             </div>
@@ -214,96 +195,61 @@ export default function PendingRegistrationDetails() {
       {/* Action Footer */}
       <div className="w-full flex flex-col gap-4 mt-2">
         <AnimatePresence>
-          {showApproveSuccess && (
+          {showSuccess && (
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="flex items-center justify-center gap-2 text-cyan-400 bg-cyan-500/10 px-4 py-3 rounded-xl border border-cyan-500/20"
+              className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border ${
+                status === 'ACTIVE' 
+                  ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' 
+                  : 'text-red-400 bg-red-500/10 border-red-500/20'
+              }`}
             >
               <CheckCircle2 className="w-5 h-5" />
-              <span className="text-sm font-bold">Account approved. An activation email has been sent to the institution to set up their platform access.</span>
-            </motion.div>
-          )}
-
-          {showRejectSuccess && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="flex items-center justify-center gap-2 text-red-400 bg-red-500/10 px-4 py-3 rounded-xl border border-red-500/20"
-            >
-              <CheckCircle2 className="w-5 h-5" />
-              <span className="text-sm font-bold">Application rejected. An email containing your remarks has been sent to the applicant.</span>
+              <span className="text-sm font-bold">{successMessage}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <div className="w-full flex flex-col gap-4">
+        <div className="w-full flex flex-col items-center justify-center mt-2">
           
-          <AnimatePresence>
-            {showRejectInput && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="flex flex-col gap-3 overflow-hidden bg-slate-900/80 backdrop-blur-md border border-red-500/30 rounded-xl p-5 shadow-xl"
-              >
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Enter Rejection Remark / Reason</label>
-                <div className="flex gap-3">
-                  <input 
-                    type="text" 
-                    value={rejectionReason}
-                    onChange={(e) => setRejectionReason(e.target.value)}
-                    placeholder="Provide detailed reason for rejection..." 
-                    className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-red-500/50 transition-colors"
-                  />
-                  <button 
-                    onClick={() => setShowRejectInput(false)}
-                    className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold rounded-lg transition-colors border border-slate-700"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    onClick={handleReject}
-                    disabled={!rejectionReason.trim() || isRejecting}
-                    className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-lg transition-colors shadow-[0_0_15px_rgba(239,68,68,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[120px]"
-                  >
-                    {isRejecting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm'}
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {!showRejectInput && !showApproveSuccess && !showRejectSuccess && (
-            <div className="flex flex-col sm:flex-row gap-4 mt-2">
-              <button 
-                onClick={() => setShowRejectInput(true)}
-                disabled={status !== 'PENDING VERIFICATION'}
-                className="flex-1 flex items-center justify-center gap-2 bg-transparent border border-red-500 hover:bg-red-500/10 text-red-500 hover:text-red-400 px-6 py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <X className="w-5 h-5" />
-                Reject Application
-              </button>
-              <button 
-                onClick={handleApprove}
-                disabled={isApproving || status !== 'PENDING VERIFICATION'}
-                className="flex-1 flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isApproving ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-5 h-5" />
-                    Approve & Generate ID
-                  </>
-                )}
-              </button>
-            </div>
+          {status === 'ACTIVE' ? (
+            <button 
+              onClick={handleToggleStatus}
+              disabled={isProcessing}
+              className="w-full max-w-md flex items-center justify-center gap-2 bg-transparent border border-red-500 hover:bg-red-500/10 text-red-500 hover:text-red-400 px-6 py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Ban className="w-5 h-5" />
+                  Suspend Network Access
+                </>
+              )}
+            </button>
+          ) : (
+            <button 
+              onClick={handleToggleStatus}
+              disabled={isProcessing}
+              className="w-full max-w-md flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-5 h-5" />
+                  Activate Network Access
+                </>
+              )}
+            </button>
           )}
         </div>
       </div>

@@ -245,8 +245,11 @@ export default function SuperAdminProfile() {
             </div>
 
             {/* Role Badge */}
-            <div className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 mb-4">
-              <span className="text-[10px] font-bold tracking-widest text-cyan-400 uppercase">Platform Overseer</span>
+            <div className="px-4 py-1.5 rounded-full border mb-4 transition-colors duration-500 flex items-center gap-2 bg-cyan-500/10 border-cyan-500/30 text-cyan-400">
+              <span className="w-2 h-2 rounded-full animate-pulse bg-cyan-400"></span>
+              <span className="text-[11px] font-black tracking-widest uppercase">
+                Status: ACTIVE
+              </span>
             </div>
 
             {/* Admin Name */}

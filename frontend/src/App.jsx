@@ -31,6 +31,7 @@ import OperatorLayout from './components/layout/OperatorLayout';
 import OperatorDashboard from './pages/OperatorDashboard';
 import OperatorStatistics from './pages/OperatorStatistics';
 import OperatorProfile from './pages/OperatorProfile';
+import EnrollCitizens from './pages/EnrollCitizens';
 
 import PlaceholderPage from './pages/PlaceholderPage';
 
@@ -79,7 +80,7 @@ function App() {
         {/* Operator Protected Routes */}
         <Route element={<OperatorLayout />}>
           <Route path="/operator/dashboard" element={<OperatorDashboard />} />
-          <Route path="/operator/enroll-citizens" element={<PlaceholderPage title="Enroll Citizens" />} />
+          <Route path="/operator/enroll-citizens" element={<EnrollCitizens />} />
           <Route path="/operator/manage-citizens" element={<PlaceholderPage title="Manage Citizens" />} />
           <Route path="/operator/emergency-scan" element={<PlaceholderPage title="Emergency Scan" />} />
           <Route path="/operator/statistics" element={<OperatorStatistics />} />

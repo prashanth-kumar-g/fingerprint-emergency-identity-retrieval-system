@@ -57,6 +57,11 @@ body {
   outline-offset: 2px;
 }
 
+/* Remove global outline for form fields so local Tailwind borders (Red/Green) take effect */
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: none !important;
+}
+
 /* ── Frosted Glass Utility ────────────────────────────────────── */
 .glass-panel {
   background: var(--surface-panel);

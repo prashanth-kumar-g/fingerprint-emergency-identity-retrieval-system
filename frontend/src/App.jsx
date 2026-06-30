@@ -32,6 +32,10 @@ import OperatorDashboard from './pages/OperatorDashboard';
 import OperatorStatistics from './pages/OperatorStatistics';
 import OperatorProfile from './pages/OperatorProfile';
 import EnrollCitizens from './pages/EnrollCitizens';
+import ManageCitizensGateway from './pages/ManageCitizensGateway';
+import ManageCitizenDetails from './pages/ManageCitizenDetails';
+import EmergencyScanGateway from './pages/EmergencyScanGateway';
+import EmergencyCitizenDetails from './pages/EmergencyCitizenDetails';
 
 import PlaceholderPage from './pages/PlaceholderPage';
 
@@ -81,8 +85,10 @@ function App() {
         <Route element={<OperatorLayout />}>
           <Route path="/operator/dashboard" element={<OperatorDashboard />} />
           <Route path="/operator/enroll-citizens" element={<EnrollCitizens />} />
-          <Route path="/operator/manage-citizens" element={<PlaceholderPage title="Manage Citizens" />} />
-          <Route path="/operator/emergency-scan" element={<PlaceholderPage title="Emergency Scan" />} />
+          <Route path="/operator/manage-citizens" element={<ManageCitizensGateway />} />
+          <Route path="/operator/manage-citizens/:id" element={<ManageCitizenDetails />} />
+          <Route path="/operator/emergency-scan" element={<EmergencyScanGateway />} />
+          <Route path="/operator/emergency-scan/:id" element={<EmergencyCitizenDetails />} />
           <Route path="/operator/statistics" element={<OperatorStatistics />} />
           <Route path="/operator/settings" element={<OperatorProfile />} />
         </Route>

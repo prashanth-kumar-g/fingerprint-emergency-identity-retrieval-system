@@ -21,7 +21,10 @@ import {
   ShieldCheck, 
   X,
   CheckCircle2,
-  Lock
+  Lock,
+  ChevronRight,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 
 // ── Shared React-Select Custom Dark Styles (Red Theme) ──
@@ -175,6 +178,16 @@ export default function EnrollCitizens() {
 
   // OTP
   const [otpValue, setOtpValue] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isOtpVerifying, setIsOtpVerifying] = useState(false);
+  const [alertInfo, setAlertInfo] = useState({ show: false, type: '', message: '' });
+
+  const triggerAlert = (type, message) => {
+    setAlertInfo({ show: true, type, message });
+    setTimeout(() => {
+      setAlertInfo({ show: false, type: '', message: '' });
+    }, 3500);
+  };
   
   // Dynamic Age Calculation
   useEffect(() => {
@@ -228,16 +241,25 @@ export default function EnrollCitizens() {
 
   const handleRequestVerification = (e) => {
     e.preventDefault();
-    setEnrollState('OTP');
-  };
-
-  const handleVerifyOTP = () => {
-    if (otpValue.length === 6) {
-      setEnrollState('SUCCESS');
-      // Hide success message after 5 seconds but keep fields locked
+    if (enrollState === 'READY') {
+      setIsSaving(true);
       setTimeout(() => {
-        setEnrollState('SUCCESS_HIDDEN');
-      }, 5000);
+        setIsSaving(false);
+        setEnrollState('OTP');
+        triggerAlert('warning', "An authorization code has been dispatched to the provided email address.");
+      }, 1000);
+    } else if (enrollState === 'OTP') {
+      setIsOtpVerifying(true);
+      setTimeout(() => {
+        setIsOtpVerifying(false);
+        if (otpValue === '111111') {
+          setEnrollState('READY');
+          setOtpValue('');
+          triggerAlert('success', 'OTP Verified! Citizen successfully enrolled.');
+        } else {
+          triggerAlert('error', 'Invalid OTP. Please check the code and try again.');
+        }
+      }, 1200);
     }
   };
 
@@ -768,89 +790,89 @@ export default function EnrollCitizens() {
           </section>
 
           {/* 7. Action Footer & Inline OTP */}
-          <div className="mt-6 border-t border-slate-800 pt-8 pb-4">
-            <AnimatePresence mode="wait">
-              {enrollState === 'READY' && (
-                <motion.div
-                  key="ready"
-                  initial={{ opacity: 0, y: 10 }}
+          <div className="mt-6 border-t border-slate-800 pt-8 pb-4 flex flex-col items-center gap-4">
+            
+            {/* Simulation Alert */}
+            <AnimatePresence>
+              {alertInfo.show && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="w-full flex justify-center"
+                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl border ${
+                    alertInfo.type === 'success' 
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                      : alertInfo.type === 'error'
+                      ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                      : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                  }`}
                 >
-                  <button
-                    type="submit"
-                    className="w-full sm:w-auto px-12 py-4 bg-red-600 hover:bg-red-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] hover:-translate-y-1 transition-all duration-300"
-                  >
-                    Request Enrollment Verification
-                  </button>
+                  {alertInfo.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : alertInfo.type === 'error' ? <AlertCircle className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+                  <span className="text-sm font-bold">{alertInfo.message}</span>
                 </motion.div>
               )}
+            </AnimatePresence>
 
+            {/* Inline OTP Box */}
+            <AnimatePresence>
               {enrollState === 'OTP' && (
                 <motion.div
-                  key="otp"
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="w-full bg-slate-900/80 backdrop-blur-md border border-amber-500/30 rounded-2xl p-6 shadow-xl"
+                  className="w-full bg-slate-900/80 backdrop-blur-md border border-amber-500/30 rounded-xl p-5 overflow-hidden shadow-xl"
                 >
-                  <div className="flex items-center gap-3 mb-6 bg-amber-500/10 p-4 rounded-xl border border-amber-500/20">
-                    <ShieldCheck className="w-6 h-6 text-amber-400 shrink-0" />
-                    <p className="text-sm font-bold text-amber-100/90 leading-relaxed">
-                      An authorization code has been dispatched to the provided email address. Please verify to finalize enrollment.
-                    </p>
-                  </div>
-                  
-                  <div className="flex flex-col items-center gap-6">
-                    <input
-                      type="text"
-                      maxLength={6}
-                      value={otpValue}
-                      onChange={(e) => setOtpValue(e.target.value.replace(/[^0-9]/g, ''))}
-                      placeholder="000000"
-                      className="w-48 bg-slate-950/80 border-2 border-slate-700 rounded-xl text-center font-mono text-3xl tracking-widest text-white py-3 focus:border-amber-500 focus:outline-none transition-colors shadow-inner"
-                    />
-                    
-                    <div className="flex items-center gap-4 w-full justify-center">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                        <ShieldCheck className="w-5 h-5 text-amber-400" />
+                      </div>
+                      <div className="text-left">
+                        <h4 className="text-sm font-bold text-white">Citizen Identity Verification</h4>
+                        <p className="text-xs text-slate-400">Enter the 6-digit OTP sent to the provided email.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <input
+                        type="text"
+                        maxLength={6}
+                        value={otpValue}
+                        onChange={(e) => setOtpValue(e.target.value.replace(/[^0-9]/g, ''))}
+                        placeholder="000000"
+                        className="w-full sm:w-32 bg-slate-950/50 border border-slate-700 rounded-lg text-center font-mono text-lg tracking-widest text-white py-2 focus:border-amber-500/50 focus:outline-none transition-colors"
+                      />
                       <button
                         type="button"
                         onClick={() => setEnrollState('READY')}
-                        className="flex items-center gap-1.5 px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-colors text-sm"
+                        className="px-3 py-2 text-slate-400 hover:text-white transition-colors text-sm font-bold"
                       >
-                        <X className="w-4 h-4" /> Cancel & Edit Form
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleVerifyOTP}
-                        disabled={otpValue.length !== 6}
-                        className="px-8 py-3 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:hover:bg-amber-600 text-white font-black rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all"
-                      >
-                        Verify & Register
+                        Cancel
                       </button>
                     </div>
                   </div>
                 </motion.div>
               )}
-
-              {enrollState === 'SUCCESS' && (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="w-full bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-6 shadow-xl flex flex-col sm:flex-row items-center gap-4 justify-center text-center sm:text-left"
-                >
-                  <CheckCircle2 className="w-10 h-10 text-emerald-400" />
-                  <div>
-                    <h3 className="text-xl font-black text-white">Enrollment Successful</h3>
-                    <p className="text-emerald-200/70 text-sm font-medium mt-1">
-                      Citizen record has been permanently encrypted into the database. System ID: FEIRS-CIT-40921.
-                    </p>
-                  </div>
-                </motion.div>
-              )}
             </AnimatePresence>
+
+            {enrollState !== 'SUCCESS' && enrollState !== 'SUCCESS_HIDDEN' && (
+              <button
+                type="submit"
+                disabled={isSaving || isOtpVerifying || (enrollState === 'OTP' && otpValue.length < 6)}
+                className="w-full md:w-[380px] py-4 bg-red-600 hover:bg-red-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSaving || isOtpVerifying ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    {isOtpVerifying ? 'Verifying OTP...' : 'Processing...'}
+                  </>
+                ) : (
+                  <>
+                    {enrollState === 'OTP' ? 'Verify & Enroll Citizen' : 'Enroll Citizen'}
+                    <ChevronRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
         </form>

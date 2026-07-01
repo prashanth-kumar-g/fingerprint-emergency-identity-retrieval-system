@@ -16,56 +16,56 @@ const mockRequests = [
     instId: 'FEIRS-INST-1011',
     instName: 'Apollo Hospital',
     category: 'Address Change',
-    requestedAt: 'Oct 24, 2026 - 11:30',
+    requestedAt: 'Oct 24, 2026 - 11:30:05',
   },
   {
     id: 'REQ-5002',
     instId: 'FEIRS-INST-2022',
     instName: 'Central Medical Center',
     category: 'Multiple Changes',
-    requestedAt: 'Oct 23, 2026 - 09:15',
+    requestedAt: 'Oct 23, 2026 - 09:15:22',
   },
   {
     id: 'REQ-5003',
     instId: 'FEIRS-INST-3033',
     instName: 'CarePlus Medical',
     category: 'Email Change',
-    requestedAt: 'Oct 21, 2026 - 14:45',
+    requestedAt: 'Oct 21, 2026 - 14:45:11',
   },
   {
     id: 'REQ-5004',
     instId: 'FEIRS-INST-4044',
     instName: 'Rapid Response Hub',
     category: 'Institution Type Change',
-    requestedAt: 'Oct 19, 2026 - 10:20',
+    requestedAt: 'Oct 19, 2026 - 10:20:03',
   },
   {
     id: 'REQ-5005',
     instId: 'FEIRS-INST-5055',
     instName: 'City General Hospital',
     category: 'Address Change',
-    requestedAt: 'Oct 18, 2026 - 16:00',
+    requestedAt: 'Oct 18, 2026 - 16:00:25',
   },
   {
     id: 'REQ-5006',
     instId: 'FEIRS-INST-6066',
     instName: 'Highway Ambulance Hub',
     category: 'Multiple Changes',
-    requestedAt: 'Oct 15, 2026 - 08:30',
+    requestedAt: 'Oct 15, 2026 - 08:30:45',
   },
   {
     id: 'REQ-5007',
     instId: 'FEIRS-INST-7077',
     instName: 'Sunrise Maternity Home',
     category: 'Email Change',
-    requestedAt: 'Oct 12, 2026 - 11:15',
+    requestedAt: 'Oct 12, 2026 - 11:15:23',
   },
   {
     id: 'REQ-5008',
     instId: 'FEIRS-INST-8088',
     instName: 'Metro Health Clinic',
     category: 'Address Change',
-    requestedAt: 'Oct 10, 2026 - 13:45',
+    requestedAt: 'Oct 10, 2026 - 13:45:16',
   }
 ];
 
@@ -258,10 +258,10 @@ export default function DataChangeRequests() {
               <thead className="bg-slate-950/80 sticky top-0 z-10 backdrop-blur-md">
                 <tr>
                   <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[150px]">Requested At</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[180px] text-center">Logo</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[200px]">Institution</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[160px] pl-[84px]">Logo</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[220px]">Institution</th>
                   <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[150px]">Update Category</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[120px] text-left">Action</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[100px] text-left">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
@@ -275,7 +275,7 @@ export default function DataChangeRequests() {
 
                     {/* Logo */}
                     <td className="p-4 align-middle">
-                      <div className="flex justify-center">
+                      <div className="flex ml-[30px]">
                         <div className="w-28 h-28 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-md">
                           <Building2 className="w-14 h-14 text-slate-500" />
                         </div>

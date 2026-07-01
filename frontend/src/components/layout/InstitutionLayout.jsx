@@ -47,7 +47,7 @@ export default function InstitutionLayout() {
         {/* Center Nav Links */}
         <nav className="hidden xl:flex items-center gap-2">
           {navLinks.map((link) => {
-            const isActive = location.pathname === link.path;
+            const isActive = location.pathname === link.path || location.pathname.startsWith(link.path + '/');
             const Icon = link.icon;
             
             return (

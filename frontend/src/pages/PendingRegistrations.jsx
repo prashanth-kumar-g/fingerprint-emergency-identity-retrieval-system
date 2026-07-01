@@ -16,56 +16,56 @@ const mockApplications = [
     applicantName: 'City General Hospital',
     sector: 'Government',
     instType: 'Hospital',
-    submittedAt: 'Oct 24, 2026 - 09:15',
+    submittedAt: 'Oct 24, 2026 - 09:15:05',
   },
   {
     id: 'APP-1002',
     applicantName: 'Central Medical Center',
     sector: 'Government',
     instType: 'Medical Center',
-    submittedAt: 'Oct 23, 2026 - 14:30',
+    submittedAt: 'Oct 23, 2026 - 14:30:22',
   },
   {
     id: 'APP-1003',
     applicantName: 'CarePlus Medical Center',
     sector: 'Private',
     instType: 'Medical Center',
-    submittedAt: 'Oct 22, 2026 - 11:45',
+    submittedAt: 'Oct 22, 2026 - 11:45:11',
   },
   {
     id: 'APP-1004',
     applicantName: 'Rapid Response Ambulances',
     sector: 'Private',
     instType: 'Ambulance Service',
-    submittedAt: 'Oct 20, 2026 - 16:20',
+    submittedAt: 'Oct 20, 2026 - 16:20:45',
   },
   {
     id: 'APP-1005',
     applicantName: 'District Health Clinic',
     sector: 'Public-Private Partnership',
     instType: 'Medical Center',
-    submittedAt: 'Oct 18, 2026 - 08:00',
+    submittedAt: 'Oct 18, 2026 - 08:00:36',
   },
   {
     id: 'APP-1006',
     applicantName: 'Metro Health Clinic',
     sector: 'Government',
     instType: 'Medical Center',
-    submittedAt: 'Oct 15, 2026 - 10:30',
+    submittedAt: 'Oct 15, 2026 - 10:30:55',
   },
   {
     id: 'APP-1007',
     applicantName: 'Sunrise Maternity Home',
     sector: 'Private',
     instType: 'Hospital',
-    submittedAt: 'Oct 12, 2026 - 13:45',
+    submittedAt: 'Oct 12, 2026 - 13:45:23',
   },
   {
     id: 'APP-1008',
     applicantName: 'Highway Ambulance Hub',
     sector: 'Government',
     instType: 'Ambulance Service',
-    submittedAt: 'Oct 10, 2026 - 09:20',
+    submittedAt: 'Oct 10, 2026 - 09:20:16',
   }
 ];
 
@@ -268,10 +268,10 @@ export default function PendingRegistrations() {
               <thead className="bg-slate-950/80 sticky top-0 z-10 backdrop-blur-md">
                 <tr>
                   <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[150px]">Submitted At</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[180px] text-center">Logo</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[200px]">Applicant</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[160px] pl-[84px]">Logo</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[220px]">Applicant</th>
                   <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[150px]">Institution Type</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[120px] text-left">Action</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[100px] text-left">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
@@ -285,7 +285,7 @@ export default function PendingRegistrations() {
 
                     {/* Logo */}
                     <td className="p-4 align-middle">
-                      <div className="flex justify-center">
+                      <div className="flex ml-[30px]">
                         <div className="w-28 h-28 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-md">
                           <Building2 className="w-14 h-14 text-slate-500" />
                         </div>

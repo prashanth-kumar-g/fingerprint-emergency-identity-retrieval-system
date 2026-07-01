@@ -96,12 +96,22 @@ export default function EmergencyCitizenDetails() {
 
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[500px] rounded-[100%] bg-red-900/10 blur-[150px] pointer-events-none z-0" />
 
-      {/* Page Navigation */}
-      <div className="relative z-10 w-full flex flex-col items-start justify-center mt-4 mb-4 max-w-[1400px] mx-auto px-6 lg:px-0">
-        <Link to="/operator/emergency-scan" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors group mb-4">
-          <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="font-bold text-sm tracking-wide">Back to Emergency Scan</span>
-        </Link>
+      {/* Page Header */}
+      <div className="relative z-10 w-full flex items-center justify-center mt-4 mb-8 max-w-[1400px] mx-auto px-6 lg:px-0 h-10">
+        <div className="absolute left-6 lg:left-0 top-1/2 -translate-y-1/2">
+          <Link to="/operator/emergency-scan" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors group">
+            <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-bold text-sm tracking-wide">Back to Emergency Scan</span>
+          </Link>
+        </div>
+
+        {/* Live Connection Badge */}
+        <div className="flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 w-max">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span>
+          <p className="text-[10px] font-bold tracking-widest text-red-400 uppercase">
+            Live Connection
+          </p>
+        </div>
       </div>
 
       <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 lg:px-0">

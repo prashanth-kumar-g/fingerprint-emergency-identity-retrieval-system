@@ -385,10 +385,10 @@ export default function SuperAdminStatistics() {
               <thead className="bg-slate-950/80 sticky top-0 z-10 backdrop-blur-md">
                 <tr>
                   <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[180px]">Timestamp</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[250px]">Actor</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[330px]">Actor</th>
                   <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">Action</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[250px]">Target</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[120px] text-right">Status</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[330px]">Target</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[120px] text-left">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
@@ -436,7 +436,7 @@ export default function SuperAdminStatistics() {
                     </td>
 
                     {/* Status */}
-                    <td className="p-4 align-top text-right">
+                    <td className="p-4 align-top text-left">
                       <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider ${log.statusColor}`}>
                         {log.status}
                       </span>

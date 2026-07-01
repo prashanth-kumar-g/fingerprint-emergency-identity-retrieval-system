@@ -216,14 +216,24 @@ export default function OperatorConfiguration() {
     <div className="w-full flex flex-col items-center gap-6 pb-24 relative">
       
       {/* Header Section */}
-      <div className="w-full relative flex flex-col items-start justify-center mt-2 mb-4 max-w-[1400px] mx-auto px-4 lg:px-0">
-        <button 
-          onClick={() => navigate('/institution/manage-operators')}
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4 group"
-        >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="font-bold text-sm">Back to Manage Operators</span>
-        </button>
+      <div className="relative z-10 w-full flex items-center justify-center mt-4 mb-8 max-w-[1400px] mx-auto px-6 lg:px-0 h-10">
+        <div className="absolute left-6 lg:left-0 top-1/2 -translate-y-1/2">
+          <button 
+            onClick={() => navigate('/institution/manage-operators')}
+            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-bold text-sm">Back to Manage Operators</span>
+          </button>
+        </div>
+
+        {/* Live Connection Badge */}
+        <div className="flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 w-max">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <p className="text-[10px] font-bold tracking-widest text-emerald-400 uppercase">
+            Live Connection
+          </p>
+        </div>
       </div>
 
       <div className="w-full max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 lg:px-0">

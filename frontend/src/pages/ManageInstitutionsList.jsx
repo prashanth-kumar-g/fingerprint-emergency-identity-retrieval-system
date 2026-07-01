@@ -15,49 +15,49 @@ const mockInstitutions = [
     id: 'FEIRS-INST-1011',
     instName: 'Apollo Hospital',
     status: 'ACTIVE',
-    createdAt: 'Oct 10, 2026 - 11:30',
+    createdAt: 'Oct 10, 2026 - 11:30:05',
   },
   {
     id: 'FEIRS-INST-2022',
     instName: 'Central Medical Center',
     status: 'SUSPENDED',
-    createdAt: 'Oct 05, 2026 - 09:15',
+    createdAt: 'Oct 05, 2026 - 09:15:22',
   },
   {
     id: 'FEIRS-INST-3033',
     instName: 'CarePlus Medical',
     status: 'ACTIVE',
-    createdAt: 'Sep 21, 2026 - 14:45',
+    createdAt: 'Sep 21, 2026 - 14:45:11',
   },
   {
     id: 'FEIRS-INST-4044',
     instName: 'Rapid Response Hub',
     status: 'ACTIVE',
-    createdAt: 'Sep 19, 2026 - 10:20',
+    createdAt: 'Sep 19, 2026 - 10:20:35',
   },
   {
     id: 'FEIRS-INST-5055',
     instName: 'City General Hospital',
     status: 'ACTIVE',
-    createdAt: 'Sep 18, 2026 - 16:00',
+    createdAt: 'Sep 18, 2026 - 16:00:45',
   },
   {
     id: 'FEIRS-INST-6066',
     instName: 'Highway Ambulance Hub',
     status: 'SUSPENDED',
-    createdAt: 'Sep 15, 2026 - 08:30',
+    createdAt: 'Sep 15, 2026 - 08:30:16',
   },
   {
     id: 'FEIRS-INST-7077',
     instName: 'Sunrise Maternity Home',
     status: 'ACTIVE',
-    createdAt: 'Sep 12, 2026 - 11:15',
+    createdAt: 'Sep 12, 2026 - 11:15:55',
   },
   {
     id: 'FEIRS-INST-8088',
     instName: 'Metro Health Clinic',
     status: 'ACTIVE',
-    createdAt: 'Sep 10, 2026 - 13:45',
+    createdAt: 'Sep 10, 2026 - 13:45:03',
   }
 ];
 
@@ -246,10 +246,10 @@ export default function ManageInstitutionsList() {
               <thead className="bg-slate-950/80 sticky top-0 z-10 backdrop-blur-md">
                 <tr>
                   <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[150px]">Account Created At</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[180px] text-center">Logo</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[200px]">Institution</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[150px] text-center">Status</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[120px] text-left">Action</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[160px] pl-[84px]">Logo</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[220px]">Institution</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[150px]">Status</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[100px] text-left">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
@@ -263,7 +263,7 @@ export default function ManageInstitutionsList() {
 
                     {/* Logo */}
                     <td className="p-4 align-middle">
-                      <div className="flex justify-center">
+                      <div className="flex ml-[30px]">
                         <div className="w-28 h-28 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-md">
                           <Building2 className="w-14 h-14 text-slate-500" />
                         </div>
@@ -279,7 +279,7 @@ export default function ManageInstitutionsList() {
                     </td>
 
                     {/* Status */}
-                    <td className="p-4 align-middle text-center">
+                    <td className="p-4 align-middle text-left">
                       <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider ${inst.status === 'ACTIVE' ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}>
                         {inst.status}
                       </span>

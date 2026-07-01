@@ -194,10 +194,7 @@ export default function LoginPage() {
               </div>
             )}
             
-            <div className="flex items-center justify-center gap-2 mt-4 opacity-50">
-              <Fingerprint className="w-4 h-4 text-slate-400" />
-              <span className="text-xs text-slate-400 font-bold tracking-widest uppercase">Secure Biometric Link</span>
-            </div>
+
           </form>
 
         </div>

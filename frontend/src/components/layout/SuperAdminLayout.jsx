@@ -17,8 +17,8 @@ export default function SuperAdminLayout() {
 
   const navLinks = [
     { name: 'Pending Registrations', path: '/super-admin/pending-registrations', icon: FileCheck },
-    { name: 'Data Change Requests', path: '/super-admin/data-change-requests', icon: DatabaseBackup },
     { name: 'Manage Institutions', path: '/super-admin/manage-institutions', icon: Building2 },
+    { name: 'Data Change Requests', path: '/super-admin/data-change-requests', icon: DatabaseBackup },
     { name: 'Statistics & Logs', path: '/super-admin/statistics', icon: Activity },
   ];
 
@@ -49,7 +49,7 @@ export default function SuperAdminLayout() {
         {/* Center Nav Links */}
         <nav className="hidden xl:flex items-center gap-2">
           {navLinks.map((link) => {
-            const isActive = location.pathname === link.path;
+            const isActive = location.pathname === link.path || location.pathname.startsWith(link.path + '/');
             const Icon = link.icon;
             
             return (

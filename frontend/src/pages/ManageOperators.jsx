@@ -14,49 +14,49 @@ const mockOperators = [
   {
     id: 'FEIRS-OP-8821',
     name: 'Subham',
-    createdAt: 'Oct 20, 2026 - 14:30',
+    createdAt: 'Oct 20, 2026 - 14:30:05',
     status: 'ACTIVE',
   },
   {
     id: 'FEIRS-OP-3312',
     name: 'Priya',
-    createdAt: 'Oct 18, 2026 - 09:15',
+    createdAt: 'Oct 18, 2026 - 09:15:22',
     status: 'SUSPENDED',
   },
   {
     id: 'FEIRS-OP-4491',
     name: 'Rahul Kumar',
-    createdAt: 'Oct 15, 2026 - 11:45',
+    createdAt: 'Oct 15, 2026 - 11:45:11',
     status: 'ACTIVE',
   },
   {
     id: 'FEIRS-OP-1102',
     name: 'Dr. Sarah',
-    createdAt: 'Oct 10, 2026 - 16:20',
+    createdAt: 'Oct 10, 2026 - 16:20:03',
     status: 'ACTIVE',
   },
   {
     id: 'FEIRS-OP-5523',
     name: 'Arjun',
-    createdAt: 'Oct 05, 2026 - 08:00',
+    createdAt: 'Oct 05, 2026 - 08:00:45',
     status: 'ACTIVE',
   },
   {
     id: 'FEIRS-OP-9912',
     name: 'Neha Singh',
-    createdAt: 'Sep 28, 2026 - 10:30',
+    createdAt: 'Sep 28, 2026 - 10:30:55',
     status: 'SUSPENDED',
   },
   {
     id: 'FEIRS-OP-2281',
     name: 'Vikas',
-    createdAt: 'Sep 15, 2026 - 13:45',
+    createdAt: 'Sep 15, 2026 - 13:45:16',
     status: 'ACTIVE',
   },
   {
     id: 'FEIRS-OP-7744',
     name: 'Anjali',
-    createdAt: 'Sep 02, 2026 - 09:20',
+    createdAt: 'Sep 02, 2026 - 09:20:23',
     status: 'ACTIVE',
   }
 ];
@@ -245,11 +245,11 @@ export default function ManageOperators() {
             <table className="w-full text-left border-collapse min-w-[900px]">
               <thead className="bg-slate-950/80 sticky top-0 z-10 backdrop-blur-md">
                 <tr>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[120px]">Account Created At</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[180px] text-center">Photo</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[150px]">Operator</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[150px] text-center">Status</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[150px] text-left">Action</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[180px]">Account Created At</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[205px] pl-[84px]">Photo</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[180px]">Operator</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[125px]">Status</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[120px] text-left">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
@@ -263,7 +263,7 @@ export default function ManageOperators() {
 
                     {/* Photo */}
                     <td className="p-4 align-middle">
-                      <div className="flex justify-center">
+                      <div className="flex ml-[30px]">
                         <div className="w-28 h-28 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-md">
                           <User className="w-14 h-14 text-slate-500" />
                         </div>
@@ -279,7 +279,7 @@ export default function ManageOperators() {
                     </td>
 
                     {/* Status */}
-                    <td className="p-4 align-middle text-center">
+                    <td className="p-4 align-middle text-left">
                       <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider ${op.status === 'ACTIVE' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}>
                         {op.status}
                       </span>

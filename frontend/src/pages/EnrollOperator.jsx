@@ -13,7 +13,10 @@ import {
   CheckCircle2,
   Calendar,
   Briefcase,
-  Camera
+  Camera,
+  ShieldCheck,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
@@ -120,6 +123,19 @@ export default function EnrollOperator() {
 
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
+  const [showOtpBox, setShowOtpBox] = useState(false);
+  const [otpValue, setOtpValue] = useState('');
+  const [isOtpVerifying, setIsOtpVerifying] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [alertInfo, setAlertInfo] = useState({ show: false, type: '', message: '' });
+
+  const triggerAlert = (type, message) => {
+    setAlertInfo({ show: true, type, message });
+    setTimeout(() => {
+      setAlertInfo({ show: false, type: '', message: '' });
+    }, 3500);
+  };
+
   const stateOptions = selectedCountry 
     ? State.getStatesOfCountry(selectedCountry.value).map(s => ({ value: s.isoCode, label: s.name }))
     : [];
@@ -146,12 +162,29 @@ export default function EnrollOperator() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Simulate API Call
-    setShowSuccessMessage(true);
-    setTimeout(() => {
-      setShowSuccessMessage(false);
-      handleReset();
-    }, 3000);
+    if (!showOtpBox) {
+      setIsSaving(true);
+      setTimeout(() => {
+        setIsSaving(false);
+        setShowOtpBox(true);
+        triggerAlert('warning', "Operator Enrollment requires Admin consent. An OTP has been sent to your official email.");
+      }, 1000);
+    } else {
+      setIsOtpVerifying(true);
+      setTimeout(() => {
+        setIsOtpVerifying(false);
+        if (otpValue === '111111') {
+          setShowOtpBox(false);
+          setOtpValue('');
+          triggerAlert('success', 'OTP Verified! Operator successfully enrolled.');
+          setTimeout(() => {
+            handleReset();
+          }, 2000);
+        } else {
+          triggerAlert('error', 'Invalid OTP. Please check the code and try again.');
+        }
+      }, 1200);
+    }
   };
 
   return (
@@ -199,7 +232,7 @@ export default function EnrollOperator() {
                 <Upload className="w-5 h-5" />
               </div>
             </div>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-3">Upload Operator Photo (Optional)</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-3">Upload Operator Photo</span>
             <input 
               type="file" 
               className="hidden" 
@@ -412,32 +445,87 @@ export default function EnrollOperator() {
           </section>
 
           {/* Action Footer */}
-          <div className="mt-4 pt-6 border-t border-slate-800 flex flex-col items-center">
+          <div className="mt-4 pt-6 border-t border-slate-800 flex flex-col items-center gap-4">
             
+            {/* Simulation Alert */}
             <AnimatePresence>
-              {showSuccessMessage && (
-                <motion.div
+              {alertInfo.show && (
+                <motion.div 
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="mb-4 px-6 py-3 bg-emerald-900/30 border border-emerald-500/50 rounded-xl flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl border ${
+                    alertInfo.type === 'success' 
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                      : alertInfo.type === 'error'
+                      ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                      : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                  }`}
                 >
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                  <span className="text-emerald-400 font-bold text-sm">Account created successfully! Operator must set password and activate through email.</span>
+                  {alertInfo.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : alertInfo.type === 'error' ? <AlertCircle className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+                  <span className="text-sm font-bold">{alertInfo.message}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Inline OTP Box */}
+            <AnimatePresence>
+              {showOtpBox && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="w-full bg-slate-900/80 backdrop-blur-md border border-amber-500/30 rounded-xl p-5 overflow-hidden shadow-xl"
+                >
+                  <div className="flex flex-col sm:flex-row items-center gap-4 justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                        <ShieldCheck className="w-5 h-5 text-amber-400" />
+                      </div>
+                      <div className="text-left">
+                        <h4 className="text-sm font-bold text-white">Admin Identity Verification</h4>
+                        <p className="text-xs text-slate-400">Enter the 6-digit OTP sent to your admin email.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <input
+                        type="text"
+                        maxLength={6}
+                        value={otpValue}
+                        onChange={(e) => setOtpValue(e.target.value.replace(/[^0-9]/g, ''))}
+                        placeholder="000000"
+                        className="w-full sm:w-32 bg-slate-950/50 border border-slate-700 rounded-lg text-center font-mono text-lg tracking-widest text-white py-2 focus:border-amber-500/50 focus:outline-none transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowOtpBox(false)}
+                        className="px-3 py-2 text-slate-400 hover:text-white transition-colors text-sm font-bold"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
             <button
               type="submit"
-              className="w-full md:w-auto px-12 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2"
+              disabled={isSaving || isOtpVerifying || (showOtpBox && otpValue.length < 6)}
+              className="w-full md:w-[380px] py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Enroll Operator & Dispatch Link
-              <ChevronRight className="w-5 h-5" />
+              {isSaving || isOtpVerifying ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  {isOtpVerifying ? 'Verifying OTP...' : 'Processing...'}
+                </>
+              ) : (
+                <>
+                  {showOtpBox ? 'Verify & Enroll Operator' : 'Enroll Operator'}
+                  <ChevronRight className="w-5 h-5" />
+                </>
+              )}
             </button>
-            <p className="text-xs font-medium text-slate-500 mt-4 max-w-md text-center leading-relaxed">
-              By submitting this form, the system will instantly generate an Operator ID. The operator must securely set their own password via the dispatched email link.
-            </p>
           </div>
 
         </form>

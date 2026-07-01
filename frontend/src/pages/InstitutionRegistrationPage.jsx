@@ -447,14 +447,11 @@ export default function InstitutionRegistrationPage() {
           <div className="mt-4 pt-6 border-t border-slate-800 flex flex-col items-center">
             <button
               type="button"
-              className="w-full md:w-auto px-12 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2"
+              className="w-full md:w-[380px] py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all duration-300 flex items-center justify-center gap-2"
             >
               Submit Application
               <ChevronRight className="w-5 h-5" />
             </button>
-            <p className="text-xs font-medium text-slate-500 mt-4 max-w-md text-center">
-              By submitting this application, you attest that you are legally authorized to register this facility on the FEIRS platform. Approvals may take up to 24-48 hours.
-            </p>
           </div>
 
         </form>

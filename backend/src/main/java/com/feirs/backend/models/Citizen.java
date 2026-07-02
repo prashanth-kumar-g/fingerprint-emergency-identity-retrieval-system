@@ -36,13 +36,11 @@ public class Citizen {
     // ── Multi-Tenant Binding ──────────────────────────────
 
     /**
-     * FK to the institution that enrolled this citizen.
-     * NOT NULL per Database Tables Correction Plan.pdf — every citizen is
-     * permanently tied to the facility that enrolled them via Mantra MFS 110.
+     * FK to the operator that enrolled this citizen.
      */
     @ManyToOne
-    @JoinColumn(name = "enrolling_institution_id", nullable = false)
-    private Institution enrollingInstitution;
+    @JoinColumn(name = "enrolling_operator_id", nullable = false)
+    private Operator enrollingOperator;
 
     // ── Identity & Core Demographics (PII — Nullable for wiping) ──
 

@@ -237,13 +237,17 @@ export default function InstitutionProfile() {
 
             {/* Read-Only Meta */}
             <div className="w-full flex flex-col gap-3 pt-6 border-t border-slate-800/50 text-center items-center">
-              <div className="flex flex-wrap justify-center gap-1.5 text-sm">
-                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Institution ID:</span>
-                <span className="font-medium text-slate-300 font-mono text-center">FEIRS-INST-1011</span>
+              <div className="text-sm w-full px-2 leading-relaxed">
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Institution ID:</span>
+                <span className="font-medium text-slate-300 font-mono">FEIRS-INST-1011</span>
               </div>
-              <div className="flex flex-wrap justify-center gap-1.5 text-sm">
-                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Last Login At:</span>
-                <span className="font-medium text-slate-300 text-center">Oct 24, 2026 - 08:05:12</span>
+              <div className="text-sm w-full px-2 leading-relaxed">
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Last Login At:</span>
+                <span className="font-medium text-slate-300">Oct 24, 2026 - 08:05:12</span>
+              </div>
+              <div className="text-sm w-full px-2 leading-relaxed">
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Linked Super Admin:</span>
+                <span className="font-medium text-slate-300">Anil Kumar (FEIRS-SA-ROOT)</span>
               </div>
             </div>
           </div>

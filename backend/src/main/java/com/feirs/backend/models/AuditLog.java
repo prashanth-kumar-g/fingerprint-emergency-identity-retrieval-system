@@ -66,10 +66,6 @@ public class AuditLog {
      * specific hospital.
      *
      * Column name uses institution_id per Database Tables Correction Plan.pdf.
-     */
-    @Column(name = "institution_id", length = 50)
-    private String institutionId;
-
     // ── The "What" (Action Details) ──────────────────────
 
     /**
@@ -89,6 +85,12 @@ public class AuditLog {
      */
     @Column(name = "target_id", length = 50)
     private String targetId;
+
+    /**
+     * The role of the record being acted upon (e.g., "CITIZEN", "INSTITUTION").
+     */
+    @Column(name = "target_role", length = 50)
+    private String targetRole;
 
     /**
      * Outcome: SUCCESS or FAILED.

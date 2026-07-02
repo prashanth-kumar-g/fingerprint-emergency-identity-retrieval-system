@@ -239,17 +239,17 @@ export default function OperatorProfile() {
 
             {/* Read-Only Meta */}
             <div className="w-full flex flex-col gap-3 pt-6 border-t border-slate-800/50 text-center items-center">
-              <div className="flex flex-wrap justify-center gap-1.5 text-sm">
-                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Operator ID:</span>
-                <span className="font-medium text-slate-300 font-mono text-center">FEIRS-OP-8821</span>
+              <div className="text-sm w-full px-2 leading-relaxed">
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Operator ID:</span>
+                <span className="font-medium text-slate-300 font-mono">FEIRS-OP-8821</span>
               </div>
-              <div className="flex flex-wrap justify-center gap-1.5 text-sm">
-                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Linked Facility:</span>
-                <span className="font-medium text-slate-300 font-mono text-center">FEIRS-INST-1011 (Apollo Hospital)</span>
+              <div className="text-sm w-full px-2 leading-relaxed">
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Last Login At:</span>
+                <span className="font-medium text-slate-300">Oct 24, 2026 - 09:00:15</span>
               </div>
-              <div className="flex flex-wrap justify-center gap-1.5 text-sm">
-                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Last Login At:</span>
-                <span className="font-medium text-slate-300 text-center">Oct 24, 2026 - 09:00:15</span>
+              <div className="text-sm w-full px-2 leading-relaxed">
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Linked Institution:</span>
+                <span className="font-medium text-slate-300 font-mono">Apollo Hospital (FEIRS-INST-1011)</span>
               </div>
             </div>
           </div>

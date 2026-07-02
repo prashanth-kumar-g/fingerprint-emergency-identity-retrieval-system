@@ -180,7 +180,7 @@ export default function SuperAdminProfile() {
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   
-  const [adminName, setAdminName] = useState("System Architect");
+  const [adminName, setAdminName] = useState("Anil Kumar");
   const [isNameEditing, setIsNameEditing] = useState(false);
   const nameInputRef = useRef(null);
 
@@ -281,13 +281,17 @@ export default function SuperAdminProfile() {
 
             {/* Read-Only Meta */}
             <div className="w-full flex flex-col gap-3 pt-6 border-t border-slate-800/50 text-center items-center">
-              <div className="flex flex-wrap justify-center gap-1.5 text-sm">
-                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Super Admin ID:</span>
-                <span className="font-medium text-slate-300 font-mono text-center">FEIRS-SA-ROOT</span>
+              <div className="text-sm w-full px-2 leading-relaxed">
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Super Admin ID:</span>
+                <span className="font-medium text-slate-300 font-mono">FEIRS-SA-ROOT</span>
               </div>
-              <div className="flex flex-wrap justify-center gap-1.5 text-sm">
-                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Last Login At:</span>
-                <span className="font-medium text-slate-300 text-center">Oct 24, 2026 - 14:32:05</span>
+              <div className="text-sm w-full px-2 leading-relaxed">
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Last Login At:</span>
+                <span className="font-medium text-slate-300">Oct 24, 2026 - 14:32:05</span>
+              </div>
+              <div className="text-sm w-full px-2 leading-relaxed">
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Location Center:</span>
+                <span className="font-medium text-slate-300">Bengaluru, Karnataka, India</span>
               </div>
             </div>
           </div>

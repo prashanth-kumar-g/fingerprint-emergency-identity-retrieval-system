@@ -75,8 +75,8 @@ public class EmergencyContact {
 
     // ── Operational Auditing ─────────────────────────────
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "linked_at", nullable = false, updatable = false)
+    private LocalDateTime linkedAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
@@ -85,7 +85,7 @@ public class EmergencyContact {
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.linkedAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 

@@ -208,7 +208,7 @@ public class FingerprintService {
     //
     //  FIX: parse both fields as strings, never cast directly.
     // ══════════════════════════════════════════════════════
-    private boolean callMFS100Verify(String probeTemplate, String galleryTemplate) {
+    public boolean matchTemplates(String probeTemplate, String galleryTemplate) {
         try {
             HttpURLConnection conn = (HttpURLConnection)
                 new URL(MFS100_URL + "/verify").openConnection();

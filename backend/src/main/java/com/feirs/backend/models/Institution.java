@@ -108,21 +108,11 @@ public class Institution {
     @Column(name = "verification_document_url", nullable = false, columnDefinition = "TEXT")
     private String verificationDocumentUrl;
 
+    @ManyToOne
+    @JoinColumn(name = "linked_super_admin_id")
+    private SuperAdmin linkedSuperAdmin;
+
     // ── Status Columns (SEPARATE per Database Tables Correction Plan.pdf) ──
-
-    /**
-     * Controls the Super Admin's verification dashboard.
-     * PENDING → APPROVED → REJECTED
-     */
-    @Builder.Default
-    @Column(name = "approval_status", nullable = false, length = 50)
-    private String approvalStatus = "PENDING";
-
-    /**
-     * Stores the reason when a registration is rejected by Super Admin.
-     */
-    @Column(name = "rejection_reason", columnDefinition = "TEXT")
-    private String rejectionReason;
 
     /**
      * Controls login/lifecycle via Spring Security filter chain.

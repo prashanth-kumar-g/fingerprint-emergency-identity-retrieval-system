@@ -104,20 +104,19 @@ public class DataChangeRequest {
 
     // ── Operational Auditing ─────────────────────────────
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "requested_at", nullable = false, updatable = false)
+    private LocalDateTime requestedAt;
 
     /**
-     * Timestamp when the Super Admin clicked approve or reject.
-     * Nullable while PENDING; allows SLA metric tracking for approval times.
+     * Stamped when Super Admin approves or rejects the request.
      */
     @Column(name = "resolved_at")
     private LocalDateTime resolvedAt;
 
-    // ── JPA Lifecycle Callbacks ──────────────────────────
+    // ── JPA Lifecycle Callbacks ────────────────────────────
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.requestedAt = LocalDateTime.now();
     }
 }

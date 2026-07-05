@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface PendingInstitutionRegistrationRepository extends JpaRepository<PendingInstitutionRegistration, Long> {
+public interface PendingInstitutionRegistrationRepository extends JpaRepository<PendingInstitutionRegistration, String> {
     boolean existsByOfficialEmail(String officialEmail);
     boolean existsByOfficialEmailAndStatus(String officialEmail, String status);
     List<PendingInstitutionRegistration> findByStatus(String status);

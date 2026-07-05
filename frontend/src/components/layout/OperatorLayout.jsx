@@ -21,7 +21,9 @@ export default function OperatorLayout() {
   ];
 
   const handleLogout = () => {
-    navigate('/login/operator');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login/operator', { replace: true });
   };
 
   return (

@@ -17,9 +17,8 @@ import java.time.LocalDateTime;
 public class PendingInstitutionRegistration {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "registration_id", updatable = false)
-    private Long registrationId;
+    @Column(name = "registration_id", length = 50, updatable = false)
+    private String registrationId;
 
     @Column(name = "institution_name", nullable = false, length = 255)
     private String institutionName;

@@ -60,25 +60,45 @@ export default function ForgotPassword() {
     );
   }
 
-  const handleResetRequest = (e) => {
+  const handleResetRequest = async (e) => {
     e.preventDefault();
     if (!idValue.trim()) return;
 
     setStatus('loading');
     setErrorMessage('');
 
-    // Simulate network delay
-    setTimeout(() => {
-      if (idValue === '0') {
+    if (role === 'super-admin') {
+      try {
+        const response = await fetch('http://localhost:8080/api/auth/forgot-password/super-admin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ identifier: idValue }),
+        });
+
+        if (response.ok) {
+          setStatus('success');
+        } else {
+          const errorData = await response.text();
+          setStatus('error');
+          setErrorMessage(errorData || 'Failed to process request.');
+        }
+      } catch (error) {
         setStatus('error');
-        setErrorMessage(`${config.errorPrefix} does not exist in our system.`);
-      } else if (idValue === '1') {
-        setStatus('success');
-      } else {
-        // Default success for mockup purposes unless specifically testing '0'
-        setStatus('success');
+        setErrorMessage('Network error. Please try again.');
       }
-    }, 1200);
+    } else {
+      // Simulate network delay for other roles
+      setTimeout(() => {
+        if (idValue === '0') {
+          setStatus('error');
+          setErrorMessage(`${config.errorPrefix} does not exist in our system.`);
+        } else {
+          setStatus('success');
+        }
+      }, 1200);
+    }
   };
 
   const Icon = config.icon;

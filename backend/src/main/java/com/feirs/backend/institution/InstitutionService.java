@@ -45,6 +45,7 @@ public class InstitutionService {
         }
 
         registration.setStatus("PENDING");
+        registration.setRegistrationId("FEIRS-REG-" + String.format("%04d", new java.util.Random().nextInt(10000)));
         PendingInstitutionRegistration saved = pendingRepo.save(registration);
         log.info("✅ Institution registered (PENDING): {}", saved.getInstitutionName());
         return saved;
@@ -96,7 +97,7 @@ public class InstitutionService {
         return pendingRepo.findByStatus("PENDING");
     }
 
-    public Institution reviewRegistration(Long registrationId,
+    public Institution reviewRegistration(String registrationId,
                                            boolean approved,
                                            String rejectionReason,
                                            String superAdminId) {

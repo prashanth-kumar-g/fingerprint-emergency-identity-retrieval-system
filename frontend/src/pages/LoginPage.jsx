@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Shield, Building2, Stethoscope, Fingerprint, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
+import { Shield, Building2, Stethoscope, Fingerprint, ArrowLeft, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
+import api from '../api/axiosConfig';
 
 const roleConfigs = {
   'super-admin': {
@@ -45,6 +46,7 @@ export default function LoginPage() {
 
   const [idValue, setIdValue] = useState('');
   const [passwordValue, setPasswordValue] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
   const config = roleConfigs[role];
@@ -59,7 +61,18 @@ export default function LoginPage() {
 
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  const handleLogin = (e) => {
+  useEffect(() => {
+    // AGGRESSIVE SECURITY PROTOCOL:
+    // If a user navigates to the login screen (e.g. by pressing the browser back button),
+    // immediately terminate their session to prevent unauthorized forward navigation.
+    const token = localStorage.getItem('token');
+    if (token) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
+  }, []);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -70,26 +83,33 @@ export default function LoginPage() {
 
     setIsAuthenticating(true);
 
-    // Simulate Network Delay
-    setTimeout(() => {
+    try {
+      const response = await api.post('/auth/login', {
+        identifier: idValue,
+        password: passwordValue,
+        role: role
+      });
+
+      // Save token and user details to localStorage
+      localStorage.setItem('token', response.data.accessToken);
+      localStorage.setItem('user', JSON.stringify(response.data));
+
       setIsAuthenticating(false);
       
-      if (idValue === '0' || passwordValue === '0') {
-        setError('Invalid credentials. Please verify your ID / Email or Password and try again.');
-      } else if (idValue === '1' && passwordValue === '1') {
-        // Navigate on success
-        if (role === 'super-admin') navigate('/super-admin/dashboard');
-        else if (role === 'institution') navigate('/institution/dashboard');
-        else if (role === 'operator') navigate('/operator/dashboard');
-        else navigate(`/${role}/dashboard`);
+      // Navigate on success (without replace, so the login page remains in history)
+      if (role === 'super-admin') navigate('/super-admin/dashboard');
+      else if (role === 'institution') navigate('/institution/dashboard');
+      else if (role === 'operator') navigate('/operator/dashboard');
+      else navigate(`/${role}/dashboard`);
+
+    } catch (err) {
+      setIsAuthenticating(false);
+      if (err.response && err.response.data && typeof err.response.data === 'string') {
+        setError(err.response.data);
       } else {
-        // Default behavior for other inputs during dev
-        if (role === 'super-admin') navigate('/super-admin/dashboard');
-        else if (role === 'institution') navigate('/institution/dashboard');
-        else if (role === 'operator') navigate('/operator/dashboard');
-        else navigate(`/${role}/dashboard`);
+        setError('Invalid credentials. Please verify your ID / Email or Password and try again.');
       }
-    }, 1200);
+    }
   };
 
   const Icon = config.icon;
@@ -149,13 +169,22 @@ export default function LoginPage() {
             
             <div className="flex flex-col gap-2">
               <label className="text-xs font-bold text-slate-400 tracking-wide uppercase">Authorization Password</label>
-              <input 
-                type="password" 
-                value={passwordValue}
-                onChange={(e) => setPasswordValue(e.target.value)}
-                placeholder="••••••••••••"
-                className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-4 py-3 text-white outline-none transition-colors"
-              />
+              <div className="relative w-full">
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  value={passwordValue}
+                  onChange={(e) => setPasswordValue(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-4 py-3 pr-12 text-white outline-none transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
               <div className="flex justify-end">
                 <button
                   type="button"

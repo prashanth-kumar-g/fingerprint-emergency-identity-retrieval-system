@@ -12,10 +12,11 @@ import {
   Phone,
   User,
   Briefcase,
-  MapPin,
   Calendar,
   Users,
-  Building2
+  Building2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 const EditableField = ({ label, value, icon: Icon, type = "text", placeholder, isSaving }) => {
@@ -104,6 +105,9 @@ const ManagedField = ({ label, value, icon: Icon, tooltipMessage }) => {
 
 const PasswordExpander = ({ isSaving }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -146,13 +150,22 @@ const PasswordExpander = ({ isSaving }) => {
           </div>
           
           <div className="relative">
-            <input ref={inputRef} type="password" placeholder="Current Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-white focus:border-red-500/50 outline-none transition-colors" />
+            <input ref={inputRef} type={showCurrent ? "text" : "password"} placeholder="Current Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-red-500/50 outline-none transition-colors" />
+            <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+              {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
           <div className="relative">
-            <input type="password" placeholder="New Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-white focus:border-red-500/50 outline-none transition-colors" />
+            <input type={showNew ? "text" : "password"} placeholder="New Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-red-500/50 outline-none transition-colors" />
+            <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+              {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
           <div className="relative">
-            <input type="password" placeholder="Confirm New Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-white focus:border-red-500/50 outline-none transition-colors" />
+            <input type={showConfirm ? "text" : "password"} placeholder="Confirm New Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-red-500/50 outline-none transition-colors" />
+            <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+              {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
         </motion.div>
       )}

@@ -23,7 +23,9 @@ export default function SuperAdminLayout() {
   ];
 
   const handleLogout = () => {
-    navigate('/login/super-admin');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login/super-admin', { replace: true });
   };
 
   return (

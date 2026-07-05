@@ -95,7 +95,7 @@ public class DataChangeRequestService {
 
     @Transactional(readOnly = true)
     public List<DataChangeRequest> getPendingRequests() {
-        return requestRepository.findByRequestStatusOrderByCreatedAtDesc("PENDING");
+        return requestRepository.findByRequestStatusOrderByRequestedAtDesc("PENDING");
     }
 
     @Transactional(readOnly = true)
@@ -190,7 +190,7 @@ public class DataChangeRequestService {
     @Transactional(readOnly = true)
     public List<DataChangeRequest> getRequestsByInstitution(String institutionId) {
         return requestRepository
-                .findByInstitution_InstitutionIdOrderByCreatedAtDesc(institutionId);
+                .findByInstitution_InstitutionIdOrderByRequestedAtDesc(institutionId);
     }
 
     // ── Helpers ──────────────────────────────────────────────

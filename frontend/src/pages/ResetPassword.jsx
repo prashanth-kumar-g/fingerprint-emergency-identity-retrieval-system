@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Shield, Building2, Stethoscope, ArrowLeft, AlertCircle, CheckCircle2, Loader2, KeyRound } from 'lucide-react';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
+import { Shield, Building2, Stethoscope, ArrowLeft, AlertCircle, CheckCircle2, Loader2, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const roleConfigs = {
@@ -45,6 +45,8 @@ export default function ResetPassword() {
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [status, setStatus] = useState('idle'); // idle, loading, error, success
   const [errorMessage, setErrorMessage] = useState('');
@@ -59,7 +61,12 @@ export default function ResetPassword() {
     );
   }
 
-  const handleResetPassword = (e) => {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const token = searchParams.get('token');
+  const id = searchParams.get('id');
+
+  const handleResetPassword = async (e) => {
     e.preventDefault();
     if (!password || !confirmPassword) {
       setStatus('error');
@@ -76,17 +83,44 @@ export default function ResetPassword() {
     setStatus('loading');
     setErrorMessage('');
 
-    // Simulate network delay
-    setTimeout(() => {
-      if (password === '0') {
+    if (role === 'super-admin') {
+      if (!token || !id) {
         setStatus('error');
-        setErrorMessage('You cannot use your old password, please enter a new one.');
-      } else if (password === '1') {
-        setStatus('success');
-      } else {
-        setStatus('success');
+        setErrorMessage('Invalid reset link. Missing security tokens.');
+        return;
       }
-    }, 1200);
+
+      try {
+        const response = await fetch('http://localhost:8080/api/auth/reset-password/super-admin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token, id, newPassword: password }),
+        });
+
+        if (response.ok) {
+          setStatus('success');
+        } else {
+          const errorData = await response.text();
+          setStatus('error');
+          setErrorMessage(errorData || 'Failed to process request.');
+        }
+      } catch (error) {
+        setStatus('error');
+        setErrorMessage('Network error. Please try again.');
+      }
+    } else {
+      // Simulate network delay for other roles
+      setTimeout(() => {
+        if (password === '0') {
+          setStatus('error');
+          setErrorMessage('You cannot use your old password, please enter a new one.');
+        } else {
+          setStatus('success');
+        }
+      }, 1200);
+    }
   };
 
   const Icon = config.icon;
@@ -163,26 +197,44 @@ export default function ResetPassword() {
 
               <div className="flex flex-col gap-2">
                 <label className="text-xs font-bold text-slate-400 tracking-wide uppercase">New Password</label>
-                <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  disabled={status === 'loading'}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-4 py-3 text-white outline-none transition-colors disabled:opacity-50"
-                />
+                <div className="relative w-full">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    disabled={status === 'loading'}
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-4 py-3 pr-12 text-white outline-none transition-colors disabled:opacity-50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
 
               <div className="flex flex-col gap-2">
                 <label className="text-xs font-bold text-slate-400 tracking-wide uppercase">Confirm New Password</label>
-                <input 
-                  type="password" 
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  disabled={status === 'loading'}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-4 py-3 text-white outline-none transition-colors disabled:opacity-50"
-                />
+                <div className="relative w-full">
+                  <input 
+                    type={showConfirmPassword ? "text" : "password"} 
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    disabled={status === 'loading'}
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-4 py-3 pr-12 text-white outline-none transition-colors disabled:opacity-50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
 
               <button 

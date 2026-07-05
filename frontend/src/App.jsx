@@ -42,10 +42,27 @@ import PlaceholderPage from './pages/PlaceholderPage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ActivateAccount from './pages/ActivateAccount';
+import ProtectedRoute from './components/ProtectedRoute';
+import { useEffect, useState } from 'react';
 
 function App() {
+  const [bfCacheKey, setBfCacheKey] = useState(0);
+
+  useEffect(() => {
+    // Defeat Back-Forward Cache (BFCache) without a white screen flash!
+    // Instead of forcing a hard browser reload, we just force React to completely re-render
+    // the routing tree. This wakes up ProtectedRoute instantly.
+    const handlePageShow = (event) => {
+      if (event.persisted) {
+        setBfCacheKey(prev => prev + 1);
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
+
   return (
-    <BrowserRouter>
+    <BrowserRouter key={bfCacheKey}>
       <Routes>
         {/* Public Routes */}
         <Route element={<Layout />}>
@@ -58,39 +75,45 @@ function App() {
         </Route>
 
         {/* Super Admin Protected Routes */}
-        <Route element={<SuperAdminLayout />}>
-          <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
-          <Route path="/super-admin/pending-registrations" element={<PendingRegistrations />} />
-          <Route path="/super-admin/pending-registrations/:id" element={<PendingRegistrationDetails />} />
-          <Route path="/super-admin/data-change-requests" element={<DataChangeRequests />} />
-          <Route path="/super-admin/data-change-requests/:id" element={<ReviewDataChangeRequest />} />
-          <Route path="/super-admin/manage-institutions" element={<ManageInstitutionsList />} />
-          <Route path="/super-admin/manage-institutions/:id" element={<ManageInstitutionDetails />} />
-          <Route path="/super-admin/statistics" element={<SuperAdminStatistics />} />
-          <Route path="/super-admin/settings" element={<SuperAdminProfile />} />
+        <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
+          <Route element={<SuperAdminLayout />}>
+            <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
+            <Route path="/super-admin/pending-registrations" element={<PendingRegistrations />} />
+            <Route path="/super-admin/pending-registrations/:id" element={<PendingRegistrationDetails />} />
+            <Route path="/super-admin/data-change-requests" element={<DataChangeRequests />} />
+            <Route path="/super-admin/data-change-requests/:id" element={<ReviewDataChangeRequest />} />
+            <Route path="/super-admin/manage-institutions" element={<ManageInstitutionsList />} />
+            <Route path="/super-admin/manage-institutions/:id" element={<ManageInstitutionDetails />} />
+            <Route path="/super-admin/statistics" element={<SuperAdminStatistics />} />
+            <Route path="/super-admin/settings" element={<SuperAdminProfile />} />
+          </Route>
         </Route>
 
         {/* Institution Protected Routes */}
-        <Route element={<InstitutionLayout />}>
-          <Route path="/institution/dashboard" element={<InstitutionDashboard />} />
-          <Route path="/institution/enroll-operators" element={<EnrollOperator />} />
-          <Route path="/institution/manage-operators" element={<ManageOperators />} />
-          <Route path="/institution/manage-operators/:id" element={<OperatorConfiguration />} />
-          <Route path="/institution/request-data-change" element={<RequestDataChange />} />
-          <Route path="/institution/statistics" element={<InstitutionStatistics />} />
-          <Route path="/institution/settings" element={<InstitutionProfile />} />
+        <Route element={<ProtectedRoute allowedRoles={['INSTITUTION']} />}>
+          <Route element={<InstitutionLayout />}>
+            <Route path="/institution/dashboard" element={<InstitutionDashboard />} />
+            <Route path="/institution/enroll-operators" element={<EnrollOperator />} />
+            <Route path="/institution/manage-operators" element={<ManageOperators />} />
+            <Route path="/institution/manage-operators/:id" element={<OperatorConfiguration />} />
+            <Route path="/institution/request-data-change" element={<RequestDataChange />} />
+            <Route path="/institution/statistics" element={<InstitutionStatistics />} />
+            <Route path="/institution/settings" element={<InstitutionProfile />} />
+          </Route>
         </Route>
 
         {/* Operator Protected Routes */}
-        <Route element={<OperatorLayout />}>
-          <Route path="/operator/dashboard" element={<OperatorDashboard />} />
-          <Route path="/operator/enroll-citizens" element={<EnrollCitizens />} />
-          <Route path="/operator/manage-citizens" element={<ManageCitizensGateway />} />
-          <Route path="/operator/manage-citizens/:id" element={<ManageCitizenDetails />} />
-          <Route path="/operator/emergency-scan" element={<EmergencyScanGateway />} />
-          <Route path="/operator/emergency-scan/:id" element={<EmergencyCitizenDetails />} />
-          <Route path="/operator/statistics" element={<OperatorStatistics />} />
-          <Route path="/operator/settings" element={<OperatorProfile />} />
+        <Route element={<ProtectedRoute allowedRoles={['OPERATOR']} />}>
+          <Route element={<OperatorLayout />}>
+            <Route path="/operator/dashboard" element={<OperatorDashboard />} />
+            <Route path="/operator/enroll-citizens" element={<EnrollCitizens />} />
+            <Route path="/operator/manage-citizens" element={<ManageCitizensGateway />} />
+            <Route path="/operator/manage-citizens/:id" element={<ManageCitizenDetails />} />
+            <Route path="/operator/emergency-scan" element={<EmergencyScanGateway />} />
+            <Route path="/operator/emergency-scan/:id" element={<EmergencyCitizenDetails />} />
+            <Route path="/operator/statistics" element={<OperatorStatistics />} />
+            <Route path="/operator/settings" element={<OperatorProfile />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

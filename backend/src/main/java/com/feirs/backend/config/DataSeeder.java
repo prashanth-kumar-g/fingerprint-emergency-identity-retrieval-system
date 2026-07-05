@@ -25,9 +25,8 @@ public class DataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
-    public static final String ROOT_SUPER_ADMIN_ID = "FEIRS-SA-ROOT";
-    public static final String ROOT_MASTER_EMAIL = "feirs.root@feirs.system";
-    public static final String ROOT_DEFAULT_PASSWORD = "SuperAdmin@FEIRS2026";
+    // Removed hardcoded root strings
+
 
     private final SuperAdminRepository superAdminRepository;
     private final PasswordEncoder passwordEncoder;
@@ -38,29 +37,39 @@ public class DataSeeder implements CommandLineRunner {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @Override
-    @Order(1)
     public void run(String... args) {
-        if (superAdminRepository.existsByMasterEmail(ROOT_MASTER_EMAIL)) {
-            log.info("✅ Root Super Admin account already exists — skipping seed.");
-            return;
+        if (!superAdminRepository.existsByMasterEmail("admin.feirs@gmail.com")) {
+            SuperAdmin aditya = SuperAdmin.builder()
+                    .superAdminId("FEIRS-SA-GLOBAL")
+                    .masterEmail("admin.feirs@gmail.com")
+                    .passwordHash(passwordEncoder.encode("Admin@123"))
+                    .adminName("Aditya Das")
+                    .phoneCountryCode("+91")
+                    .phoneNumber("9876543210")
+                    .profilePhotoUrl(null)
+                    .city(null)
+                    .state(null)
+                    .country("Global")
+                    .build();
+            superAdminRepository.save(aditya);
+            log.info("🚀 Super Admin 'Aditya Das' (Global) seeded successfully.");
         }
 
-        SuperAdmin root = SuperAdmin.builder()
-                .superAdminId(ROOT_SUPER_ADMIN_ID)
-                .masterEmail(ROOT_MASTER_EMAIL)
-                .passwordHash(passwordEncoder.encode(ROOT_DEFAULT_PASSWORD))
-                .adminName(null)        // Nullable by design — architect completes later
-                .phoneCountryCode(null)
-                .phoneNumber(null)
-                .profilePhotoUrl(null)
-                .lastLoginAt(null)
-                .build();
-
-        superAdminRepository.save(root);
-        log.info("🚀 Root Super Admin account seeded successfully!");
-        log.info("   ID: {}", ROOT_SUPER_ADMIN_ID);
-        log.info("   Email: {}", ROOT_MASTER_EMAIL);
-        log.info("   Password: {} (CHANGE IMMEDIATELY AFTER FIRST LOGIN)", ROOT_DEFAULT_PASSWORD);
+        if (!superAdminRepository.existsByMasterEmail("shetty.admin.feirs@gmail.com")) {
+            SuperAdmin divya = SuperAdmin.builder()
+                    .superAdminId("FEIRS-SA-BLR")
+                    .masterEmail("shetty.admin.feirs@gmail.com")
+                    .passwordHash(passwordEncoder.encode("Admin@123"))
+                    .adminName("Divya Shetty")
+                    .phoneCountryCode("+91")
+                    .phoneNumber("9876543211")
+                    .profilePhotoUrl(null)
+                    .city("Bengaluru")
+                    .state("Karnataka")
+                    .country("India")
+                    .build();
+            superAdminRepository.save(divya);
+            log.info("🚀 Super Admin 'Divya Shetty' (Bengaluru) seeded successfully.");
+        }
     }
 }

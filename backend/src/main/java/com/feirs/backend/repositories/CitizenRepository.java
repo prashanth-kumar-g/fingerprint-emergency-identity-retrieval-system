@@ -24,15 +24,15 @@ public interface CitizenRepository extends JpaRepository<Citizen, String> {
     List<Citizen> findByAccountStatus(String accountStatus);
 
     /**
-     * Multi-tenant: returns all citizens enrolled by a specific institution.
+     * Returns all citizens enrolled by a specific operator.
      */
-    List<Citizen> findByEnrollingInstitution_InstitutionId(String institutionId);
+    List<Citizen> findByEnrollingOperator_OperatorId(String operatorId);
 
     /**
-     * Tenant + status filter: e.g., all DELETED citizens at a specific hospital.
+     * Tenant + status filter: e.g., all DELETED citizens by a specific operator.
      */
-    List<Citizen> findByEnrollingInstitution_InstitutionIdAndAccountStatus(
-            String institutionId, String accountStatus);
+    List<Citizen> findByEnrollingOperator_OperatorIdAndAccountStatus(
+            String operatorId, String accountStatus);
 
     /**
      * Find by blood group — emergency filtering (e.g., find all "O-" donors in the system).
@@ -40,9 +40,9 @@ public interface CitizenRepository extends JpaRepository<Citizen, String> {
     List<Citizen> findByBloodGroupAndAccountStatus(String bloodGroup, String accountStatus);
 
     /**
-     * Count citizens enrolled by a specific institution (for analytics dashboards).
+     * Count citizens enrolled by a specific operator (for analytics dashboards).
      */
-    long countByEnrollingInstitution_InstitutionId(String institutionId);
+    long countByEnrollingOperator_OperatorId(String operatorId);
 
     /**
      * Count active citizens in the system.

@@ -21,7 +21,9 @@ export default function InstitutionLayout() {
   ];
 
   const handleLogout = () => {
-    navigate('/login/institution');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login/institution', { replace: true });
   };
 
   return (

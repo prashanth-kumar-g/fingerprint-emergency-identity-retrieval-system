@@ -62,8 +62,8 @@ public class AuditLogService {
      * Institution Admins can NEVER see another hospital's logs.
      */
     public Page<AuditLog> getFacilityLogs(String institutionId, int page, int size) {
-        Page<AuditLog> logs = auditLogRepository.findByInstitutionIdOrderByTimestampDesc(
-                institutionId, PageRequest.of(page, size > 0 ? size : DEFAULT_PAGE_SIZE));
+        Page<AuditLog> logs = auditLogRepository.findByTargetIdAndTargetRoleOrderByTimestampDesc(
+                institutionId, "INSTITUTION", PageRequest.of(page, size > 0 ? size : DEFAULT_PAGE_SIZE));
         log.info("📋 Facility audit logs for {} — {} records", institutionId,
                 logs.getTotalElements());
         return logs;
@@ -75,8 +75,8 @@ public class AuditLogService {
     public Page<AuditLog> getFacilityLogsByType(String institutionId,
                                                   String actionType,
                                                   int page, int size) {
-        return auditLogRepository.findByInstitutionIdAndActionTypeOrderByTimestampDesc(
-                institutionId, actionType,
+        return auditLogRepository.findByTargetIdAndTargetRoleAndActionTypeOrderByTimestampDesc(
+                institutionId, "INSTITUTION", actionType,
                 PageRequest.of(page, size > 0 ? size : DEFAULT_PAGE_SIZE));
     }
 

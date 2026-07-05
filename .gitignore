@@ -50,6 +50,7 @@ backend/mvnw
 backend/mvnw.cmd
 backend/HELP.md
 backend/src/test/
+backend/src/main/resources/application.properties
 backend/src/main/resources/static/
 backend/src/main/resources/templates/
 

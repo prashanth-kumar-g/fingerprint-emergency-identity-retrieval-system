@@ -26,19 +26,7 @@ public interface InstitutionRepository extends JpaRepository<Institution, String
     boolean existsByOfficialEmail(String officialEmail);
 
     /**
-     * Filter by approval status — used by Super Admin's verification dashboard
-     * to list PENDING registrations awaiting review.
-     */
-    List<Institution> findByApprovalStatus(String approvalStatus);
-
-    /**
      * Filter by account status — used to query active, suspended, or deactivated institutions.
      */
     List<Institution> findByAccountStatus(String accountStatus);
-
-    /**
-     * Combined filter — find all institutions of a given type with a specific approval status.
-     * e.g., "HOSPITAL" + "APPROVED" for operator selection dropdowns.
-     */
-    List<Institution> findByInstitutionTypeAndApprovalStatus(String institutionType, String approvalStatus);
 }

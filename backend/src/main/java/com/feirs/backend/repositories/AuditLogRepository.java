@@ -45,22 +45,22 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     // ═══════════════════════════════════════════════════════════
 
     /**
-     * Multi-tenant: all events tagged to a specific institution.
+     * Multi-tenant: all events tagged to a specific target.
      */
-    Page<AuditLog> findByInstitutionIdOrderByTimestampDesc(
-            String institutionId, Pageable pageable);
+    Page<AuditLog> findByTargetIdAndTargetRoleOrderByTimestampDesc(
+            String targetId, String targetRole, Pageable pageable);
 
     /**
-     * Multi-tenant + type filter: e.g., all CITIZEN_ENROLL events at this facility.
+     * Multi-tenant + type filter: e.g., all CITIZEN_ENROLL events at this target.
      */
-    Page<AuditLog> findByInstitutionIdAndActionTypeOrderByTimestampDesc(
-            String institutionId, String actionType, Pageable pageable);
+    Page<AuditLog> findByTargetIdAndTargetRoleAndActionTypeOrderByTimestampDesc(
+            String targetId, String targetRole, String actionType, Pageable pageable);
 
     /**
-     * Multi-tenant security: failed logins at a specific facility.
+     * Multi-tenant security: failed logins at a specific target.
      */
-    List<AuditLog> findByInstitutionIdAndActionTypeAndActionStatusOrderByTimestampDesc(
-            String institutionId, String actionType, String actionStatus);
+    List<AuditLog> findByTargetIdAndTargetRoleAndActionTypeAndActionStatusOrderByTimestampDesc(
+            String targetId, String targetRole, String actionType, String actionStatus);
 
     // ═══════════════════════════════════════════════════════════
     //  OPERATOR — Personal Scan History
@@ -89,10 +89,10 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
             String actionType, LocalDateTime start, LocalDateTime end);
 
     /**
-     * Count events at a facility within a time range.
+     * Count events at a target within a time range.
      */
-    long countByInstitutionIdAndActionTypeAndTimestampBetween(
-            String institutionId, String actionType, LocalDateTime start, LocalDateTime end);
+    long countByTargetIdAndTargetRoleAndActionTypeAndTimestampBetween(
+            String targetId, String targetRole, String actionType, LocalDateTime start, LocalDateTime end);
 
     /**
      * Count events by an actor within a time range.

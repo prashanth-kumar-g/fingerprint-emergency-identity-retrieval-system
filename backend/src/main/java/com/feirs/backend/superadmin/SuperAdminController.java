@@ -43,7 +43,7 @@ public class SuperAdminController {
     }
 
     @PutMapping("/institutions/{id}/review")
-    public ResponseEntity<?> reviewInstitution(@PathVariable Long id,
+    public ResponseEntity<?> reviewInstitution(@PathVariable String id,
                                                 @RequestBody Map<String, Object> body,
                                                 @RequestParam(required = false) String superAdminId) {
         try {

@@ -44,7 +44,7 @@ public class SuperAdminService {
         return institutionService.getPendingRegistrations();
     }
 
-    public Institution reviewInstitution(Long registrationId, boolean approved, String rejectionReason, String superAdminId) {
+    public Institution reviewInstitution(String registrationId, boolean approved, String rejectionReason, String superAdminId) {
         log.info("Super Admin {} reviewing registration {} - Approved: {}", 
                  superAdminId, registrationId, approved);
         return institutionService.reviewRegistration(registrationId, approved, rejectionReason, superAdminId);

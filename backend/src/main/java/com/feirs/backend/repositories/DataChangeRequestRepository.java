@@ -20,18 +20,18 @@ public interface DataChangeRequestRepository
     /**
      * Super Admin dashboard: all PENDING requests awaiting review.
      */
-    List<DataChangeRequest> findByRequestStatusOrderByCreatedAtDesc(String requestStatus);
+    List<DataChangeRequest> findByRequestStatusOrderByRequestedAtDesc(String requestStatus);
 
     /**
      * Institution Admin: view all change requests submitted by their facility.
      */
-    List<DataChangeRequest> findByInstitution_InstitutionIdOrderByCreatedAtDesc(
+    List<DataChangeRequest> findByInstitution_InstitutionIdOrderByRequestedAtDesc(
             String institutionId);
 
     /**
      * Institution Admin: filter their requests by status (e.g., all APPROVED requests).
      */
-    List<DataChangeRequest> findByInstitution_InstitutionIdAndRequestStatusOrderByCreatedAtDesc(
+    List<DataChangeRequest> findByInstitution_InstitutionIdAndRequestStatusOrderByRequestedAtDesc(
             String institutionId, String requestStatus);
 
     /**

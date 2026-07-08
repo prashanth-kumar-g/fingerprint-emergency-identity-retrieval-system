@@ -33,25 +33,22 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Transactional
     public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
         // Try SuperAdmin (by ID or Email)
-        Optional<SuperAdmin> superAdmin = superAdminRepository.findById(identifier);
-        if (superAdmin.isEmpty()) superAdmin = superAdminRepository.findByMasterEmail(identifier);
+        Optional<SuperAdmin> superAdmin = superAdminRepository.findByIdentifierIgnoreCase(identifier);
         if (superAdmin.isPresent()) return UserDetailsImpl.build(superAdmin.get());
 
         // Try Institution (by ID or Email)
-        Optional<Institution> institution = institutionRepository.findById(identifier);
-        if (institution.isEmpty()) institution = institutionRepository.findByOfficialEmail(identifier);
+        Optional<Institution> institution = institutionRepository.findByIdentifierIgnoreCase(identifier);
         if (institution.isPresent()) {
-            if ("SUSPENDED".equals(institution.get().getAccountStatus()) || "DELETED".equals(institution.get().getAccountStatus())) {
+            if ("DELETED".equals(institution.get().getAccountStatus())) {
                 throw new UsernameNotFoundException("Account is " + institution.get().getAccountStatus());
             }
             return UserDetailsImpl.build(institution.get());
         }
 
         // Try Operator (by ID or Email)
-        Optional<Operator> operator = operatorRepository.findById(identifier);
-        if (operator.isEmpty()) operator = operatorRepository.findByOfficialEmail(identifier);
+        Optional<Operator> operator = operatorRepository.findByIdentifierIgnoreCase(identifier);
         if (operator.isPresent()) {
-            if ("SUSPENDED".equals(operator.get().getAccountStatus()) || "DELETED".equals(operator.get().getAccountStatus())) {
+            if ("DELETED".equals(operator.get().getAccountStatus())) {
                 throw new UsernameNotFoundException("Account is " + operator.get().getAccountStatus());
             }
             return UserDetailsImpl.build(operator.get());

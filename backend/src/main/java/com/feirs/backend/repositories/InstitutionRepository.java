@@ -20,6 +20,9 @@ public interface InstitutionRepository extends JpaRepository<Institution, String
      */
     Optional<Institution> findByOfficialEmail(String officialEmail);
 
+    @org.springframework.data.jpa.repository.Query("SELECT i FROM Institution i WHERE LOWER(i.institutionId) = LOWER(:identifier) OR LOWER(i.officialEmail) = LOWER(:identifier)")
+    Optional<Institution> findByIdentifierIgnoreCase(@org.springframework.data.repository.query.Param("identifier") String identifier);
+
     /**
      * Efficient existence check to prevent duplicate registrations.
      */
@@ -29,4 +32,6 @@ public interface InstitutionRepository extends JpaRepository<Institution, String
      * Filter by account status — used to query active, suspended, or deactivated institutions.
      */
     List<Institution> findByAccountStatus(String accountStatus);
+    
+    Institution findFirstByOrderByInstitutionIdDesc();
 }

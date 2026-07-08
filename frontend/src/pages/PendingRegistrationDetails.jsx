@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft,
@@ -15,9 +15,24 @@ import {
   X,
   Loader2
 } from 'lucide-react';
+import api from '../api/axiosConfig';
 
 export default function PendingRegistrationDetails() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const institution = location.state?.institution || {};
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const d = new Date(dateString);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthName = months[d.getMonth()];
+    const dayNum = d.getDate();
+    const year = d.getFullYear();
+    const timeStr = d.toLocaleTimeString('en-GB');
+    return `${monthName} ${dayNum}, ${year} - ${timeStr}`;
+  };
+
   const { id } = useParams();
 
   const [isApproving, setIsApproving] = useState(false);
@@ -28,28 +43,60 @@ export default function PendingRegistrationDetails() {
   const [isRejecting, setIsRejecting] = useState(false);
   const [showRejectSuccess, setShowRejectSuccess] = useState(false);
 
-  const [status, setStatus] = useState('PENDING VERIFICATION');
+  const [status, setStatus] = useState(institution.status === 'PENDING' ? 'PENDING VERIFICATION' : institution.status);
 
-  const handleApprove = () => {
-    setIsApproving(true);
-    setTimeout(() => {
-      setIsApproving(false);
+  const handleApprove = async () => {
+    try {
+      setIsApproving(true);
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const superAdminId = user?.id;
+
+      await api.put(`/v1/super-admin/institutions/${id}/review`, {
+        approved: true,
+        rejectionReason: '',
+        superAdminId: superAdminId
+      });
+      
       setStatus('APPROVED');
       setShowApproveSuccess(true);
-      setTimeout(() => setShowApproveSuccess(false), 3000);
-    }, 1500);
+      setTimeout(() => {
+        setShowApproveSuccess(false);
+        navigate('/super-admin/pending-registrations');
+      }, 3000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsApproving(false);
+    }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!rejectionReason.trim()) return;
-    setIsRejecting(true);
-    setTimeout(() => {
-      setIsRejecting(false);
+    try {
+      setIsRejecting(true);
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const superAdminId = user?.id;
+
+      await api.put(`/v1/super-admin/institutions/${id}/review`, {
+        approved: false,
+        rejectionReason: rejectionReason,
+        superAdminId: superAdminId
+      });
+
       setShowRejectInput(false);
       setStatus('REJECTED');
       setShowRejectSuccess(true);
-      setTimeout(() => setShowRejectSuccess(false), 3000);
-    }, 1500);
+      setTimeout(() => {
+        setShowRejectSuccess(false);
+        navigate('/super-admin/pending-registrations');
+      }, 3000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsRejecting(false);
+    }
   };
 
   return (
@@ -88,7 +135,11 @@ export default function PendingRegistrationDetails() {
             
             <div className="relative mb-6 mt-4 group">
               <div className="w-56 h-56 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-xl">
-                <Building2 className="w-20 h-20 text-slate-500" />
+                {institution.institutionLogoUrl ? (
+                  <img src={institution.institutionLogoUrl} alt="Institution Logo" className="w-full h-full object-cover" />
+                ) : (
+                  <Building2 className="w-20 h-20 text-slate-500" />
+                )}
               </div>
             </div>
             
@@ -107,12 +158,16 @@ export default function PendingRegistrationDetails() {
               </span>
             </div>
 
-            <h2 className="text-2xl font-black text-white mb-4">City General Hospital</h2>
+            <h2 className="text-2xl font-black text-white mb-4">{institution.institutionName || 'Unknown Institution'}</h2>
 
             <div className="w-full flex flex-col gap-3 pt-6 border-t border-slate-800/50 text-center items-center">
+              <div className="flex flex-wrap justify-center gap-1.5 text-sm mb-1">
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Registration ID:</span>
+                <span className="font-medium text-slate-300 font-mono text-center">{institution.registrationId || id}</span>
+              </div>
               <div className="flex flex-wrap justify-center gap-1.5 text-sm">
                 <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Submitted At:</span>
-                <span className="font-medium text-slate-300 text-center">Oct 24, 2026</span>
+                <span className="font-medium text-slate-300 text-center">{formatDate(institution.submittedAt)}</span>
               </div>
             </div>
           </div>
@@ -134,7 +189,7 @@ export default function PendingRegistrationDetails() {
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Institution Contact Number</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><Phone className="w-4 h-4" /></div>
-                  <input type="text" value="+1 (555) 293-4811" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value={`${institution.phoneCountryCode || ''} ${institution.phoneNumber || ''}`} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
               <div className="hidden md:block"></div>
@@ -142,14 +197,14 @@ export default function PendingRegistrationDetails() {
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Primary Officer Name</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><User className="w-4 h-4" /></div>
-                  <input type="text" value="Dr. Sarah Jenkins" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value={institution.primaryOfficerName || ''} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 w-full">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Officer Designation</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><Briefcase className="w-4 h-4" /></div>
-                  <input type="text" value="Chief Medical Administrator" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value={institution.officerDesignation || ''} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
             </div>
@@ -172,28 +227,28 @@ export default function PendingRegistrationDetails() {
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Institution Type</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><Building2 className="w-4 h-4" /></div>
-                  <input type="text" value="Hospital" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value={institution.institutionType || ''} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 w-full">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Sector Type</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><Briefcase className="w-4 h-4" /></div>
-                  <input type="text" value="Government" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value={institution.sectorType || ''} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 w-full md:col-span-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Official Email</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><Mail className="w-4 h-4" /></div>
-                  <input type="text" value="admin@citygeneral.gov.health" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value={institution.officialEmail || ''} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 w-full md:col-span-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Full Registered Address</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><MapPin className="w-4 h-4" /></div>
-                  <input type="text" value="101 Wellness Blvd, Health District, NY 10001, United States" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value={`${institution.addressLine1 || ''}${institution.addressLine2 ? ', ' + institution.addressLine2 : ''}, ${institution.city || ''}, ${institution.state || ''}, ${institution.country || ''} - ${institution.pinCode || ''}`} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
             </div>
@@ -207,14 +262,19 @@ export default function PendingRegistrationDetails() {
             <div className="p-4 border-b border-slate-800 bg-slate-950/50 flex items-center justify-between">
               <span className="text-sm font-bold text-white uppercase tracking-wider">Institute License</span>
             </div>
-            <div className="flex-1 w-full bg-slate-800/30 overflow-y-auto">
-              {/* Using a placeholder object tag for PDF viewing */}
-              <object 
-                data="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" 
-                type="application/pdf" 
-                className="w-full h-[1200px]"
-              >
-              </object>
+            <div className="flex-1 w-full bg-slate-800/30 overflow-y-auto min-h-[600px] flex">
+              {institution.verificationDocumentUrl ? (
+                <iframe 
+                  src={`${institution.verificationDocumentUrl}#toolbar=0`} 
+                  title="Institute License PDF"
+                  className="w-full h-full min-h-[800px] border-none flex-1"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center w-full h-full text-slate-500 gap-4 mt-20">
+                  <AlertCircle className="w-12 h-12" />
+                  <p className="text-sm font-medium">No document attached.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

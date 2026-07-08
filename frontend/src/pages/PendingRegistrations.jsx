@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -9,65 +9,9 @@ import {
   Building2,
   ArrowRight
 } from 'lucide-react';
+import api from '../api/axiosConfig';
 
-const mockApplications = [
-  {
-    id: 'APP-1001',
-    applicantName: 'City General Hospital',
-    sector: 'Government',
-    instType: 'Hospital',
-    submittedAt: 'Oct 24, 2026 - 09:15:05',
-  },
-  {
-    id: 'APP-1002',
-    applicantName: 'Central Medical Center',
-    sector: 'Government',
-    instType: 'Medical Center',
-    submittedAt: 'Oct 23, 2026 - 14:30:22',
-  },
-  {
-    id: 'APP-1003',
-    applicantName: 'CarePlus Medical Center',
-    sector: 'Private',
-    instType: 'Medical Center',
-    submittedAt: 'Oct 22, 2026 - 11:45:11',
-  },
-  {
-    id: 'APP-1004',
-    applicantName: 'Rapid Response Ambulances',
-    sector: 'Private',
-    instType: 'Ambulance Service',
-    submittedAt: 'Oct 20, 2026 - 16:20:45',
-  },
-  {
-    id: 'APP-1005',
-    applicantName: 'District Health Clinic',
-    sector: 'Public-Private Partnership',
-    instType: 'Medical Center',
-    submittedAt: 'Oct 18, 2026 - 08:00:36',
-  },
-  {
-    id: 'APP-1006',
-    applicantName: 'Metro Health Clinic',
-    sector: 'Government',
-    instType: 'Medical Center',
-    submittedAt: 'Oct 15, 2026 - 10:30:55',
-  },
-  {
-    id: 'APP-1007',
-    applicantName: 'Sunrise Maternity Home',
-    sector: 'Private',
-    instType: 'Hospital',
-    submittedAt: 'Oct 12, 2026 - 13:45:23',
-  },
-  {
-    id: 'APP-1008',
-    applicantName: 'Highway Ambulance Hub',
-    sector: 'Government',
-    instType: 'Ambulance Service',
-    submittedAt: 'Oct 10, 2026 - 09:20:16',
-  }
-];
+// mockApplications removed
 
 const defaultFilters = { time: 'All Time', instType: 'All Types', sector: 'All Sectors' };
 
@@ -79,6 +23,45 @@ export default function PendingRegistrations() {
   
   const [tempFilters, setTempFilters] = useState(defaultFilters);
   const [activeFilters, setActiveFilters] = useState(defaultFilters);
+  
+  const [applications, setApplications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.get('/v1/super-admin/institutions/pending');
+        if (response.data.success) {
+          const userStr = localStorage.getItem('user');
+          const user = userStr ? JSON.parse(userStr) : null;
+          const currentAdminId = user?.id;
+
+          // Filter by routedSuperAdmin and sort by submittedAt descending
+          const filtered = response.data.institutions
+            .filter(app => app.routedSuperAdmin?.superAdminId === currentAdminId)
+            .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+          setApplications(filtered);
+        }
+      } catch (err) {
+        console.error("Failed to fetch applications", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchApplications();
+  }, []);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const d = new Date(dateString);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthName = months[d.getMonth()];
+    const dayNum = d.getDate();
+    const year = d.getFullYear();
+    const timeStr = d.toLocaleTimeString('en-GB');
+    return `${monthName} ${dayNum}, ${year} - ${timeStr}`;
+  };
 
   const simulateSearch = () => {
     setIsSearching(true);
@@ -275,19 +258,23 @@ export default function PendingRegistrations() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
-                {mockApplications.map((app) => (
-                  <tr key={app.id} className="hover:bg-slate-800/30 transition-colors">
+                {applications.map((app) => (
+                  <tr key={app.registrationId} className="hover:bg-slate-800/30 transition-colors">
                     
                     {/* Submitted At */}
                     <td className="p-4 align-middle">
-                      <p className="text-xs text-slate-400 font-medium whitespace-nowrap">{app.submittedAt}</p>
+                      <p className="text-xs text-slate-400 font-medium whitespace-nowrap">{formatDate(app.submittedAt)}</p>
                     </td>
 
                     {/* Logo */}
                     <td className="p-4 align-middle">
                       <div className="flex ml-[30px]">
                         <div className="w-28 h-28 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-md">
-                          <Building2 className="w-14 h-14 text-slate-500" />
+                          {app.institutionLogoUrl ? (
+                            <img src={app.institutionLogoUrl} alt="Logo" className="w-full h-full object-cover" />
+                          ) : (
+                            <Building2 className="w-14 h-14 text-slate-500" />
+                          )}
                         </div>
                       </div>
                     </td>
@@ -295,22 +282,25 @@ export default function PendingRegistrations() {
                     {/* Applicant */}
                     <td className="p-4 align-middle">
                       <div className="flex flex-col gap-1">
-                        <span className="text-sm font-bold text-white">{app.applicantName}</span>
-                        <span className="text-xs text-slate-500">{app.sector}</span>
+                        <span className="text-sm font-bold text-white">{app.institutionName}</span>
+                        <span className="text-xs text-slate-500 font-mono">{app.registrationId}</span>
                       </div>
                     </td>
 
                     {/* Institution Type */}
                     <td className="p-4 align-middle text-left">
-                      <span className="text-sm font-medium text-slate-300">
-                        {app.instType}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-medium text-slate-300">
+                          {app.institutionType}
+                        </span>
+                        <span className="text-xs text-slate-500">{app.sectorType}</span>
+                      </div>
                     </td>
 
                     {/* Action */}
                     <td className="p-4 align-middle text-left">
                       <button 
-                        onClick={() => navigate(`/super-admin/pending-registrations/${app.id}`)}
+                        onClick={() => navigate(`/super-admin/pending-registrations/${app.registrationId}`, { state: { institution: app } })}
                         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-cyan-700/50 text-xs font-bold text-cyan-400 hover:text-white hover:border-cyan-500/80 hover:bg-cyan-500/20 transition-all"
                       >
                         Review <ArrowRight className="w-3.5 h-3.5" />

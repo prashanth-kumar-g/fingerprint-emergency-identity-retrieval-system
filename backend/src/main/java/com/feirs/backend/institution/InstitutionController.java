@@ -26,10 +26,13 @@ public class InstitutionController {
         this.changeRequestService = changeRequestService;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody PendingInstitutionRegistration registration) {
+    @PostMapping(value = "/register", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> register(
+            @ModelAttribute PendingInstitutionRegistration registration,
+            @RequestPart(value = "logoFile", required = false) org.springframework.web.multipart.MultipartFile logoFile,
+            @RequestPart(value = "licenseFile", required = true) org.springframework.web.multipart.MultipartFile licenseFile) {
         try {
-            PendingInstitutionRegistration saved = institutionService.register(registration);
+            PendingInstitutionRegistration saved = institutionService.register(registration, logoFile, licenseFile);
             log.info("📝 New institution registration: {}", saved.getInstitutionName());
             return ResponseEntity.status(201).body(Map.of(
                 "success", true,
@@ -112,6 +115,59 @@ public class InstitutionController {
                 "success", false,
                 "error", e.getMessage()
             ));
+        }
+    }
+
+    @PutMapping("/profile/email")
+    public ResponseEntity<?> updateEmail(
+            @RequestParam String institutionId,
+            @RequestBody Map<String, String> payload) {
+        try {
+            String newEmail = payload.get("newEmail");
+            String currentPassword = payload.get("password");
+            
+            Institution updated = institutionService.updateEmail(institutionId, newEmail, currentPassword);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Email updated successfully.",
+                "institution", updated
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/profile/password")
+    public ResponseEntity<?> updatePassword(
+            @RequestParam String institutionId,
+            @RequestBody Map<String, String> payload) {
+        try {
+            String oldPassword = payload.get("oldPassword");
+            String newPassword = payload.get("newPassword");
+            
+            institutionService.updatePassword(institutionId, oldPassword, newPassword);
+            return ResponseEntity.ok("Password updated successfully.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/profile/photo")
+    public ResponseEntity<?> uploadPhoto(
+            @RequestParam String institutionId,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        try {
+            String publicUrl = institutionService.uploadLogo(institutionId, file);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Photo uploaded successfully.",
+                "url", publicUrl
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to upload photo for institution: {}", institutionId, e);
+            return ResponseEntity.internalServerError().body("Failed to upload photo: " + e.getMessage());
         }
     }
 }

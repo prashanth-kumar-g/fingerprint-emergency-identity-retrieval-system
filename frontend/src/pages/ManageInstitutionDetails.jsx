@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import api from '../api/axiosConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft,
@@ -20,21 +21,40 @@ export default function ManageInstitutionDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const [status, setStatus] = useState('ACTIVE');
+  const location = useLocation();
+  const institution = location.state?.institution || {};
+
+  const [status, setStatus] = useState(institution.accountStatus || 'ACTIVE');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const handleToggleStatus = () => {
+  const formatDateTime = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    const datePart = date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const timePart = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    return `${datePart} - ${timePart}`;
+  };
+
+  const handleToggleStatus = async () => {
     setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
+    try {
       const newStatus = status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-      setStatus(newStatus);
-      setSuccessMessage(newStatus === 'ACTIVE' ? 'Facility access restored.' : 'Facility access suspended.');
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-    }, 1500);
+      const response = await api.put(`/v1/super-admin/institutions/${id}/status`, {
+        status: newStatus
+      });
+      if (response.data.success) {
+        setStatus(newStatus);
+        setSuccessMessage(newStatus === 'ACTIVE' ? 'Facility access restored.' : 'Facility access suspended.');
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+      }
+    } catch (err) {
+      console.error("Failed to update status", err);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -64,7 +84,7 @@ export default function ManageInstitutionDetails() {
       {/* Main 50/50 Split */}
       <div className="flex flex-col lg:flex-row gap-6 w-full">
         
-        {/* Left Column: Data Cards (Static) */}
+        {/* Left Column: Data Cards */}
         <div className="w-full lg:w-1/2 flex flex-col gap-6">
           
           {/* Card 1: Identity Plate */}
@@ -73,7 +93,11 @@ export default function ManageInstitutionDetails() {
             
             <div className="relative mb-6 mt-4 group">
               <div className="w-56 h-56 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-xl">
-                <Building2 className="w-20 h-20 text-slate-500" />
+                {institution.institutionLogoUrl ? (
+                  <img src={institution.institutionLogoUrl} alt="Logo" className="w-full h-full object-cover" />
+                ) : (
+                  <Building2 className="w-20 h-20 text-slate-500" />
+                )}
               </div>
             </div>
             
@@ -84,68 +108,65 @@ export default function ManageInstitutionDetails() {
               </span>
             </div>
 
-            <h2 className="text-2xl font-black text-white mb-4">Apollo Hospital</h2>
+            <h2 className="text-2xl font-black text-white mb-4">{institution.institutionName || 'Unknown'}</h2>
 
             <div className="w-full flex flex-col gap-3 pt-6 border-t border-slate-800/50 text-center items-center">
               <div className="flex flex-wrap justify-center gap-1.5 text-sm">
                 <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">System ID:</span>
-                <span className="font-medium text-slate-300 font-mono text-center">FEIRS-INST-1011</span>
+                <span className="font-medium text-slate-300 font-mono text-center">{institution.institutionId || id}</span>
               </div>
               <div className="flex flex-wrap justify-center gap-1.5 text-sm">
                 <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Account Created:</span>
-                <span className="font-medium text-slate-300 text-center">Oct 24, 2026</span>
+                <span className="font-medium text-slate-300 text-center">
+                  {formatDateTime(institution.createdAt)}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Card 2: Administrative Details */}
-          <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-800/50">
-              <div className="p-2 rounded-lg bg-slate-800/50 border border-slate-700">
-                <User className="w-4 h-4 text-slate-400" />
+          {/* Card 2: Combined Details */}
+          <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl flex flex-col gap-6">
+            
+            {/* Primary Officer Section */}
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                <User className="w-4 h-4 text-cyan-400" />
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">Administrative Details</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Self-service officer records</p>
-              </div>
+              <h3 className="text-lg font-bold text-white tracking-wide">Primary Officer</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Institution Contact Number</label>
-                <div className="relative flex items-center">
-                  <div className="absolute left-3 text-slate-500"><Phone className="w-4 h-4" /></div>
-                  <input type="text" value="+91 98765 43210" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
-                </div>
-              </div>
-              <div className="hidden md:block"></div>
-              <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Primary Officer Name</label>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Full Name</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><User className="w-4 h-4" /></div>
-                  <input type="text" value="Dr. Rakesh Sharma" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value={institution.primaryOfficerName || ''} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Officer Designation</label>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Designation</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><Briefcase className="w-4 h-4" /></div>
-                  <input type="text" value="Chief Medical Administrator" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value={institution.officerDesignation || ''} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5 w-full md:col-span-2">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Phone Number</label>
+                <div className="relative flex items-center">
+                  <div className="absolute left-3 text-slate-500"><Phone className="w-4 h-4" /></div>
+                  <input type="text" value={`${institution.phoneCountryCode || ''} ${institution.phoneNumber || ''}`} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Card 3: Legal Facility Data */}
-          <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-800/50">
-              <div className="p-2 rounded-lg bg-slate-800/50 border border-slate-700">
-                <Building className="w-4 h-4 text-slate-400" />
+            <div className="w-full h-px bg-slate-800 my-2"></div>
+
+            {/* Institution Section */}
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                <Building className="w-4 h-4 text-cyan-400" />
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">Legal Facility Data</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Managed records bound to the facility</p>
-              </div>
+              <h3 className="text-lg font-bold text-white tracking-wide">Institution Data</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -153,28 +174,28 @@ export default function ManageInstitutionDetails() {
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Institution Type</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><Building2 className="w-4 h-4" /></div>
-                  <input type="text" value="Hospital" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value={institution.institutionType || ''} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 w-full">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Sector Type</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><Briefcase className="w-4 h-4" /></div>
-                  <input type="text" value="Private" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value={institution.sectorType || ''} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 w-full md:col-span-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Official Email</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><Mail className="w-4 h-4" /></div>
-                  <input type="text" value="apollo@hospital.com" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value={institution.officialEmail || ''} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 w-full md:col-span-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Full Registered Address</label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><MapPin className="w-4 h-4" /></div>
-                  <input type="text" value="154/11, Bannerghatta Road, Bangalore, Karnataka - 560076, India" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <input type="text" value={`${institution.addressLine1 || ''} ${institution.addressLine2 || ''}, ${institution.city || ''}, ${institution.state || ''} - ${institution.pinCode || ''}, ${institution.country || ''}`} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-300 outline-none cursor-default" />
                 </div>
               </div>
             </div>
@@ -189,13 +210,12 @@ export default function ManageInstitutionDetails() {
               <span className="text-sm font-bold text-white uppercase tracking-wider">Institute License</span>
             </div>
             <div className="flex-1 w-full bg-slate-800/30 overflow-y-auto">
-              {/* Using a placeholder object tag for PDF viewing */}
-              <object 
-                data="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" 
-                type="application/pdf" 
-                className="w-full h-[1200px]"
+              <iframe 
+                src={`${institution.verificationDocumentUrl || ''}#view=FitH&toolbar=0`}
+                title="Institute License"
+                className="w-full h-full min-h-[1200px] border-0 rounded-b-2xl bg-white"
               >
-              </object>
+              </iframe>
             </div>
           </div>
         </div>

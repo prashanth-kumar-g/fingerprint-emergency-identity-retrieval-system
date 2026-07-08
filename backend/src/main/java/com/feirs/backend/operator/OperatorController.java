@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * REST Controller for Operator HR management and self-service.
@@ -59,6 +61,61 @@ public class OperatorController {
             return ResponseEntity.status(500).body(Map.of(
                 "success", false,
                 "error", "Internal server error creating operator."
+            ));
+        }
+    }
+
+    @PostMapping("/enroll/initiate")
+    public ResponseEntity<?> initiateEnrollment(@RequestParam String institutionId,
+                                                @RequestBody Operator operator) {
+        try {
+            operatorService.initiateEnrollment(operator, institutionId);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "OTP sent successfully."
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "error", e.getMessage()
+            ));
+        } catch (Exception e) {
+            log.error("Error initiating enrollment: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "error", "Failed to initiate enrollment."
+            ));
+        }
+    }
+
+    @PostMapping(value = "/enroll/verify", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> verifyEnrollment(
+            @RequestParam("otp") String otp,
+            @RequestParam("institutionId") String institutionId,
+            @RequestParam("operator") String operatorJson,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.findAndRegisterModules();
+            Operator operator = mapper.readValue(operatorJson, Operator.class);
+            
+            Operator saved = operatorService.verifyEnrollment(otp, operator, institutionId, file);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Operator enrolled successfully.",
+                "operatorId", saved.getOperatorId(),
+                "operator", saved
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "error", e.getMessage()
+            ));
+        } catch (Exception e) {
+            log.error("Error verifying enrollment: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "error", "Failed to verify enrollment."
             ));
         }
     }
@@ -151,9 +208,25 @@ public class OperatorController {
 
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestParam String operatorId,
-                                            @RequestBody Operator updates) {
+                                            @RequestBody Map<String, String> body) {
         try {
+            Operator updates = new Operator();
+            if (body.containsKey("phoneNumber")) updates.setPhoneNumber(body.get("phoneNumber"));
+            if (body.containsKey("phoneCountryCode")) updates.setPhoneCountryCode(body.get("phoneCountryCode"));
+            if (body.containsKey("addressLine1")) updates.setAddressLine1(body.get("addressLine1"));
+            if (body.containsKey("addressLine2")) updates.setAddressLine2(body.get("addressLine2"));
+            if (body.containsKey("city")) updates.setCity(body.get("city"));
+            if (body.containsKey("state")) updates.setState(body.get("state"));
+            if (body.containsKey("country")) updates.setCountry(body.get("country"));
+            if (body.containsKey("pinCode")) updates.setPinCode(body.get("pinCode"));
+            if (body.containsKey("profilePhotoUrl")) updates.setProfilePhotoUrl(body.get("profilePhotoUrl"));
+            
             Operator updated = operatorService.updateProfile(operatorId, updates);
+            
+            if (body.containsKey("oldPassword") && body.containsKey("newPassword")) {
+                operatorService.updatePassword(operatorId, body.get("oldPassword"), body.get("newPassword"));
+            }
+            
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Profile updated successfully.",
@@ -170,6 +243,23 @@ public class OperatorController {
                 "success", false,
                 "error", "Internal server error updating profile."
             ));
+        }
+    }
+    @PostMapping("/profile/photo")
+    public ResponseEntity<?> uploadPhoto(@RequestParam String operatorId,
+                                          @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        try {
+            String url = operatorService.uploadPhoto(operatorId, file);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Photo uploaded successfully.",
+                "url", url
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error uploading operator photo: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of("error", "Internal server error uploading photo."));
         }
     }
 }

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { 
   Fingerprint, 
   ShieldCheck, 
@@ -14,41 +15,63 @@ export default function EmergencyScanGateway() {
   const [gatewayState, setGatewayState] = useState('READY');
   const [fingerprintQuality, setFingerprintQuality] = useState(0);
 
-  // Simulated Citizen ID to redirect to on success
-  const targetCitizenId = 'FEIRS-CIT-12459';
+  const token = localStorage.getItem('token');
 
-  const handleSimulateScan = () => {
+  const handleEmergencyScan = () => {
     setGatewayState('SCANNING');
-    
-    // Simulate scan progression
-    let quality = 0;
-    const interval = setInterval(() => {
-      quality += Math.floor(Math.random() * 20) + 10;
-      if (quality >= 85) {
-        quality = 87; // Final quality
-        clearInterval(interval);
-        setFingerprintQuality(quality);
-        setTimeout(() => {
-          // 80% chance of success for demonstration
-          if (Math.random() > 0.2) {
-            setGatewayState('IDENTIFIED');
-            // Auto redirect after 1.5 seconds (Zero OTP, high-speed flow)
-            setTimeout(() => {
-              navigate(`/operator/emergency-scan/${targetCitizenId}`);
-            }, 1500);
+    setFingerprintQuality(0);
+
+    setTimeout(async () => {
+      try {
+        if (typeof window.CaptureFinger !== 'function') {
+          throw new Error("MFS100 scripts (mfs100.js) are not loaded in index.html");
+        }
+        
+        const res = window.CaptureFinger(60, 10000);
+        
+        if (res.httpStaus) {
+          const data = res.data;
+          if (data && data.BitmapData && (data.ErrorCode == 0 || data.BitmapData.length > 10)) {
+            setFingerprintQuality(data.Quality || 100);
+            
+            // Match against backend
+            const response = await axios.post('http://localhost:8080/api/v1/citizens/emergency-scan', 
+              { isoTemplate: data.IsoTemplate },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            if (response.data.found) {
+              setGatewayState('IDENTIFIED');
+              setTimeout(() => {
+                navigate(`/operator/emergency-scan/${response.data.citizenId}`, { 
+                  state: { 
+                    citizen: response.data.citizen,
+                    contacts: response.data.contacts
+                  } 
+                });
+              }, 1500);
+            } else {
+              setGatewayState('NOT_FOUND');
+              setTimeout(() => {
+                setGatewayState('READY');
+                setFingerprintQuality(0);
+              }, 4000);
+            }
           } else {
-            setGatewayState('NOT_FOUND');
-            // Reset back to ready after 3 seconds
-            setTimeout(() => {
-              setGatewayState('READY');
-              setFingerprintQuality(0);
-            }, 3000);
+            throw new Error(data ? (data.ErrorDescription || data.Description || 'Capture failed') : 'No response data from scanner');
           }
-        }, 500);
-      } else {
-        setFingerprintQuality(quality);
+        } else {
+          throw new Error(res.err || 'Scanner Service not reachable (Network Error)');
+        }
+      } catch (error) {
+        console.error("Emergency Scan Error:", error);
+        setGatewayState('NOT_FOUND'); // Treat scanner errors as not found/failure state
+        setTimeout(() => {
+          setGatewayState('READY');
+          setFingerprintQuality(0);
+        }, 4000);
       }
-    }, 400);
+    }, 100);
   };
 
   return (
@@ -128,7 +151,7 @@ export default function EmergencyScanGateway() {
                 initial={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 disabled={gatewayState === 'SCANNING'}
-                onClick={handleSimulateScan}
+                onClick={handleEmergencyScan}
                 className={`flex items-center gap-2 px-10 py-4 rounded-full font-black text-lg transition-all shadow-lg ${
                   gatewayState === 'SCANNING' 
                     ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none' 

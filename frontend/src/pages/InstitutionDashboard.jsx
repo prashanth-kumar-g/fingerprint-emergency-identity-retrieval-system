@@ -66,6 +66,10 @@ const cards = [
 export default function InstitutionDashboard() {
   const navigate = useNavigate();
 
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const isSuspended = user?.accountStatus === 'SUSPENDED';
+
   return (
     <div className="w-full flex flex-col items-center gap-6 pb-20">
       
@@ -94,6 +98,7 @@ export default function InstitutionDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
           {cards.map((card, i) => {
             const Icon = card.icon;
+            const isRestricted = isSuspended && card.key !== 'data-change';
 
             return (
               <motion.div
@@ -101,12 +106,27 @@ export default function InstitutionDashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
-                whileHover={{ y: -4 }}
-                onClick={() => navigate(card.path)}
-                className={`group cursor-pointer bg-slate-900/80 backdrop-blur-xl border ${card.border} rounded-2xl p-6 shadow-xl ${card.glow} transition-all duration-300 flex flex-col items-center text-center h-full`}
+                whileHover={!isRestricted ? { y: -4 } : {}}
+                onClick={() => {
+                  if (!isRestricted) navigate(card.path);
+                }}
+                className={`relative group ${isRestricted ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'} bg-slate-900/80 backdrop-blur-xl border ${card.border} rounded-2xl p-6 shadow-xl ${!isRestricted ? card.glow : ''} transition-all duration-300 flex flex-col items-center text-center h-full overflow-hidden`}
               >
+                {/* Suspension Overlay */}
+                {isRestricted && (
+                  <div className="absolute inset-0 z-20 bg-slate-950/95 flex flex-col items-center justify-center p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="w-10 h-10 rounded-full bg-red-900/30 flex items-center justify-center border border-red-500/30 mb-3">
+                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                    </span>
+                    <p className="text-xs font-bold text-red-400 uppercase tracking-widest mb-2">Access Restricted</p>
+                    <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
+                      Your account is suspended. Please request reactivation from Super Admin by submitting legal documents.
+                    </p>
+                  </div>
+                )}
+
                 {/* Icon */}
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${card.iconBg} border border-slate-700/50 ${card.iconColor} mb-4 transition-transform group-hover:scale-110 duration-300`}>
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${card.iconBg} border border-slate-700/50 ${card.iconColor} mb-4 transition-transform ${!isRestricted ? 'group-hover:scale-110' : ''} duration-300`}>
                   <Icon className="w-7 h-7" />
                 </div>
 
@@ -127,10 +147,11 @@ export default function InstitutionDashboard() {
 
                 {/* Action Button */}
                 <button
-                  className={`w-full py-3 rounded-lg font-bold text-white text-xs bg-slate-800 border border-slate-700 group-hover:bg-slate-700 transition-all duration-300 flex items-center justify-center gap-2 mt-auto`}
+                  disabled={isRestricted}
+                  className={`w-full py-3 rounded-lg font-bold text-white text-xs bg-slate-800 border border-slate-700 ${!isRestricted ? 'group-hover:bg-slate-700' : ''} transition-all duration-300 flex items-center justify-center gap-2 mt-auto`}
                 >
                   Enter Module
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  {!isRestricted && <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
                 </button>
               </motion.div>
             );

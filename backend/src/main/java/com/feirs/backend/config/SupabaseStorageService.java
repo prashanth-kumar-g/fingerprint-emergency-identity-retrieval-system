@@ -70,12 +70,15 @@ public class SupabaseStorageService {
             if (!publicUrl.startsWith(basePath)) return;
             
             String filePath = publicUrl.substring(basePath.length());
-            String endpoint = supabaseUrl + "/storage/v1/object/" + bucketName + "/" + filePath;
+            String endpoint = supabaseUrl + "/storage/v1/object/" + bucketName;
 
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(supabaseKey);
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
-            HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+            String requestBody = "{\"prefixes\": [\"" + filePath + "\"]}";
+
+            HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
             restTemplate.exchange(endpoint, HttpMethod.DELETE, requestEntity, String.class);
             log.info("Successfully deleted old file from storage: {}", filePath);
         } catch (Exception e) {

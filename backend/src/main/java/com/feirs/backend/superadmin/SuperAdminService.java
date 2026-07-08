@@ -44,6 +44,11 @@ public class SuperAdminService {
         return institutionService.getPendingRegistrations();
     }
 
+    @Transactional(readOnly = true)
+    public List<Institution> getAllInstitutions() {
+        return institutionService.getAllInstitutions();
+    }
+
     public Institution reviewInstitution(String registrationId, boolean approved, String rejectionReason, String superAdminId) {
         log.info("Super Admin {} reviewing registration {} - Approved: {}", 
                  superAdminId, registrationId, approved);

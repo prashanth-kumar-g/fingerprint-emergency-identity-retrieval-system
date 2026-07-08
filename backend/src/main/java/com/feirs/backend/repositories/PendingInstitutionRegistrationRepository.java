@@ -11,4 +11,6 @@ public interface PendingInstitutionRegistrationRepository extends JpaRepository<
     boolean existsByOfficialEmail(String officialEmail);
     boolean existsByOfficialEmailAndStatus(String officialEmail, String status);
     List<PendingInstitutionRegistration> findByStatus(String status);
+    
+    PendingInstitutionRegistration findFirstByOrderByRegistrationIdDesc();
 }

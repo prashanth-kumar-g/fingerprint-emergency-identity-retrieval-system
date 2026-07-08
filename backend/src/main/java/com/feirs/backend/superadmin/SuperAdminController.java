@@ -42,13 +42,31 @@ public class SuperAdminController {
         }
     }
 
+    @GetMapping("/institutions")
+    public ResponseEntity<?> getAllInstitutions() {
+        try {
+            List<Institution> institutions = superAdminService.getAllInstitutions();
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "count", institutions.size(),
+                "institutions", institutions
+            ));
+        } catch (Exception e) {
+            log.error("Error fetching all institutions: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "error", "Failed to fetch institutions."
+            ));
+        }
+    }
+
     @PutMapping("/institutions/{id}/review")
     public ResponseEntity<?> reviewInstitution(@PathVariable String id,
-                                                @RequestBody Map<String, Object> body,
-                                                @RequestParam(required = false) String superAdminId) {
+                                                @RequestBody Map<String, Object> body) {
         try {
             boolean approved = (boolean) body.getOrDefault("approved", false);
             String rejectionReason = (String) body.getOrDefault("rejectionReason", null);
+            String superAdminId = (String) body.getOrDefault("superAdminId", null);
 
             if (!approved && (rejectionReason == null || rejectionReason.isBlank())) {
                 return ResponseEntity.badRequest().body(Map.of(

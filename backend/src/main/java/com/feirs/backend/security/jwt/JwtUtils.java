@@ -82,4 +82,27 @@ public class JwtUtils {
         }
         return null;
     }
+
+    public String generateActivationToken(String email) {
+        return Jwts.builder()
+                .subject(email)
+                .claim("purpose", "ACTIVATE_ACCOUNT")
+                .issuedAt(new Date())
+                .expiration(new Date((new Date()).getTime() + 7L * 24 * 60 * 60 * 1000)) // 7 days
+                .signWith(key())
+                .compact();
+    }
+
+    public String validateActivationTokenAndGetEmail(String token) {
+        try {
+            Claims claims = Jwts.parser().verifyWith(key()).build()
+                    .parseSignedClaims(token).getPayload();
+            if ("ACTIVATE_ACCOUNT".equals(claims.get("purpose"))) {
+                return claims.getSubject();
+            }
+        } catch (Exception e) {
+            logger.error("Invalid activation token: {}", e.getMessage());
+        }
+        return null;
+    }
 }

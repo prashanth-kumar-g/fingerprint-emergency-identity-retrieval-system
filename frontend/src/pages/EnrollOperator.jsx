@@ -109,6 +109,15 @@ const genderOptions = [
 
 export default function EnrollOperator() {
   const navigate = useNavigate();
+  
+  const [fullName, setFullName] = useState('');
+  const [department, setDepartment] = useState('');
+  const [position, setPosition] = useState('');
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [addressLine1, setAddressLine1] = useState('');
+  const [addressLine2, setAddressLine2] = useState('');
+  const [pinCode, setPinCode] = useState('');
 
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [selectedState, setSelectedState] = useState(null);
@@ -152,38 +161,125 @@ export default function EnrollOperator() {
   };
 
   const handleReset = () => {
-    // Reset fields
     setPhotoFile(null);
     setDob(null);
     setSelectedGender(null);
     setSelectedCountry(null); setSelectedState(null); setSelectedCity(null);
     setSelectedPhoneCode(null);
+    setFullName(''); setDepartment(''); setPosition(''); setEmail('');
+    setPhoneNumber(''); setAddressLine1(''); setAddressLine2(''); setPinCode('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const institutionId = user.id;
+
+    if (!institutionId) {
+      triggerAlert('error', 'Institution ID not found. Please log in again.');
+      return;
+    }
+
     if (!showOtpBox) {
+      if (!photoFile) {
+        triggerAlert('error', 'Operator photo is required.');
+        return;
+      }
       setIsSaving(true);
-      setTimeout(() => {
+      try {
+        const payload = {
+          fullName,
+          dateOfBirth: dob ? dob.toISOString().split('T')[0] : null,
+          gender: selectedGender?.value,
+          department,
+          designationTitle: position,
+          officialEmail: email,
+          phoneCountryCode: selectedPhoneCode?.value,
+          phoneNumber,
+          addressLine1,
+          addressLine2,
+          city: selectedCity?.value,
+          state: selectedState?.label,
+          country: selectedCountry?.label,
+          pinCode
+        };
+
+        const res = await fetch(`http://localhost:8080/api/v1/operators/enroll/initiate?institutionId=${institutionId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
         setIsSaving(false);
-        setShowOtpBox(true);
-        triggerAlert('warning', "Operator Enrollment requires Admin consent. An OTP has been sent to your official email.");
-      }, 1000);
+
+        if (res.ok) {
+          setShowOtpBox(true);
+          triggerAlert('warning', "Operator Enrollment requires Admin consent. An OTP has been sent to the operator's official email.");
+        } else {
+          triggerAlert('error', data.error || 'Failed to initiate enrollment.');
+        }
+      } catch (err) {
+        setIsSaving(false);
+        triggerAlert('error', 'A network error occurred.');
+      }
     } else {
       setIsOtpVerifying(true);
-      setTimeout(() => {
+      try {
+        const payload = {
+          fullName,
+          dateOfBirth: dob ? dob.toISOString().split('T')[0] : null,
+          gender: selectedGender?.value,
+          department,
+          designationTitle: position,
+          officialEmail: email,
+          phoneCountryCode: selectedPhoneCode?.value,
+          phoneNumber,
+          addressLine1,
+          addressLine2,
+          city: selectedCity?.value,
+          state: selectedState?.label,
+          country: selectedCountry?.label,
+          pinCode
+        };
+
+        const formData = new FormData();
+        formData.append("otp", otpValue);
+        formData.append("institutionId", institutionId);
+        formData.append("operator", JSON.stringify(payload));
+        if (photoFile) {
+          formData.append("file", photoFile);
+        }
+
+        const res = await fetch(`http://localhost:8080/api/v1/operators/enroll/verify`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: formData
+        });
+
+        const data = await res.json();
         setIsOtpVerifying(false);
-        if (otpValue === '111111') {
+
+        if (res.ok) {
           setShowOtpBox(false);
           setOtpValue('');
-          triggerAlert('success', 'OTP Verified! Operator successfully enrolled.');
+          triggerAlert('success', 'OTP Verified! Operator added successfully and an account activation link is sent to operator.');
           setTimeout(() => {
             handleReset();
-          }, 2000);
+          }, 3000);
         } else {
-          triggerAlert('error', 'Invalid OTP. Please check the code and try again.');
+          triggerAlert('error', data.error || 'Invalid OTP. Please check the code and try again.');
         }
-      }, 1200);
+      } catch (err) {
+        setIsOtpVerifying(false);
+        triggerAlert('error', 'A network error occurred while verifying OTP.');
+      }
     }
   };
 
@@ -220,10 +316,7 @@ export default function EnrollOperator() {
             <div className="relative group cursor-pointer mb-2 mt-2" onClick={() => photoInputRef.current?.click()}>
               <div className={`w-[200px] h-[200px] rounded-full border-2 flex flex-col items-center justify-center overflow-hidden shadow-xl transition-colors ${photoFile ? 'border-emerald-500 bg-emerald-900/10' : 'border-slate-700 bg-slate-800 group-hover:border-emerald-500/50'}`}>
                 {photoFile ? (
-                  <>
-                    <CheckCircle2 className="w-16 h-16 text-emerald-400 mb-2" />
-                    <span className="text-sm text-emerald-200/70 font-bold max-w-[150px] truncate px-2 text-center">{photoFile.name}</span>
-                  </>
+                  <img src={URL.createObjectURL(photoFile)} alt="Operator" className="w-full h-full object-cover" />
                 ) : (
                   <Camera className="w-20 h-20 text-slate-500 group-hover:text-emerald-400 transition-colors" />
                 )}
@@ -255,6 +348,8 @@ export default function EnrollOperator() {
                 <input 
                   type="text" 
                   required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   placeholder="Enter employee's legal name" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                 />
@@ -307,6 +402,8 @@ export default function EnrollOperator() {
                 <input 
                   type="text" 
                   required
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
                   placeholder="e.g., Emergency Room, Trauma Center" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                 />
@@ -317,6 +414,8 @@ export default function EnrollOperator() {
                 <input 
                   type="text" 
                   required
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
                   placeholder="e.g., Triage Nurse, Duty Doctor" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                 />
@@ -329,6 +428,8 @@ export default function EnrollOperator() {
                   <input 
                     type="email" 
                     required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="operator@hospital.org" 
                     className="w-full bg-slate-950 border border-slate-800 text-white pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                   />
@@ -352,6 +453,8 @@ export default function EnrollOperator() {
                   <div className="flex-grow">
                     <input 
                       type="text" 
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="Enter phone number" 
                       className="w-full h-[42px] bg-slate-950 border border-slate-800 text-white px-4 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                     />
@@ -373,6 +476,8 @@ export default function EnrollOperator() {
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Address Line 1 (Building & Street)</label>
                 <input 
                   type="text" 
+                  value={addressLine1}
+                  onChange={(e) => setAddressLine1(e.target.value)}
                   placeholder="Enter building number and street" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                 />
@@ -382,6 +487,8 @@ export default function EnrollOperator() {
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Address Line 2 (Optional Landmark)</label>
                 <input 
                   type="text" 
+                  value={addressLine2}
+                  onChange={(e) => setAddressLine2(e.target.value)}
                   placeholder="Enter nearby landmark or floor" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                 />
@@ -420,6 +527,8 @@ export default function EnrollOperator() {
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Postal / Pin Code</label>
                 <input 
                   type="text" 
+                  value={pinCode}
+                  onChange={(e) => setPinCode(e.target.value)}
                   placeholder="Enter pin code" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                 />

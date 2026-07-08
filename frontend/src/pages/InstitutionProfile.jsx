@@ -17,10 +17,23 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
+import api from '../api/axiosConfig';
 
-const EditableField = ({ label, value, icon: Icon, type = "text", placeholder, isSaving }) => {
+const formatDate = (dateString) => {
+  if (!dateString) return 'Session Started';
+  const d = new Date(dateString);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  const monthName = months[d.getMonth()];
+  const dayNum = d.getDate();
+  const year = d.getFullYear();
+  const timeStr = d.toLocaleTimeString('en-GB');
+  
+  return `${monthName} ${dayNum}, ${year} - ${timeStr}`;
+};
+
+const EditableField = ({ label, value, onChange, icon: Icon, type = "text", placeholder, isSaving }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [currentValue, setCurrentValue] = useState(value);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -46,8 +59,8 @@ const EditableField = ({ label, value, icon: Icon, type = "text", placeholder, i
         <input 
           ref={inputRef}
           type={type}
-          value={currentValue}
-          onChange={(e) => setCurrentValue(e.target.value)}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           readOnly={!isEditing}
           placeholder={placeholder}
           className={`w-full bg-slate-950/50 border rounded-xl pl-10 pr-10 py-3 text-sm transition-all duration-300 outline-none
@@ -91,7 +104,7 @@ const ManagedField = ({ label, value, icon: Icon, tooltipMessage }) => {
           <div className="absolute right-0 bottom-full mb-2 w-64 bg-slate-800 text-white text-xs font-medium p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 pointer-events-none border border-slate-700 text-left">
             <div className="flex gap-2 items-start">
               <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-              <p leading-relaxed>{tooltipMessage}</p>
+              <p className="leading-relaxed">{tooltipMessage}</p>
             </div>
             {/* Arrow */}
             <div className="absolute -bottom-1 right-5 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
@@ -102,94 +115,211 @@ const ManagedField = ({ label, value, icon: Icon, tooltipMessage }) => {
   );
 };
 
-const PasswordExpander = ({ isSaving }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    if (isSaving) setIsExpanded(false);
-  }, [isSaving]);
-
-  const handleExpand = () => {
-    setIsExpanded(true);
-    setTimeout(() => inputRef.current?.focus(), 0);
-  };
-
-  return (
-    <div className="flex flex-col gap-1.5 w-full md:col-span-2">
-      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Account Password</label>
-      
-      {!isExpanded ? (
-        <div className="relative group cursor-pointer" onClick={handleExpand}>
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
-            <KeyRound className="w-4 h-4" />
-          </div>
-          <input 
-            type="password"
-            value="••••••••••••"
-            readOnly
-            className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-300 cursor-pointer group-hover:border-slate-700 transition-colors outline-none"
-          />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-500 group-hover:text-emerald-400 transition-colors">
-            <Pencil className="w-3.5 h-3.5" />
-          </div>
-        </div>
-      ) : (
-        <motion.div 
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          className="flex flex-col gap-4 p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/10"
-        >
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Update Password</span>
-            <button onClick={() => setIsExpanded(false)} className="text-xs text-slate-500 hover:text-white transition-colors">Cancel</button>
-          </div>
-          
-          <div className="relative">
-            <input ref={inputRef} type={showCurrent ? "text" : "password"} placeholder="Current Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-emerald-500/50 outline-none transition-colors" />
-            <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
-              {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-          <div className="relative">
-            <input type={showNew ? "text" : "password"} placeholder="New Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-emerald-500/50 outline-none transition-colors" />
-            <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
-              {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-          <div className="relative">
-            <input type={showConfirm ? "text" : "password"} placeholder="Confirm New Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-emerald-500/50 outline-none transition-colors" />
-            <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
-              {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-        </motion.div>
-      )}
-    </div>
-  );
-};
-
 export default function InstitutionProfile() {
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [globalError, setGlobalError] = useState("");
+
+  const [profile, setProfile] = useState(null);
+  
+  // Editable fields state
+  const [phoneInput, setPhoneInput] = useState("");
+  const [officerName, setOfficerName] = useState("");
+  const [officerDesignation, setOfficerDesignation] = useState("");
+  
+  const [phoneError, setPhoneError] = useState("");
+
+  // Password Expand State
+  const [isPasswordExpanded, setIsPasswordExpanded] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState("");
+  
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Photo State
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState(null);
+  const fileInputRef = useRef(null);
+  const passwordInputRef = useRef(null);
 
   const tooltipMsg = "To update this data, please submit a Data Change Request for Super Admin approval.";
 
-  const handleSave = () => {
+  const fetchProfile = async () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      if (!user?.id) return;
+      
+      const response = await api.get(`/v1/institutions/profile?institutionId=${user.id}`);
+      setProfile(response.data.institution);
+      
+      setOfficerName(response.data.institution.primaryOfficerName || "");
+      setOfficerDesignation(response.data.institution.officerDesignation || "");
+      
+      const countryCode = response.data.institution.phoneCountryCode || "";
+      const number = response.data.institution.phoneNumber || "";
+      if (countryCode && number) {
+        setPhoneInput(`${countryCode} ${number}`);
+      } else {
+        setPhoneInput("");
+      }
+    } catch (err) {
+      console.error(err);
+      setGlobalError("Failed to load profile data.");
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setSelectedPhotoFile(file);
+    setPhotoPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleSave = async () => {
+    setPhoneError("");
+    setPasswordError("");
+    setGlobalError("");
+    
+    let finalCountryCode = "";
+    let finalPhoneNumber = "";
+    let hasError = false;
+
+    if (phoneInput) {
+      const parts = phoneInput.trim().split(" ");
+      if (parts.length < 2 || !phoneInput.startsWith("+")) {
+        setPhoneError("Phone must be in format: +[Code] [Number]. E.g. +91 9876543210");
+        hasError = true;
+      } else {
+        finalCountryCode = parts[0];
+        finalPhoneNumber = parts.slice(1).join("").replace(/\D/g, ''); 
+      }
+    }
+
+    if (isPasswordExpanded && (newPassword || currentPassword)) {
+      if (newPassword !== confirmPassword) {
+        setPasswordError('New passwords do not match');
+        hasError = true;
+      } else if (!currentPassword) {
+        setPasswordError('Current password is required to change password');
+        hasError = true;
+      } else if (!newPassword) {
+         setPasswordError('New password cannot be empty');
+         hasError = true;
+      }
+    }
+
+    if (hasError) return;
+
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+    let successCount = 0;
+    let anyApiFailed = false;
+
+    // Save info
+    try {
+      await api.put(`/v1/institutions/profile/self-service?institutionId=${profile.institutionId}`, {
+        primaryOfficerName: officerName,
+        officerDesignation: officerDesignation,
+        phoneCountryCode: finalCountryCode,
+        phoneNumber: finalPhoneNumber
+      });
+      successCount++;
+    } catch (err) {
+      setGlobalError(err.response?.data?.error || 'Failed to update profile info');
+      anyApiFailed = true;
+    }
+
+    // Save password
+    if (!anyApiFailed && isPasswordExpanded && newPassword && currentPassword) {
+      if (newPassword !== confirmPassword) {
+        setPasswordError("New passwords do not match");
+        anyApiFailed = true;
+      } else if (newPassword === currentPassword) {
+        setPasswordError("Old and new password cannot be the same");
+        anyApiFailed = true;
+      } else {
+        try {
+          await api.put(`/v1/institutions/profile/password?institutionId=${profile.institutionId}`, {
+            oldPassword: currentPassword,
+            newPassword: newPassword
+          });
+          successCount++;
+          setIsPasswordExpanded(false);
+          setCurrentPassword('');
+          setNewPassword('');
+          setConfirmPassword('');
+        } catch(err) {
+          setPasswordError(err.response?.data || "Failed to update password");
+          anyApiFailed = true;
+        }
+      }
+    }
+
+    // Save photo
+    if (!anyApiFailed && selectedPhotoFile) {
+      const formData = new FormData();
+      formData.append('file', selectedPhotoFile);
+      try {
+        const response = await api.post(`/v1/institutions/profile/photo?institutionId=${profile.institutionId}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        successCount++;
+        setProfile(prev => ({ ...prev, institutionLogoUrl: response.data.url }));
+        setSelectedPhotoFile(null);
+        setPhotoPreviewUrl(null);
+      } catch (err) {
+        setGlobalError("Failed to upload photo: " + (err.response?.data || err.message));
+        anyApiFailed = true;
+      }
+    }
+
+    setIsSaving(false);
+    
+    if (!anyApiFailed && successCount > 0) {
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-    }, 1200);
+      fetchProfile();
+    }
   };
+
+  if (isLoadingProfile || !profile) {
+    return (
+      <div className="w-full flex justify-center items-center py-20">
+        <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
+      </div>
+    );
+  }
+
+  const displayPhoto = photoPreviewUrl || profile?.institutionLogoUrl;
 
   return (
     <div className="w-full flex flex-col items-center gap-6 pb-24 relative">
       
+      {/* Global Error Banner */}
+      <AnimatePresence>
+        {globalError && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-24 z-50 bg-red-500/90 text-white px-6 py-3 rounded-xl font-medium shadow-2xl backdrop-blur-md border border-red-400"
+          >
+            {globalError}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header Section */}
       <div className="w-full relative flex flex-col items-center justify-center text-center mt-2 mb-8 max-w-[1400px] mx-auto">
         <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-3">
@@ -214,13 +344,27 @@ export default function InstitutionProfile() {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-emerald-500/10 blur-[50px] pointer-events-none" />
             
             {/* Facility Logo */}
-            <div className="relative group cursor-pointer mb-6 mt-4">
+            <div 
+              className="relative group cursor-pointer mb-6 mt-4"
+              onClick={() => fileInputRef.current?.click()}
+            >
               <div className="w-56 h-56 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-xl group-hover:border-emerald-500/50 transition-colors">
-                <Building2 className="w-20 h-20 text-slate-500 group-hover:text-emerald-400 transition-colors" />
+                {displayPhoto ? (
+                  <img src={displayPhoto} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <Building2 className="w-20 h-20 text-slate-500 group-hover:text-emerald-400 transition-colors" />
+                )}
               </div>
               <div className="absolute bottom-4 right-4 p-2 bg-slate-800 border border-slate-700 rounded-full shadow-lg text-slate-400 group-hover:text-emerald-400 group-hover:border-emerald-500/50 transition-all">
                 <Pencil className="w-4 h-4" />
               </div>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handlePhotoSelect} 
+                accept="image/jpeg, image/png, image/jpg" 
+                className="hidden" 
+              />
             </div>
 
             {/* Role Badge */}
@@ -233,7 +377,7 @@ export default function InstitutionProfile() {
 
             {/* Institution Name (Managed) */}
             <div className="w-full relative group mb-6 flex justify-center items-center">
-              <h2 className="text-2xl font-black text-white text-center">Apollo Hospital</h2>
+              <h2 className="text-2xl font-black text-white text-center">{profile?.institutionName || "Loading..."}</h2>
               <div className="relative flex items-center ml-3">
                 <div className="text-slate-700 cursor-not-allowed">
                   <Pencil className="w-4 h-4" />
@@ -242,7 +386,7 @@ export default function InstitutionProfile() {
                 <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 bg-slate-800 text-white text-xs font-medium p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 pointer-events-none border border-slate-700 text-left">
                   <div className="flex gap-2 items-start">
                     <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <p leading-relaxed>{tooltipMsg}</p>
+                    <p className="leading-relaxed">{tooltipMsg}</p>
                   </div>
                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
                 </div>
@@ -253,15 +397,19 @@ export default function InstitutionProfile() {
             <div className="w-full flex flex-col gap-3 pt-6 border-t border-slate-800/50 text-center items-center">
               <div className="text-sm w-full px-2 leading-relaxed">
                 <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Institution ID:</span>
-                <span className="font-medium text-slate-300 font-mono">FEIRS-INST-1011</span>
+                <span className="font-medium text-slate-300 font-mono">{profile?.institutionId}</span>
               </div>
               <div className="text-sm w-full px-2 leading-relaxed">
-                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Last Login At:</span>
-                <span className="font-medium text-slate-300">Oct 24, 2026 - 08:05:12</span>
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Last Login at:</span>
+                <span className="font-medium text-slate-300 font-mono">{formatDate(profile?.lastLoginAt)}</span>
               </div>
               <div className="text-sm w-full px-2 leading-relaxed">
-                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Linked Super Admin:</span>
-                <span className="font-medium text-slate-300">Anil Kumar (FEIRS-SA-ROOT)</span>
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Linked super admin:</span>
+                <span className="font-medium text-slate-300 font-mono">
+                  {profile?.linkedSuperAdmin 
+                    ? `${profile.linkedSuperAdmin.adminName || 'Admin'} (${profile.linkedSuperAdmin.superAdminId})`
+                    : 'System Admin (FEIRS-SA-ROOT)'}
+                </span>
               </div>
             </div>
           </div>
@@ -283,26 +431,86 @@ export default function InstitutionProfile() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <EditableField 
-                label="Institution Contact Number" 
-                value="+91 98765 43210" 
-                icon={Phone} 
-                isSaving={isSaving}
-              />
+              <div className="flex flex-col gap-1 w-full">
+                <EditableField 
+                  label="Institution Contact Number" 
+                  value={phoneInput} 
+                  onChange={setPhoneInput}
+                  icon={Phone} 
+                  isSaving={isSaving}
+                />
+                {phoneError && <span className="text-red-400 text-xs mt-1 ml-1 font-medium">{phoneError}</span>}
+              </div>
               <div className="hidden md:block"></div>
+              
               <EditableField 
                 label="Primary Officer Name" 
-                value="Dr. Rakesh Sharma" 
+                value={officerName} 
+                onChange={setOfficerName}
                 icon={User} 
                 isSaving={isSaving}
               />
               <EditableField 
                 label="Officer Designation" 
-                value="Chief Medical Officer" 
+                value={officerDesignation} 
+                onChange={setOfficerDesignation}
                 icon={Briefcase} 
                 isSaving={isSaving}
               />
-              <PasswordExpander isSaving={isSaving} />
+              
+              {/* Password Expander */}
+              <div className="flex flex-col gap-1.5 w-full md:col-span-2">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Account Password</label>
+                
+                {!isPasswordExpanded ? (
+                  <div className="relative group cursor-pointer" onClick={() => { setIsPasswordExpanded(true); setTimeout(() => passwordInputRef.current?.focus(), 0); }}>
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+                      <KeyRound className="w-4 h-4" />
+                    </div>
+                    <input 
+                      type="password"
+                      value="••••••••••••"
+                      readOnly
+                      className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-300 cursor-pointer group-hover:border-slate-700 transition-colors outline-none"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-500 group-hover:text-emerald-400 transition-colors">
+                      <Pencil className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                ) : (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="flex flex-col gap-4 p-4 rounded-xl border border-emerald-500/30 bg-emerald-950/10"
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Update Password</span>
+                      <button onClick={() => setIsPasswordExpanded(false)} className="text-xs text-slate-500 hover:text-white transition-colors">Cancel</button>
+                    </div>
+                    
+                    <div className="relative">
+                      <input ref={passwordInputRef} value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} type={showCurrentPassword ? "text" : "password"} placeholder="Current Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-emerald-500/50 outline-none transition-colors" />
+                      <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                        {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <input value={newPassword} onChange={e=>setNewPassword(e.target.value)} type={showNewPassword ? "text" : "password"} placeholder="New Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-emerald-500/50 outline-none transition-colors" />
+                      <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <input value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} type={showConfirmPassword ? "text" : "password"} placeholder="Confirm New Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-emerald-500/50 outline-none transition-colors" />
+                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {passwordError && <span className="text-red-400 text-xs font-medium">{passwordError}</span>}
+                  </motion.div>
+                )}
+              </div>
+
             </div>
           </div>
 
@@ -321,20 +529,20 @@ export default function InstitutionProfile() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ManagedField 
                 label="Institution Type" 
-                value="Hospital" 
+                value={profile?.institutionType || ""} 
                 icon={Building2} 
                 tooltipMessage={tooltipMsg}
               />
               <ManagedField 
                 label="Sector Type" 
-                value="Private" 
+                value={profile?.sectorType || ""} 
                 icon={Briefcase} 
                 tooltipMessage={tooltipMsg}
               />
               <div className="md:col-span-2">
                 <ManagedField 
                   label="Official Email" 
-                  value="apollo@hospital.com" 
+                  value={profile?.officialEmail || ""} 
                   icon={Mail} 
                   tooltipMessage={tooltipMsg}
                 />
@@ -342,7 +550,7 @@ export default function InstitutionProfile() {
               <div className="md:col-span-2">
                 <ManagedField 
                   label="Full Registered Address" 
-                  value="154/11, Bannerghatta Road, Bangalore, Karnataka - 560076, India" 
+                  value={`${profile?.addressLine1 || ""}${profile?.addressLine2 ? ', ' + profile.addressLine2 : ''}, ${profile?.city || ""}, ${profile?.state || ""} - ${profile?.pinCode || ""}, ${profile?.country || ""}`} 
                   icon={MapPin} 
                   tooltipMessage={tooltipMsg}
                 />
@@ -353,7 +561,7 @@ export default function InstitutionProfile() {
         </div>
       </div>
 
-      {/* Global Action Bar (Expanded Full Width) */}
+      {/* Global Action Bar */}
       <div className="w-full max-w-[1400px] mx-auto px-4 lg:px-0 mt-2 flex flex-col gap-4">
         <AnimatePresence>
           {showSuccess && (

@@ -60,8 +60,10 @@ public class FingerprintController {
             Map<String, Object> result = fingerprintService.capture();
             return ResponseEntity.ok(result);
         } catch (Exception e) {
+            e.printStackTrace();
+            String msg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
             return ResponseEntity.status(500)
-                .body(Map.of("ErrorCode", -1, "Description", e.getMessage()));
+                .body(Map.of("ErrorCode", -1, "Description", msg));
         }
     }
 

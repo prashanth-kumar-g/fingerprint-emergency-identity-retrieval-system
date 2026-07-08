@@ -26,6 +26,10 @@ export default function InstitutionLayout() {
     navigate('/login/institution', { replace: true });
   };
 
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const isSuspended = user?.accountStatus === 'SUSPENDED';
+
   return (
     <div className="min-h-screen bg-[#020617] text-slate-300 font-sans flex flex-col overflow-x-hidden">
       
@@ -51,20 +55,34 @@ export default function InstitutionLayout() {
           {navLinks.map((link) => {
             const isActive = location.pathname === link.path || location.pathname.startsWith(link.path + '/');
             const Icon = link.icon;
+            const isRestricted = isSuspended && link.name !== 'Request Data Change';
             
             return (
-              <button
-                key={link.name}
-                onClick={() => navigate(link.path)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold tracking-wide ${
-                  isActive 
-                    ? 'bg-emerald-900/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]' 
-                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-white border border-transparent'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {link.name}
-              </button>
+              <div key={link.name} className="relative group">
+                <button
+                  disabled={isRestricted}
+                  onClick={() => {
+                    if (!isRestricted) navigate(link.path);
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold tracking-wide ${
+                    isActive 
+                      ? 'bg-emerald-900/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]' 
+                      : isRestricted
+                        ? 'text-slate-600 cursor-not-allowed border border-transparent'
+                        : 'text-slate-400 hover:bg-slate-800/60 hover:text-white border border-transparent'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {link.name}
+                </button>
+                {/* Tooltip for restricted items */}
+                {isRestricted && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 p-3 rounded-lg bg-slate-900 border border-red-500/30 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50">
+                    <p className="text-[10px] text-red-400 font-bold uppercase mb-1">Access Restricted</p>
+                    <p className="text-[10px] text-slate-300 leading-tight">Your account is suspended. Request reactivation to access this module.</p>
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>

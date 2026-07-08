@@ -16,12 +16,14 @@ import {
   Users,
   Building2,
   Eye,
-  EyeOff
+  EyeOff,
+  MapPin,
+  Upload
 } from 'lucide-react';
+import api from '../api/axiosConfig';
 
-const EditableField = ({ label, value, icon: Icon, type = "text", placeholder, isSaving }) => {
+const EditableField = ({ label, value, onChange, icon: Icon, type = "text", placeholder, isSaving }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [currentValue, setCurrentValue] = useState(value);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -47,8 +49,8 @@ const EditableField = ({ label, value, icon: Icon, type = "text", placeholder, i
         <input 
           ref={inputRef}
           type={type}
-          value={currentValue}
-          onChange={(e) => setCurrentValue(e.target.value)}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           readOnly={!isEditing}
           placeholder={placeholder}
           className={`w-full bg-slate-950/50 border rounded-xl pl-10 pr-10 py-3 text-sm transition-all duration-300 outline-none
@@ -103,7 +105,7 @@ const ManagedField = ({ label, value, icon: Icon, tooltipMessage }) => {
   );
 };
 
-const PasswordExpander = ({ isSaving }) => {
+const PasswordExpander = ({ isSaving, oldPassword, newPassword, confirmPassword, setOldPassword, setNewPassword, setConfirmPassword }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
@@ -150,19 +152,19 @@ const PasswordExpander = ({ isSaving }) => {
           </div>
           
           <div className="relative">
-            <input ref={inputRef} type={showCurrent ? "text" : "password"} placeholder="Current Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-red-500/50 outline-none transition-colors" />
+            <input ref={inputRef} type={showCurrent ? "text" : "password"} value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="Current Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-red-500/50 outline-none transition-colors" />
             <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
               {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
           <div className="relative">
-            <input type={showNew ? "text" : "password"} placeholder="New Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-red-500/50 outline-none transition-colors" />
+            <input type={showNew ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-red-500/50 outline-none transition-colors" />
             <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
               {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
           <div className="relative">
-            <input type={showConfirm ? "text" : "password"} placeholder="Confirm New Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-red-500/50 outline-none transition-colors" />
+            <input type={showConfirm ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm New Password" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 pr-10 text-sm text-white focus:border-red-500/50 outline-none transition-colors" />
             <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors">
               {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -174,19 +176,203 @@ const PasswordExpander = ({ isSaving }) => {
 };
 
 export default function OperatorProfile() {
+  const [operator, setOperator] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const [formData, setFormData] = useState({
+    phoneNumber: '',
+    addressLine1: '',
+  });
+
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [message, setMessage] = useState({ show: false, type: '', text: '' });
+  
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState(null);
+  const fileInputRef = useRef(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const tooltipMsg = "Please contact your Institution Admin directly to request modifications to this data.";
 
-  const handleSave = () => {
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-    }, 1200);
+  const [phoneError, setPhoneError] = useState("");
+  const [addressError, setAddressError] = useState("");
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Never';
+    const d = new Date(dateString);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    const monthName = months[d.getMonth()];
+    const dayNum = d.getDate();
+    const year = d.getFullYear();
+    const timeStr = d.toLocaleTimeString('en-GB');
+    
+    return `${monthName} ${dayNum}, ${year} - ${timeStr}`;
   };
+
+  const fetchProfile = async () => {
+    try {
+      setIsLoading(true);
+      const user = JSON.parse(localStorage.getItem('user'));
+      const response = await api.get(`/v1/operators/profile?operatorId=${user.id}`);
+      const data = response.data.operator;
+      setOperator(data);
+      
+      let combinedAddress = data.addressLine1 || '';
+      
+      if (data.city && !combinedAddress.includes(data.city)) {
+        combinedAddress = [
+          data.addressLine1,
+          data.addressLine2,
+          data.city,
+          data.state && data.pinCode ? `${data.state} - ${data.pinCode}` : (data.state || data.pinCode),
+          data.country
+        ].filter(Boolean).join(', ');
+      }
+
+      setFormData({
+        phoneNumber: data.phoneCountryCode && data.phoneNumber ? `${data.phoneCountryCode} ${data.phoneNumber}` : (data.phoneNumber || ''),
+        addressLine1: combinedAddress || '',
+      });
+    } catch (err) {
+      console.error(err);
+      setMessage({ show: true, type: 'error', text: 'Failed to load profile data.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setSelectedPhotoFile(file);
+    setPhotoPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleSave = async () => {
+    setPhoneError("");
+    setAddressError("");
+    
+    if (newPassword && newPassword !== confirmPassword) {
+      setMessage({ show: true, type: 'error', text: 'New passwords do not match.' });
+      setTimeout(() => setMessage({ show: false, type: '', text: '' }), 3000);
+      return;
+    }
+
+    let finalCountryCode = "";
+    let finalPhoneNumber = "";
+    if (formData.phoneNumber) {
+      const parts = formData.phoneNumber.trim().split(" ");
+      if (parts.length < 2 || !formData.phoneNumber.startsWith("+")) {
+        setPhoneError("Phone must be in format: +[Code] [Number]. E.g. +91 9876543210");
+        return;
+      } else {
+        finalCountryCode = parts[0];
+        finalPhoneNumber = parts.slice(1).join("").replace(/\D/g, ''); 
+      }
+    }
+
+    let finalAddressLine1 = "";
+    let finalAddressLine2 = "";
+    let finalCity = "";
+    let finalState = "";
+    let finalCountry = "";
+    let finalPinCode = "";
+
+    if (formData.addressLine1) {
+      const parts = formData.addressLine1.split(",").map(s => s.trim()).filter(Boolean);
+      
+      if (parts.length < 4 || parts.length > 5) {
+        setAddressError("Address must be format: [Line 1], [Optional Line 2], [City], [State] - [Pin], [Country]");
+        return;
+      }
+
+      finalAddressLine1 = parts[0];
+      finalCountry = parts[parts.length - 1];
+      
+      const statePinStr = parts[parts.length - 2];
+      if (!statePinStr.includes("-")) {
+        setAddressError("State and Pin Code must be separated by ' - ' (e.g. Karnataka - 560076)");
+        return;
+      }
+      
+      const spParts = statePinStr.split("-").map(s => s.trim());
+      finalState = spParts[0];
+      finalPinCode = spParts[1];
+
+      if (parts.length === 5) {
+        finalAddressLine2 = parts[1];
+        finalCity = parts[2];
+      } else {
+        finalAddressLine2 = "";
+        finalCity = parts[1];
+      }
+    }
+
+    setIsSaving(true);
+    try {
+      const payload = {
+        phoneCountryCode: finalCountryCode,
+        phoneNumber: finalPhoneNumber,
+        addressLine1: finalAddressLine1,
+        addressLine2: finalAddressLine2,
+        city: finalCity,
+        state: finalState,
+        country: finalCountry,
+        pinCode: finalPinCode,
+      };
+
+      if (oldPassword && newPassword) {
+        payload.oldPassword = oldPassword;
+        payload.newPassword = newPassword;
+      }
+
+      const response = await api.put(`/v1/operators/profile?operatorId=${operator.operatorId}`, payload);
+      
+      if (selectedPhotoFile) {
+        const photoData = new FormData();
+        photoData.append('file', selectedPhotoFile);
+        const photoResponse = await api.post(`/v1/operators/profile/photo?operatorId=${operator.operatorId}`, photoData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        setOperator(prev => ({ ...prev, profilePhotoUrl: photoResponse.data.url }));
+        setSelectedPhotoFile(null);
+        setPhotoPreviewUrl(null);
+      }
+
+      setShowSuccess(true);
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (err) {
+      console.error(err);
+      setMessage({ show: true, type: 'error', text: err.response?.data?.error || 'Failed to update profile.' });
+      setTimeout(() => setMessage({ show: false, type: '', text: '' }), 3000);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+      </div>
+    );
+  }
+
+  const displayPhoto = photoPreviewUrl || operator?.profilePhotoUrl;
 
   return (
     <div className="w-full flex flex-col items-center gap-6 pb-24 relative">
@@ -212,29 +398,44 @@ export default function OperatorProfile() {
         <div className="lg:col-span-1 flex flex-col gap-6 h-full">
           <div className="h-full bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center text-center relative overflow-hidden">
             {/* Background Glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-red-500/10 blur-[50px] pointer-events-none" />
+            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 blur-[50px] pointer-events-none transition-colors duration-500 ${operator?.accountStatus === 'ACTIVE' ? 'bg-red-500/10' : 'bg-orange-500/10'}`} />
             
             {/* Profile Photo */}
-            <div className="relative group cursor-pointer mb-6 mt-4">
+            <div 
+              className="relative group cursor-pointer mb-6 mt-4"
+              onClick={() => fileInputRef.current?.click()}
+            >
               <div className="w-56 h-56 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-xl group-hover:border-red-500/50 transition-colors">
-                <User className="w-20 h-20 text-slate-500 group-hover:text-red-400 transition-colors" />
+                {displayPhoto ? (
+                  <img src={displayPhoto} alt="Operator" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-20 h-20 text-slate-500 group-hover:text-red-400 transition-colors" />
+                )}
               </div>
               <div className="absolute bottom-4 right-4 p-2 bg-slate-800 border border-slate-700 rounded-full shadow-lg text-slate-400 group-hover:text-red-400 group-hover:border-red-500/50 transition-all">
                 <Pencil className="w-4 h-4" />
               </div>
+              <input 
+                type="file" 
+                accept="image/jpeg, image/png, image/jpg"
+                className="hidden" 
+                ref={fileInputRef}
+                onChange={handlePhotoSelect}
+                disabled={isSaving}
+              />
             </div>
 
             {/* Role Badge */}
-            <div className="px-4 py-1.5 rounded-full border mb-4 transition-colors duration-500 flex items-center gap-2 bg-red-500/10 border-red-500/30 text-red-400">
-              <span className="w-2 h-2 rounded-full animate-pulse bg-red-400"></span>
+            <div className={`px-4 py-1.5 rounded-full border mb-4 transition-colors duration-500 flex items-center gap-2 ${operator?.accountStatus === 'ACTIVE' ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-orange-500/10 border-orange-500/30 text-orange-400'}`}>
+              <span className={`w-2 h-2 rounded-full animate-pulse ${operator?.accountStatus === 'ACTIVE' ? 'bg-red-400' : 'bg-orange-400'}`}></span>
               <span className="text-[11px] font-black tracking-widest uppercase">
-                Status: ACTIVE
+                Status: {operator?.accountStatus}
               </span>
             </div>
 
             {/* Operator Name (Managed) */}
             <div className="w-full relative group mb-6 flex justify-center items-center">
-              <h2 className="text-2xl font-black text-white text-center">Subham</h2>
+              <h2 className="text-2xl font-black text-white text-center">{operator?.fullName}</h2>
               <div className="relative flex items-center ml-3">
                 <div className="text-slate-700 cursor-not-allowed">
                   <Pencil className="w-4 h-4" />
@@ -254,15 +455,17 @@ export default function OperatorProfile() {
             <div className="w-full flex flex-col gap-3 pt-6 border-t border-slate-800/50 text-center items-center">
               <div className="text-sm w-full px-2 leading-relaxed">
                 <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Operator ID:</span>
-                <span className="font-medium text-slate-300 font-mono">FEIRS-OP-8821</span>
+                <span className="font-medium text-slate-300 font-mono">{operator?.operatorId}</span>
               </div>
               <div className="text-sm w-full px-2 leading-relaxed">
                 <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Last Login At:</span>
-                <span className="font-medium text-slate-300">Oct 24, 2026 - 09:00:15</span>
+                <span className="font-medium text-slate-300">
+                  {formatDate(operator?.lastLoginAt)}
+                </span>
               </div>
               <div className="text-sm w-full px-2 leading-relaxed">
                 <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mr-1.5">Linked Institution:</span>
-                <span className="font-medium text-slate-300 font-mono">Apollo Hospital (FEIRS-INST-1011)</span>
+                <span className="font-medium text-slate-300 font-mono">{operator?.institution?.institutionName} ({operator?.institution?.institutionId})</span>
               </div>
             </div>
           </div>
@@ -284,21 +487,35 @@ export default function OperatorProfile() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <EditableField 
-                label="Personal Mobile Number" 
-                value="+91 98765 43210" 
-                icon={Phone} 
-                isSaving={isSaving}
-              />
-              <div className="md:col-span-2">
+              <div className="flex flex-col gap-1 w-full">
+                <EditableField 
+                  label="Personal Mobile Number" 
+                  value={formData.phoneNumber} 
+                  onChange={(val) => setFormData({...formData, phoneNumber: val})}
+                  icon={Phone} 
+                  isSaving={isSaving}
+                />
+                {phoneError && <span className="text-red-400 text-xs mt-1 ml-1 font-medium">{phoneError}</span>}
+              </div>
+              <div className="md:col-span-2 flex flex-col gap-1 w-full">
                 <EditableField 
                   label="Residential Address" 
-                  value="Apt 4B, Sunrise Towers, HSR Layout, Bangalore - 560102" 
+                  value={formData.addressLine1} 
+                  onChange={(val) => setFormData({...formData, addressLine1: val})}
                   icon={MapPin} 
                   isSaving={isSaving}
                 />
+                {addressError && <span className="text-red-400 text-xs mt-1 ml-1 font-medium">{addressError}</span>}
               </div>
-              <PasswordExpander isSaving={isSaving} />
+              <PasswordExpander 
+                isSaving={isSaving}
+                oldPassword={oldPassword}
+                setOldPassword={setOldPassword}
+                newPassword={newPassword}
+                setNewPassword={setNewPassword}
+                confirmPassword={confirmPassword}
+                setConfirmPassword={setConfirmPassword}
+              />
             </div>
           </div>
 
@@ -317,33 +534,33 @@ export default function OperatorProfile() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ManagedField 
                 label="Date of Birth" 
-                value="14 August 1990" 
+                value={operator?.dateOfBirth} 
                 icon={Calendar} 
                 tooltipMessage={tooltipMsg}
               />
               <ManagedField 
                 label="Gender" 
-                value="Male" 
+                value={operator?.gender} 
                 icon={Users} 
                 tooltipMessage={tooltipMsg}
               />
               <div className="md:col-span-2">
                 <ManagedField 
                   label="Official Email" 
-                  value="subham.trauma@apollo.com" 
+                  value={operator?.officialEmail} 
                   icon={Mail} 
                   tooltipMessage={tooltipMsg}
                 />
               </div>
               <ManagedField 
                 label="Department/Ward" 
-                value="Emergency Trauma Center" 
+                value={operator?.department} 
                 icon={Building2} 
                 tooltipMessage={tooltipMsg}
               />
               <ManagedField 
                 label="Position/Title" 
-                value="Senior Duty Doctor" 
+                value={operator?.designationTitle} 
                 icon={Briefcase} 
                 tooltipMessage={tooltipMsg}
               />
@@ -365,6 +582,18 @@ export default function OperatorProfile() {
             >
               <CheckCircle2 className="w-5 h-5" />
               <span className="text-sm font-bold">Profile Updated Successfully</span>
+            </motion.div>
+          )}
+          {message.show && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border ${
+                message.type === 'error' ? 'text-red-400 bg-red-500/10 border-red-500/20' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+              }`}
+            >
+              <span className="text-sm font-bold">{message.text}</span>
             </motion.div>
           )}
         </AnimatePresence>

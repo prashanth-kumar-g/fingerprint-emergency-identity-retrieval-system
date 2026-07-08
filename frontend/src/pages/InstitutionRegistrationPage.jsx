@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Select from 'react-select';
 import { Country, State, City } from 'country-state-city';
 import { 
@@ -14,8 +14,12 @@ import {
   Mail,
   Phone,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Loader2,
+  FileText,
+  Image
 } from 'lucide-react';
+import api from '../api/axiosConfig';
 
 // ── Shared React-Select Custom Dark Styles ──
 const customStyles = {
@@ -99,10 +103,23 @@ export default function InstitutionRegistrationPage() {
   const navigate = useNavigate();
 
   // ── Form State ──
+  const [institutionName, setInstitutionName] = useState('');
+  const [institutionType, setInstitutionType] = useState('');
+  const [sectorType, setSectorType] = useState('');
+  
+  const [addressLine1, setAddressLine1] = useState('');
+  const [addressLine2, setAddressLine2] = useState('');
+  const [pinCode, setPinCode] = useState('');
+  
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [selectedState, setSelectedState] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
+  
+  const [primaryOfficerName, setPrimaryOfficerName] = useState('');
+  const [officerDesignation, setOfficerDesignation] = useState('');
+  const [officialEmail, setOfficialEmail] = useState('');
   const [selectedPhoneCode, setSelectedPhoneCode] = useState(null);
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   // ── File Upload State ──
   const [licenseFile, setLicenseFile] = useState(null);
@@ -110,6 +127,10 @@ export default function InstitutionRegistrationPage() {
   const licenseInputRef = useRef(null);
   const logoInputRef = useRef(null);
   const [fileError, setFileError] = useState('');
+
+  // ── Submission State ──
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [alertInfo, setAlertInfo] = useState({ show: false, type: '', message: '' });
 
   // Generate dynamic options based on parent selection
   const stateOptions = selectedCountry 
@@ -119,6 +140,15 @@ export default function InstitutionRegistrationPage() {
   const cityOptions = selectedState && selectedCountry
     ? City.getCitiesOfState(selectedCountry.value, selectedState.value).map(c => ({ value: c.name, label: c.name }))
     : [];
+
+  const triggerAlert = (type, message) => {
+    setAlertInfo({ show: true, type, message });
+    if (type === 'success') {
+      setTimeout(() => setAlertInfo({ show: false, type: '', message: '' }), 4000);
+    } else {
+      setTimeout(() => setAlertInfo({ show: false, type: '', message: '' }), 5000);
+    }
+  };
 
   const handleFileUpload = (e, setFile) => {
     setFileError('');
@@ -139,8 +169,84 @@ export default function InstitutionRegistrationPage() {
     setFile(file);
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+
+    // Validation
+    if (!institutionName || !institutionType || !sectorType || !addressLine1 || !selectedCity || !selectedState || !selectedCountry || !pinCode || !primaryOfficerName || !officerDesignation || !officialEmail || !selectedPhoneCode || !phoneNumber) {
+      triggerAlert('error', 'Please fill in all required fields.');
+      return;
+    }
+
+    if (!licenseFile) {
+      triggerAlert('error', 'Please upload the registration license/verification document.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setAlertInfo({ show: false, type: '', message: '' });
+
+    try {
+      const formData = new FormData();
+      formData.append('institutionName', institutionName);
+      formData.append('institutionType', institutionType);
+      formData.append('sectorType', sectorType);
+      formData.append('addressLine1', addressLine1);
+      formData.append('addressLine2', addressLine2);
+      formData.append('city', selectedCity.label);
+      formData.append('state', selectedState.label);
+      formData.append('country', selectedCountry.label);
+      formData.append('pinCode', pinCode);
+      formData.append('primaryOfficerName', primaryOfficerName);
+      formData.append('officerDesignation', officerDesignation);
+      formData.append('officialEmail', officialEmail);
+      formData.append('phoneCountryCode', selectedPhoneCode.value);
+      formData.append('phoneNumber', phoneNumber);
+
+      if (logoFile) {
+        formData.append('logoFile', logoFile);
+      }
+      formData.append('licenseFile', licenseFile);
+
+      const response = await api.post('/v1/institutions/register', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        triggerAlert('success', 'Your application has been submitted and is pending review by the Super Admin. You will receive an email upon approval or rejection.');
+        // Reset form
+        setInstitutionName('');
+        setInstitutionType('');
+        setSectorType('');
+        setAddressLine1('');
+        setAddressLine2('');
+        setPinCode('');
+        setSelectedCountry(null);
+        setSelectedState(null);
+        setSelectedCity(null);
+        setPrimaryOfficerName('');
+        setOfficerDesignation('');
+        setOfficialEmail('');
+        setSelectedPhoneCode(null);
+        setPhoneNumber('');
+        setLogoFile(null);
+        setLicenseFile(null);
+      } else {
+        triggerAlert('error', response.data.error || 'Failed to submit application.');
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      triggerAlert('error', error.response?.data?.error || 'An error occurred during submission. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="flex-grow w-full flex flex-col items-center py-12 px-4 relative">
+    <div className="flex-grow w-full flex flex-col items-center py-12 px-4 relative overflow-y-auto">
       
       {/* Background Ambient Glow */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] rounded-[100%] bg-emerald-900/10 blur-[150px] pointer-events-none z-0" />
@@ -170,19 +276,20 @@ export default function InstitutionRegistrationPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 w-full max-w-4xl bg-slate-900/60 backdrop-blur-2xl border border-slate-800 rounded-3xl p-6 md:p-10 shadow-2xl"
+        className="relative z-10 w-full max-w-4xl bg-slate-900/60 backdrop-blur-2xl border border-slate-800 rounded-3xl p-6 md:p-10 shadow-2xl mb-12"
       >
-        <form className="flex flex-col gap-10">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-10">
 
           {/* Top Section: Facility Logo Upload */}
           <div className="w-full flex flex-col items-center">
             <div className="relative group cursor-pointer mb-2 mt-4" onClick={() => logoInputRef.current?.click()}>
               <div className={`w-[200px] h-[200px] rounded-full border-2 flex flex-col items-center justify-center overflow-hidden shadow-xl transition-colors ${logoFile ? 'border-emerald-500 bg-emerald-900/10' : 'border-slate-700 bg-slate-800 group-hover:border-emerald-500/50'}`}>
                 {logoFile ? (
-                  <>
-                    <CheckCircle2 className="w-16 h-16 text-emerald-400 mb-2" />
-                    <span className="text-sm text-emerald-200/70 font-bold max-w-[150px] truncate px-2 text-center">{logoFile.name}</span>
-                  </>
+                  <img 
+                    src={URL.createObjectURL(logoFile)} 
+                    alt="Facility Logo" 
+                    className="w-full h-full object-cover rounded-full"
+                  />
                 ) : (
                   <Building2 className="w-20 h-20 text-slate-500 group-hover:text-emerald-400 transition-colors" />
                 )}
@@ -210,18 +317,21 @@ export default function InstitutionRegistrationPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="col-span-1 md:col-span-2">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Legally Registered Institution Name</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Legally Registered Institution Name *</label>
                 <input 
                   type="text" 
+                  value={institutionName}
+                  onChange={(e) => setInstitutionName(e.target.value)}
                   placeholder="Enter full registered name" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Institution Type</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Institution Type *</label>
                 <select 
-                  defaultValue=""
+                  value={institutionType}
+                  onChange={(e) => setInstitutionType(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors appearance-none cursor-pointer"
                 >
                   <option value="" disabled>Select facility type...</option>
@@ -232,9 +342,10 @@ export default function InstitutionRegistrationPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sector Type</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sector Type *</label>
                 <select 
-                  defaultValue=""
+                  value={sectorType}
+                  onChange={(e) => setSectorType(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors appearance-none cursor-pointer"
                 >
                   <option value="" disabled>Select sector...</option>
@@ -255,9 +366,11 @@ export default function InstitutionRegistrationPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="col-span-1 md:col-span-2">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Address Line 1 (Building & Street)</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Address Line 1 (Building & Street) *</label>
                 <input 
                   type="text" 
+                  value={addressLine1}
+                  onChange={(e) => setAddressLine1(e.target.value)}
                   placeholder="Enter building number and street" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                 />
@@ -267,6 +380,8 @@ export default function InstitutionRegistrationPage() {
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Address Line 2 (Optional Landmark)</label>
                 <input 
                   type="text" 
+                  value={addressLine2}
+                  onChange={(e) => setAddressLine2(e.target.value)}
                   placeholder="Enter nearby landmark or floor" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                 />
@@ -274,7 +389,7 @@ export default function InstitutionRegistrationPage() {
 
               {/* Advanced Cascading Searchable Dropdowns */}
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">City / District</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">City / District *</label>
                 <Select
                   options={cityOptions}
                   styles={customStyles}
@@ -287,7 +402,7 @@ export default function InstitutionRegistrationPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">State / Province</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">State / Province *</label>
                 <Select
                   options={stateOptions}
                   styles={customStyles}
@@ -303,16 +418,18 @@ export default function InstitutionRegistrationPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Postal / Pin Code</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Postal / Pin Code *</label>
                 <input 
                   type="text" 
+                  value={pinCode}
+                  onChange={(e) => setPinCode(e.target.value)}
                   placeholder="Enter pin code" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Country</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Country *</label>
                 <Select
                   options={allCountries}
                   styles={customStyles}
@@ -339,29 +456,35 @@ export default function InstitutionRegistrationPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Primary Officer Name</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Primary Officer Name *</label>
                 <input 
                   type="text" 
+                  value={primaryOfficerName}
+                  onChange={(e) => setPrimaryOfficerName(e.target.value)}
                   placeholder="Enter officer's full name" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Officer Designation</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Officer Designation *</label>
                 <input 
                   type="text" 
+                  value={officerDesignation}
+                  onChange={(e) => setOfficerDesignation(e.target.value)}
                   placeholder="Enter official designation" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                 />
               </div>
 
               <div className="col-span-1 md:col-span-2">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Official Email (Used for Login)</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Official Email (Used for Login) *</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                   <input 
                     type="email" 
+                    value={officialEmail}
+                    onChange={(e) => setOfficialEmail(e.target.value)}
                     placeholder="admin@hospital.org" 
                     className="w-full bg-slate-950 border border-slate-800 text-white pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                   />
@@ -369,7 +492,7 @@ export default function InstitutionRegistrationPage() {
               </div>
 
               <div className="col-span-1 md:col-span-2">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Facility Phone Number</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Facility Phone Number *</label>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="w-full sm:w-[220px]">
                     <Select
@@ -384,6 +507,8 @@ export default function InstitutionRegistrationPage() {
                   <div className="flex-grow">
                     <input 
                       type="text" 
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="Enter phone number" 
                       className="w-full h-[42px] bg-slate-950 border border-slate-800 text-white px-4 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
                     />
@@ -397,7 +522,7 @@ export default function InstitutionRegistrationPage() {
           <section>
             <div className="flex items-center gap-2 mb-6 border-b border-slate-800 pb-3">
               <ShieldCheck className="w-5 h-5 text-emerald-400" />
-              <h2 className="text-lg font-bold text-white tracking-wide">Compliance & Verification</h2>
+              <h2 className="text-lg font-bold text-white tracking-wide">Compliance & Verification *</h2>
             </div>
             
             {fileError && (
@@ -416,11 +541,11 @@ export default function InstitutionRegistrationPage() {
               >
                 {licenseFile ? (
                   <>
-                    <div className="p-3 bg-emerald-900/50 rounded-full mb-3">
-                      <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+                    <div className="p-3 bg-red-900/50 border border-red-500/50 rounded-2xl mb-3 shadow-lg flex items-center justify-center">
+                      <FileText className="w-8 h-8 text-red-400" />
                     </div>
-                    <h3 className="text-sm font-bold text-emerald-400 mb-1">License Uploaded</h3>
-                    <p className="text-xs text-emerald-200/70 max-w-full truncate px-4">{licenseFile.name}</p>
+                    <h3 className="text-sm font-bold text-slate-200 mb-1">Document Attached</h3>
+                    <p className="text-xs text-emerald-400 max-w-[200px] truncate px-4 bg-emerald-900/20 py-1 rounded-full border border-emerald-500/20">{licenseFile.name}</p>
                   </>
                 ) : (
                   <>
@@ -443,14 +568,45 @@ export default function InstitutionRegistrationPage() {
             </div>
           </section>
 
+          {/* Alerts Display above submit */}
+          <div className="w-full flex justify-center mt-2">
+            <AnimatePresence>
+              {alertInfo.show && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold shadow-lg max-w-xl text-center ${
+                    alertInfo.type === 'error' 
+                      ? 'bg-red-500/20 text-red-400 border border-red-500/50' 
+                      : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50'
+                  }`}
+                >
+                  {alertInfo.type === 'error' ? <AlertCircle className="w-5 h-5 shrink-0" /> : <CheckCircle2 className="w-5 h-5 shrink-0" />}
+                  <span>{alertInfo.message}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           {/* Submit Action */}
-          <div className="mt-4 pt-6 border-t border-slate-800 flex flex-col items-center">
+          <div className="pt-2 border-t border-slate-800 flex flex-col items-center">
             <button
-              type="button"
-              className="w-full md:w-[380px] py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all duration-300 flex items-center justify-center gap-2"
+              type="submit"
+              disabled={isSubmitting}
+              className={`w-full md:w-[380px] py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all duration-300 flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              Submit Application
-              <ChevronRight className="w-5 h-5" />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  Submit Application
+                  <ChevronRight className="w-5 h-5" />
+                </>
+              )}
             </button>
           </div>
 

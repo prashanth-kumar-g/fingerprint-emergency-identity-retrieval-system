@@ -5,6 +5,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Map;
 
@@ -46,11 +49,43 @@ public class CitizenController {
      * Request body: Citizen fields including fingerprint_bmp_base64
      *               and fingerprint_iso_template (both REQUIRED).
      */
-    @PostMapping("/enroll")
-    public ResponseEntity<?> enroll(@RequestParam String institutionId,
-                                     @RequestBody Citizen citizen) {
+    @PostMapping("/enroll/initiate")
+    public ResponseEntity<?> initiateEnrollment(@RequestBody Map<String, String> payload) {
         try {
-            Citizen saved = citizenService.enroll(institutionId, citizen);
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String operatorId = auth.getName(); // operatorId is the subject
+            String emailAddress = payload.get("email");
+            String citizenName = payload.get("fullName");
+
+            if (emailAddress == null || emailAddress.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Email is required"));
+            }
+
+            citizenService.initiateEnrollment(operatorId, emailAddress, citizenName);
+            return ResponseEntity.ok(Map.of("success", true, "message", "OTP sent"));
+        } catch (Exception e) {
+            log.error("OTP generation error: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping(value = "/enroll/verify", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> verifyAndEnroll(
+            @RequestParam("otp") String otp,
+            @RequestParam("citizen") String citizenJson,
+            @RequestParam(value = "contacts", required = false) String contactsJson,
+            @RequestParam(value = "livePhoto", required = false) MultipartFile livePhoto,
+            @RequestParam(value = "medicalReport", required = false) MultipartFile medicalReport,
+            @RequestParam("fingerprintBmpBase64") String fingerprintBmpBase64,
+            @RequestParam("fingerprintIsoTemplate") String fingerprintIsoTemplate) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String operatorId = auth.getName();
+
+            Citizen saved = citizenService.verifyAndEnroll(
+                operatorId, otp, citizenJson, contactsJson, livePhoto, medicalReport, fingerprintBmpBase64, fingerprintIsoTemplate
+            );
+
             return ResponseEntity.status(201).body(Map.of(
                 "success", true,
                 "message", "Citizen enrolled successfully.",
@@ -58,16 +93,10 @@ public class CitizenController {
                 "citizen", saved
             ));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "error", e.getMessage()
-            ));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         } catch (Exception e) {
             log.error("Enrollment error: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body(Map.of(
-                "success", false,
-                "error", "Internal server error during enrollment."
-            ));
+            return ResponseEntity.status(500).body(Map.of("success", false, "error", "Internal server error during enrollment."));
         }
     }
 
@@ -125,10 +154,11 @@ public class CitizenController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getCitizen(@PathVariable String id) {
         try {
-            Citizen citizen = citizenService.getById(id);
+            Map<String, Object> profile = citizenService.getProfileWithContactsById(id);
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "citizen", citizen
+                "citizen", profile.get("citizen"),
+                "contacts", profile.get("contacts")
             ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(404).body(Map.of(

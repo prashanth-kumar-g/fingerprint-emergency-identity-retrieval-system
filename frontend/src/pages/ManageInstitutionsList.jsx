@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import api from '../api/axiosConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -10,56 +11,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-const mockInstitutions = [
-  {
-    id: 'FEIRS-INST-1011',
-    instName: 'Apollo Hospital',
-    status: 'ACTIVE',
-    createdAt: 'Oct 10, 2026 - 11:30:05',
-  },
-  {
-    id: 'FEIRS-INST-2022',
-    instName: 'Central Medical Center',
-    status: 'SUSPENDED',
-    createdAt: 'Oct 05, 2026 - 09:15:22',
-  },
-  {
-    id: 'FEIRS-INST-3033',
-    instName: 'CarePlus Medical',
-    status: 'ACTIVE',
-    createdAt: 'Sep 21, 2026 - 14:45:11',
-  },
-  {
-    id: 'FEIRS-INST-4044',
-    instName: 'Rapid Response Hub',
-    status: 'ACTIVE',
-    createdAt: 'Sep 19, 2026 - 10:20:35',
-  },
-  {
-    id: 'FEIRS-INST-5055',
-    instName: 'City General Hospital',
-    status: 'ACTIVE',
-    createdAt: 'Sep 18, 2026 - 16:00:45',
-  },
-  {
-    id: 'FEIRS-INST-6066',
-    instName: 'Highway Ambulance Hub',
-    status: 'SUSPENDED',
-    createdAt: 'Sep 15, 2026 - 08:30:16',
-  },
-  {
-    id: 'FEIRS-INST-7077',
-    instName: 'Sunrise Maternity Home',
-    status: 'ACTIVE',
-    createdAt: 'Sep 12, 2026 - 11:15:55',
-  },
-  {
-    id: 'FEIRS-INST-8088',
-    instName: 'Metro Health Clinic',
-    status: 'ACTIVE',
-    createdAt: 'Sep 10, 2026 - 13:45:03',
-  }
-];
+// Removed mockInstitutions
 
 const defaultFilters = { time: 'All Time', status: 'All Statuses' };
 
@@ -71,6 +23,46 @@ export default function ManageInstitutionsList() {
   
   const [tempFilters, setTempFilters] = useState(defaultFilters);
   const [activeFilters, setActiveFilters] = useState(defaultFilters);
+  
+  const [institutions, setInstitutions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchInstitutions = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.get('/v1/super-admin/institutions');
+        if (response.data.success) {
+          const userStr = localStorage.getItem('user');
+          const user = userStr ? JSON.parse(userStr) : null;
+          const currentAdminId = user?.id;
+
+          const filtered = response.data.institutions
+            .filter(app => app.linkedSuperAdmin?.superAdminId === currentAdminId)
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          setInstitutions(filtered);
+        }
+      } catch (err) {
+        console.error("Failed to fetch institutions", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchInstitutions();
+  }, []);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const d = new Date(dateString);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthName = months[d.getMonth()];
+    const dayNum = d.getDate().toString().padStart(2, '0');
+    const yearNum = d.getFullYear();
+    const hours = d.getHours().toString().padStart(2, '0');
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    const seconds = d.getSeconds().toString().padStart(2, '0');
+    return `${monthName} ${dayNum}, ${yearNum} - ${hours}:${minutes}:${seconds}`;
+  };
 
   const simulateSearch = () => {
     setIsSearching(true);
@@ -253,19 +245,23 @@ export default function ManageInstitutionsList() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
-                {mockInstitutions.map((inst) => (
-                  <tr key={inst.id} className="hover:bg-slate-800/30 transition-colors">
+                {institutions.map((inst) => (
+                  <tr key={inst.institutionId} className="hover:bg-slate-800/30 transition-colors">
                     
                     {/* Created At */}
                     <td className="p-4 align-middle">
-                      <p className="text-xs text-slate-400 font-medium whitespace-nowrap">{inst.createdAt}</p>
+                      <p className="text-xs text-slate-400 font-medium whitespace-nowrap">{formatDate(inst.createdAt)}</p>
                     </td>
 
                     {/* Logo */}
                     <td className="p-4 align-middle">
                       <div className="flex ml-[30px]">
                         <div className="w-28 h-28 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-md">
-                          <Building2 className="w-14 h-14 text-slate-500" />
+                          {inst.institutionLogoUrl ? (
+                            <img src={inst.institutionLogoUrl} alt="Logo" className="w-full h-full object-cover" />
+                          ) : (
+                            <Building2 className="w-14 h-14 text-slate-500" />
+                          )}
                         </div>
                       </div>
                     </td>
@@ -273,22 +269,22 @@ export default function ManageInstitutionsList() {
                     {/* Institution */}
                     <td className="p-4 align-middle">
                       <div className="flex flex-col gap-1">
-                        <span className="text-sm font-bold text-white">{inst.instName}</span>
-                        <span className="text-xs text-slate-500 font-mono">{inst.id}</span>
+                        <span className="text-sm font-bold text-white">{inst.institutionName}</span>
+                        <span className="text-xs text-slate-500 font-mono">{inst.institutionId}</span>
                       </div>
                     </td>
 
                     {/* Status */}
                     <td className="p-4 align-middle text-left">
-                      <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider ${inst.status === 'ACTIVE' ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}>
-                        {inst.status}
+                      <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider ${inst.accountStatus === 'ACTIVE' ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}>
+                        {inst.accountStatus}
                       </span>
                     </td>
 
                     {/* Action */}
                     <td className="p-4 align-middle text-left">
                       <button 
-                        onClick={() => navigate(`/super-admin/manage-institutions/${inst.id}`)}
+                        onClick={() => navigate(`/super-admin/manage-institutions/${inst.institutionId}`, { state: { institution: inst } })}
                         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-cyan-700/50 text-xs font-bold text-cyan-400 hover:text-white hover:border-cyan-500/80 hover:bg-cyan-500/20 transition-all"
                       >
                         View / Edit <ArrowRight className="w-3.5 h-3.5" />

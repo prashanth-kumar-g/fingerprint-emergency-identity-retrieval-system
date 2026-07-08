@@ -20,7 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * Per Super Admin Table Plan.pdf: admin_name is intentionally left null
  * so the architect is prompted to complete their profile after login.
  */
-@Configuration
+// @Configuration
 public class DataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);

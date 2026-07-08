@@ -24,8 +24,10 @@ import {
   Lock,
   ChevronRight,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  FileText
 } from 'lucide-react';
+import axios from 'axios';
 
 // ── Shared React-Select Custom Dark Styles (Red Theme) ──
 const customStyles = {
@@ -140,7 +142,17 @@ export default function EnrollCitizens() {
 
   // Biometrics
   const [photoCaptured, setPhotoCaptured] = useState(false);
+  const [livePhotoFile, setLivePhotoFile] = useState(null);
+  const [livePhotoDataUrl, setLivePhotoDataUrl] = useState(null);
   const [fingerprintQuality, setFingerprintQuality] = useState(0);
+  const [fingerprintBmpBase64, setFingerprintBmpBase64] = useState('');
+  const [fingerprintIsoTemplate, setFingerprintIsoTemplate] = useState('');
+  const [isCapturingFingerprint, setIsCapturingFingerprint] = useState(false);
+  const isCapturingRef = useRef(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
 
   // Demographics
   const [fullName, setFullName] = useState('');
@@ -229,37 +241,221 @@ export default function EnrollCitizens() {
     setContacts(contacts.map(c => c.id === id ? { ...c, [field]: value } : c));
   };
 
-  const handleSimulateFingerprint = () => {
-    if (isLocked) return;
-    if (fingerprintQuality > 0) {
-      setFingerprintQuality(0); // Reset
-    } else {
-      // Fake capture
-      setFingerprintQuality(87);
+  // --- Camera Logic ---
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      streamRef.current = stream;
+      setIsCameraActive(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      triggerAlert('error', 'Unable to access camera. Please check permissions.');
     }
   };
 
-  const handleRequestVerification = (e) => {
+  // Ensure video keeps playing its stream if component re-renders
+  useEffect(() => {
+    if (isCameraActive && videoRef.current && streamRef.current) {
+      if (videoRef.current.srcObject !== streamRef.current) {
+        videoRef.current.srcObject = streamRef.current;
+        videoRef.current.play().catch(e => console.error("Video play error:", e));
+      }
+    }
+  });
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      canvasRef.current.width = videoRef.current.videoWidth;
+      canvasRef.current.height = videoRef.current.videoHeight;
+      context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+      const dataUrl = canvasRef.current.toDataURL('image/jpeg');
+      setLivePhotoDataUrl(dataUrl);
+      
+      canvasRef.current.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], `live_photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+          setLivePhotoFile(file);
+          setPhotoCaptured(true);
+          stopCamera();
+        }
+      }, 'image/jpeg', 0.9);
+    }
+  };
+
+  const resetPhoto = () => {
+    if (isLocked) return;
+    setPhotoCaptured(false);
+    setLivePhotoFile(null);
+    setLivePhotoDataUrl(null);
+    startCamera();
+  };
+  
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
+  // --------------------
+
+  const handleSimulateFingerprint = async () => {
+    if (isLocked) return;
+    if (fingerprintQuality > 0) {
+      setFingerprintQuality(0);
+      setFingerprintBmpBase64('');
+      setFingerprintIsoTemplate('');
+    } else {
+      if (isCapturingRef.current) return;
+      
+      setIsCapturingFingerprint(true);
+      isCapturingRef.current = true;
+      
+      // Use setTimeout so React can render the loading state before the synchronous CaptureFinger blocks the UI thread
+      setTimeout(() => {
+        try {
+          if (typeof window.CaptureFinger !== 'function') {
+            throw new Error("MFS100 scripts (mfs100.js) are not loaded in index.html");
+          }
+          
+          const res = window.CaptureFinger(60, 10000);
+          
+          if (res.httpStaus) {
+            const data = res.data;
+            if (data && data.BitmapData && (data.ErrorCode == 0 || data.BitmapData.length > 10)) {
+              setFingerprintQuality(data.Quality || 100);
+              setFingerprintBmpBase64(data.BitmapData);
+              setFingerprintIsoTemplate(data.IsoTemplate);
+              triggerAlert('success', 'Fingerprint captured successfully!');
+            } else {
+              throw new Error(data ? (data.ErrorDescription || data.Description || 'Capture failed') : 'No response data from scanner');
+            }
+          } else {
+            throw new Error(res.err || 'Scanner Service not reachable (Network Error)');
+          }
+        } catch (error) {
+          console.error("Fingerprint capture error:", error);
+          triggerAlert('error', `Fingerprint Capture Failed: ${error.message || 'Scanner not ready'}`);
+        } finally {
+          setIsCapturingFingerprint(false);
+          isCapturingRef.current = false;
+        }
+      }, 100);
+    }
+  };
+
+  const handleRequestVerification = async (e) => {
     e.preventDefault();
     if (enrollState === 'READY') {
+      if (!livePhotoFile) {
+        triggerAlert('error', 'Please capture a live photo.');
+        return;
+      }
+      if (!fingerprintIsoTemplate || !fingerprintBmpBase64) {
+        triggerAlert('error', 'Please capture the citizen fingerprint.');
+        return;
+      }
+      if (!email) {
+        triggerAlert('error', 'Email is required for OTP verification.');
+        return;
+      }
+      
       setIsSaving(true);
-      setTimeout(() => {
-        setIsSaving(false);
+      try {
+        const token = localStorage.getItem('token');
+        await axios.post('http://localhost:8080/api/v1/citizens/enroll/initiate', {
+          email: email,
+          fullName: fullName
+        }, {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 15000 // 15 seconds timeout to prevent hanging if SMTP fails
+        });
+        
         setEnrollState('OTP');
         triggerAlert('warning', "An authorization code has been dispatched to the provided email address.");
-      }, 1000);
+      } catch (error) {
+        console.error("Initiate enrollment error:", error);
+        triggerAlert('error', error.response?.data?.error || 'Failed to send OTP. Please try again.');
+      } finally {
+        setIsSaving(false);
+      }
     } else if (enrollState === 'OTP') {
+      if (otpValue.length < 6) return;
       setIsOtpVerifying(true);
-      setTimeout(() => {
-        setIsOtpVerifying(false);
-        if (otpValue === '111111') {
-          setEnrollState('READY');
-          setOtpValue('');
-          triggerAlert('success', 'OTP Verified! Citizen successfully enrolled.');
-        } else {
-          triggerAlert('error', 'Invalid OTP. Please check the code and try again.');
+      try {
+        const token = localStorage.getItem('token');
+        const citizenData = {
+          fullName,
+          dateOfBirth: dob ? dob.toISOString().split('T')[0] : null,
+          gender: gender ? gender.value : null,
+          phoneCountryCode: personalPhoneCode ? personalPhoneCode.value : null,
+          phoneNumber: personalPhone,
+          emailAddress: email,
+          addressLine1: address1,
+          addressLine2: address2,
+          city: city ? city.value : null,
+          state: stateRegion ? stateRegion.value : null,
+          country: country ? country.label : null,
+          pinCode: pinCode,
+          bloodGroup: bloodGroup ? bloodGroup.value : null,
+          severeAllergies: severeAllergies,
+          chronicConditions: chronicConditions,
+          currentMedications: currentMedications
+        };
+        
+        const contactsData = contacts.filter(c => c.name.trim() !== '').map(c => ({
+          contactName: c.name,
+          relationship: c.relationship ? c.relationship.value : null,
+          phoneCountryCode: c.phoneCode ? c.phoneCode.value : null,
+          phoneNumber: c.phone,
+          emailAddress: c.email
+        }));
+
+        const formData = new FormData();
+        formData.append('otp', otpValue);
+        formData.append('citizen', JSON.stringify(citizenData));
+        formData.append('contacts', JSON.stringify(contactsData));
+        formData.append('fingerprintBmpBase64', fingerprintBmpBase64);
+        formData.append('fingerprintIsoTemplate', fingerprintIsoTemplate);
+        
+        if (livePhotoFile) {
+          formData.append('livePhoto', livePhotoFile);
         }
-      }, 1200);
+        if (medicalReport) {
+          formData.append('medicalReport', medicalReport);
+        }
+
+        await axios.post('http://localhost:8080/api/v1/citizens/enroll/verify', formData, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        setEnrollState('SUCCESS');
+        setOtpValue('');
+        triggerAlert('success', 'OTP Verified! Citizen successfully enrolled.');
+        
+        setTimeout(() => {
+            window.location.reload();
+        }, 3000);
+      } catch (error) {
+        console.error("Verify enrollment error:", error);
+        triggerAlert('error', error.response?.data?.error || 'Invalid OTP or enrollment failed.');
+      } finally {
+        setIsOtpVerifying(false);
+      }
     }
   };
 
@@ -355,19 +551,37 @@ export default function EnrollCitizens() {
           {/* 1. Live Photo Capture (The Visual Anchor) */}
           <div className="w-full flex flex-col items-center border-b border-slate-800/50 pb-8">
             <div className="relative mb-4">
-              <div className={`w-[220px] h-[220px] rounded-full border-4 flex flex-col items-center justify-center overflow-hidden shadow-2xl transition-all duration-500 ${photoCaptured ? 'border-emerald-500 bg-emerald-900/10' : 'border-slate-800 bg-slate-950'}`}>
-                {photoCaptured ? (
-                  <User className="w-24 h-24 text-emerald-400" /> // Mocking captured face
+              <div className={`w-[220px] h-[220px] rounded-full border-4 flex flex-col items-center justify-center overflow-hidden shadow-2xl transition-all duration-500 ${photoCaptured ? 'border-red-500 bg-red-900/10' : 'border-slate-800 bg-slate-950'}`}>
+                {photoCaptured && livePhotoDataUrl ? (
+                  <img src={livePhotoDataUrl} alt="Captured" className="w-full h-full object-cover" />
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full w-full relative">
-                    {/* Mock Scanner Line */}
-                    <motion.div 
-                      className="absolute top-0 left-0 w-full h-1 bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)] z-0"
-                      animate={{ y: [0, 220, 0] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    {/* Live Camera Feed */}
+                    <video 
+                      ref={videoRef} 
+                      autoPlay 
+                      playsInline 
+                      muted 
+                      className={`w-full h-full object-cover ${!isCameraActive ? 'hidden' : ''}`} 
                     />
+                    {!isCameraActive && (
+                      <div className="flex flex-col items-center text-slate-500 z-10">
+                        <Camera className="w-12 h-12 mb-2" />
+                        <span className="text-[10px] font-bold">CAMERA OFF</span>
+                      </div>
+                    )}
+                    {/* Mock Scanner Line */}
+                    {isCameraActive && (
+                      <motion.div 
+                        className="absolute top-0 left-0 w-full h-1 bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)] z-0"
+                        animate={{ y: [0, 220, 0] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                      />
+                    )}
                   </div>
                 )}
+                {/* Hidden canvas to process image */}
+                <canvas ref={canvasRef} className="hidden" />
               </div>
             </div>
 
@@ -375,23 +589,42 @@ export default function EnrollCitizens() {
               CITIZEN PHOTO
             </div>
             
-            <button
-              type="button"
-              disabled={isLocked}
-              onClick={() => setPhotoCaptured(!photoCaptured)}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-bold text-sm transition-colors ${
-                isLocked ? 'bg-slate-800 text-slate-500 cursor-not-allowed' :
-                photoCaptured 
-                  ? 'bg-transparent border border-slate-600 text-slate-400 hover:text-white hover:border-slate-500' 
-                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)]'
-              }`}
-            >
-              {photoCaptured ? (
-                <><RefreshCcw className="w-4 h-4" /> Reset Photo</>
-              ) : (
-                <><Camera className="w-4 h-4" /> Capture Photo</>
+            <div className="flex gap-4">
+              {!isCameraActive && !photoCaptured && (
+                <button
+                  type="button"
+                  disabled={isLocked}
+                  onClick={startCamera}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-full font-bold text-sm transition-colors bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] disabled:opacity-50"
+                >
+                  <Camera className="w-4 h-4" /> Start Camera
+                </button>
               )}
-            </button>
+
+              {isCameraActive && !photoCaptured && (
+                <button
+                  type="button"
+                  onClick={capturePhoto}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-full font-bold text-sm transition-colors bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                >
+                  <Camera className="w-4 h-4" /> Capture Photo
+                </button>
+              )}
+
+              {photoCaptured && (
+                <button
+                  type="button"
+                  disabled={isLocked}
+                  onClick={resetPhoto}
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-bold text-sm transition-colors ${
+                    isLocked ? 'bg-slate-800 text-slate-500 cursor-not-allowed' :
+                    'bg-transparent border border-slate-600 text-slate-400 hover:text-white hover:border-slate-500'
+                  }`}
+                >
+                  <RefreshCcw className="w-4 h-4" /> Retake Photo
+                </button>
+              )}
+            </div>
           </div>
 
           {/* 2. Citizen Demographics */}
@@ -599,7 +832,7 @@ export default function EnrollCitizens() {
                     isLocked 
                       ? 'border-solid border-slate-800 bg-slate-900/50 cursor-not-allowed opacity-70' 
                       : medicalReport 
-                        ? 'border-dashed border-emerald-500/50 bg-emerald-500/5 cursor-pointer hover:bg-emerald-500/10' 
+                        ? 'border-solid border-red-500/50 bg-red-500/5 cursor-pointer hover:bg-red-500/10' 
                         : 'border-dashed border-slate-700 bg-slate-950 cursor-pointer hover:border-red-500/50'
                   }`}
                 >
@@ -613,8 +846,8 @@ export default function EnrollCitizens() {
                   />
                   {medicalReport ? (
                     <>
-                      <FileCheck className={`w-8 h-8 mb-2 ${isLocked ? 'text-slate-500' : 'text-emerald-400'}`} />
-                      <p className={`font-bold text-sm ${isLocked ? 'text-slate-400' : 'text-white'}`}>{medicalReport.name}</p>
+                      <FileText className={`w-12 h-12 mb-3 ${isLocked ? 'text-slate-500' : 'text-red-500'}`} />
+                      <p className={`font-bold text-sm text-center ${isLocked ? 'text-slate-400' : 'text-white'}`}>{medicalReport.name}</p>
                       {!isLocked && <p className="text-xs text-slate-500 mt-2 underline">Click to replace document</p>}
                     </>
                   ) : (
@@ -751,8 +984,8 @@ export default function EnrollCitizens() {
                 <div className={`w-[312px] h-[325px] rounded-2xl border-4 bg-slate-950 flex flex-col items-center justify-center overflow-hidden shadow-2xl transition-all duration-500 ${
                   fingerprintQuality > 0 ? 'border-emerald-500' : 'border-slate-800'
                 }`}>
-                   {fingerprintQuality > 0 ? (
-                      <Fingerprint className="w-32 h-32 text-emerald-400 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                   {fingerprintQuality > 0 && fingerprintBmpBase64 ? (
+                      <img src={`data:image/bmp;base64,${fingerprintBmpBase64}`} alt="Fingerprint" className="w-full h-full object-cover drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
                    ) : (
                       <div className="flex flex-col items-center justify-center w-full h-full relative">
                         <Fingerprint className="w-32 h-32 text-red-400/50 animate-pulse z-10" />
@@ -772,16 +1005,18 @@ export default function EnrollCitizens() {
 
              <button
                 type="button"
-                disabled={isLocked}
+                disabled={isLocked || isCapturingFingerprint}
                 onClick={handleSimulateFingerprint}
                 className={`flex items-center gap-2 px-8 py-3 rounded-full font-bold transition-all shadow-lg ${
-                  isLocked ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none' :
+                  isLocked || isCapturingFingerprint ? 'bg-slate-800 text-slate-500 cursor-not-allowed shadow-none' :
                   fingerprintQuality > 0 
                     ? 'bg-slate-800 border border-slate-600 text-slate-400 hover:text-white' 
                     : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)]'
                 }`}
               >
-                {fingerprintQuality > 0 ? (
+                {isCapturingFingerprint ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" /> Capturing...</>
+                ) : fingerprintQuality > 0 ? (
                   <><Trash2 className="w-4 h-4" /> Reset Fingerprint</>
                 ) : (
                   <><Fingerprint className="w-5 h-5" /> Capture Fingerprint</>

@@ -17,6 +17,8 @@ import java.util.Optional;
 @Repository
 public interface CitizenRepository extends JpaRepository<Citizen, String> {
 
+    Optional<Citizen> findTopByOrderByCitizenIdDesc();
+
     /**
      * Returns all ACTIVE citizens for 1:N biometric matching during emergency scan.
      * Only ACTIVE records are scanned — DELETED (tombstoned) records are excluded.

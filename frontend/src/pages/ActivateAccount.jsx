@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Building2, Stethoscope, AlertCircle, CheckCircle2, Loader2, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -50,7 +50,12 @@ export default function ActivateAccount() {
     );
   }
 
-  const handleActivateAccount = (e) => {
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
+  const id = searchParams.get('id') || config.mockId;
+  const email = searchParams.get('email') || config.mockEmail;
+
+  const handleActivateAccount = async (e) => {
     e.preventDefault();
     if (!password || !confirmPassword) {
       setStatus('error');
@@ -64,18 +69,38 @@ export default function ActivateAccount() {
       return;
     }
 
+    if (!token) {
+      setStatus('error');
+      setErrorMessage('Invalid or missing activation token.');
+      return;
+    }
+
     setStatus('loading');
     setErrorMessage('');
 
-    // Simulate network delay
-    setTimeout(() => {
-      if (password === '0') {
-        setStatus('error');
-        setErrorMessage('This activation link is invalid, expired, or has already been used.');
-      } else {
-        setStatus('success');
+    try {
+      // In reality, this endpoint will handle institution (and maybe later operator if we generalize)
+      // We assume /api/auth/activate-account/institution for now based on role
+      const endpoint = role === 'institution' 
+        ? 'http://localhost:8080/api/auth/activate-account/institution' 
+        : `http://localhost:8080/api/auth/activate-account/${role}`;
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, newPassword: password })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to activate account.');
       }
-    }, 1200);
+
+      setStatus('success');
+    } catch (err) {
+      setStatus('error');
+      setErrorMessage(err.message || 'An error occurred during activation. Please try again.');
+    }
   };
 
   const Icon = config.icon;
@@ -133,9 +158,9 @@ export default function ActivateAccount() {
               <div className="flex flex-col items-center justify-center mb-4 gap-1.5">
                 <div className="px-4 py-2 rounded-full bg-slate-950 border border-slate-800 flex items-center gap-2">
                   <Icon className={`w-4 h-4 ${config.color}`} />
-                  <span className="text-sm font-medium text-slate-300">{config.mockId}</span>
+                  <span className="text-sm font-medium text-slate-300">{id}</span>
                 </div>
-                <span className="text-xs text-slate-500 font-medium">{config.mockEmail}</span>
+                <span className="text-xs text-slate-500 font-medium">{email}</span>
               </div>
 
               {status === 'error' && (

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
+import api from '../api/axiosConfig';
 import { 
   Pencil, 
   Save, 
@@ -97,7 +98,6 @@ const ReadOnlyField = ({ label, value, icon: Icon }) => {
               <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
               <p className="leading-relaxed">{tooltipMessage}</p>
             </div>
-            {/* Arrow */}
             <div className="absolute -bottom-1 right-5 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
           </div>
         </div>
@@ -110,16 +110,21 @@ export default function OperatorConfiguration() {
   const navigate = useNavigate();
   const { id } = useParams(); // FEIRS-OP-8821
   
-  const originalData = {
-    fullName: "Subham",
-    dob: "14 August 1990",
-    gender: "Male",
-    email: "subham.trauma@apollo.com",
-    department: "Emergency Trauma Center",
-    title: "Senior Duty Doctor"
-  };
+  const [operator, setOperator] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const [formData, setFormData] = useState(originalData);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    dob: "",
+    gender: "",
+    email: "",
+    department: "",
+    title: ""
+  });
+  
+  const [originalData, setOriginalData] = useState({});
+
   const [showOtpBox, setShowOtpBox] = useState(false);
   const [otpValue, setOtpValue] = useState('');
   const [isOtpVerifying, setIsOtpVerifying] = useState(false);
@@ -139,6 +144,35 @@ export default function OperatorConfiguration() {
   const [isSaving, setIsSaving] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [operatorStatus, setOperatorStatus] = useState('ACTIVE'); // ACTIVE or SUSPENDED
+
+  const fetchOperator = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get(`/v1/operators/profile?operatorId=${id}`);
+      const op = response.data.operator;
+      setOperator(op);
+      setOperatorStatus(op.accountStatus);
+      const initialData = {
+        fullName: op.fullName || "",
+        dob: op.dateOfBirth || "",
+        gender: op.gender || "",
+        email: op.officialEmail || "",
+        department: op.department || "",
+        title: op.designationTitle || ""
+      };
+      setFormData(initialData);
+      setOriginalData(initialData);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch operator details.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOperator();
+  }, [id]);
 
   useEffect(() => {
     if (isSaving || isOtpVerifying) {
@@ -194,22 +228,30 @@ export default function OperatorConfiguration() {
     }
   };
 
-  const handleSuspend = () => {
+  const handleSuspend = async () => {
     setIsActionLoading(true);
-    setTimeout(() => {
-      setIsActionLoading(false);
+    try {
+      await api.put(`/v1/operators/${id}/status`, { status: 'SUSPENDED' });
       setOperatorStatus('SUSPENDED');
       triggerAlert('warning', 'Operator account has been suspended.');
-    }, 1200);
+    } catch (err) {
+      triggerAlert('error', 'Failed to suspend operator account.');
+    } finally {
+      setIsActionLoading(false);
+    }
   };
 
-  const handleActivate = () => {
+  const handleActivate = async () => {
     setIsActionLoading(true);
-    setTimeout(() => {
-      setIsActionLoading(false);
+    try {
+      await api.put(`/v1/operators/${id}/status`, { status: 'ACTIVE' });
       setOperatorStatus('ACTIVE');
       triggerAlert('success', 'Operator account has been activated.');
-    }, 1200);
+    } catch (err) {
+      triggerAlert('error', 'Failed to activate operator account.');
+    } finally {
+      setIsActionLoading(false);
+    }
   };
 
   return (
@@ -247,7 +289,11 @@ export default function OperatorConfiguration() {
             {/* Profile Photo */}
             <div className="relative mb-6 mt-4 group">
               <div className="w-56 h-56 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-xl">
-                <User className="w-20 h-20 text-slate-500" />
+                {operator?.profilePhotoUrl ? (
+                  <img src={operator.profilePhotoUrl} alt="Operator" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-20 h-20 text-slate-500" />
+                )}
               </div>
               <div className="absolute bottom-4 right-4 p-2 bg-slate-800 border border-slate-700 rounded-full shadow-lg">
                 <div className="text-slate-700 cursor-not-allowed">
@@ -307,7 +353,7 @@ export default function OperatorConfiguration() {
               </div>
               <div className="flex flex-wrap justify-center gap-1.5 text-sm">
                 <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Account Created:</span>
-                <span className="font-medium text-slate-300 text-center">Oct 20, 2026</span>
+                <span className="font-medium text-slate-300 text-center">{operator?.createdAt ? new Date(operator.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</span>
               </div>
             </div>
           </div>

@@ -19,8 +19,16 @@ public interface SuperAdminRepository extends JpaRepository<SuperAdmin, String> 
      */
     Optional<SuperAdmin> findByMasterEmail(String masterEmail);
 
+    @org.springframework.data.jpa.repository.Query("SELECT s FROM SuperAdmin s WHERE LOWER(s.superAdminId) = LOWER(:identifier) OR LOWER(s.masterEmail) = LOWER(:identifier)")
+    Optional<SuperAdmin> findByIdentifierIgnoreCase(@org.springframework.data.repository.query.Param("identifier") String identifier);
+
     /**
      * Efficient existence check to prevent duplicate root accounts during seeding.
      */
     boolean existsByMasterEmail(String masterEmail);
+
+    /**
+     * Finds a regional Super Admin based on exact location match.
+     */
+    Optional<SuperAdmin> findFirstByCityIgnoreCaseAndStateIgnoreCaseAndCountryIgnoreCase(String city, String state, String country);
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -7,59 +7,23 @@ import {
   X,
   Loader2,
   User,
-  ArrowRight
+  ArrowRight,
+  AlertCircle
 } from 'lucide-react';
+import api from '../api/axiosConfig';
 
-const mockOperators = [
-  {
-    id: 'FEIRS-OP-8821',
-    name: 'Subham',
-    createdAt: 'Oct 20, 2026 - 14:30:05',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'FEIRS-OP-3312',
-    name: 'Priya',
-    createdAt: 'Oct 18, 2026 - 09:15:22',
-    status: 'SUSPENDED',
-  },
-  {
-    id: 'FEIRS-OP-4491',
-    name: 'Rahul Kumar',
-    createdAt: 'Oct 15, 2026 - 11:45:11',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'FEIRS-OP-1102',
-    name: 'Dr. Sarah',
-    createdAt: 'Oct 10, 2026 - 16:20:03',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'FEIRS-OP-5523',
-    name: 'Arjun',
-    createdAt: 'Oct 05, 2026 - 08:00:45',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'FEIRS-OP-9912',
-    name: 'Neha Singh',
-    createdAt: 'Sep 28, 2026 - 10:30:55',
-    status: 'SUSPENDED',
-  },
-  {
-    id: 'FEIRS-OP-2281',
-    name: 'Vikas',
-    createdAt: 'Sep 15, 2026 - 13:45:16',
-    status: 'ACTIVE',
-  },
-  {
-    id: 'FEIRS-OP-7744',
-    name: 'Anjali',
-    createdAt: 'Sep 02, 2026 - 09:20:23',
-    status: 'ACTIVE',
-  }
-];
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  const d = new Date(dateString);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  const monthName = months[d.getMonth()];
+  const dayNum = d.getDate();
+  const year = d.getFullYear();
+  const timeStr = d.toLocaleTimeString('en-GB');
+  
+  return `${monthName} ${dayNum}, ${year} - ${timeStr}`;
+};
 
 const defaultFilters = { status: 'All Statuses', time: 'All Time' };
 
@@ -72,9 +36,37 @@ export default function ManageOperators() {
   const [tempFilters, setTempFilters] = useState(defaultFilters);
   const [activeFilters, setActiveFilters] = useState(defaultFilters);
 
+  const [operators, setOperators] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchOperators = async () => {
+      try {
+        setIsLoading(true);
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        if (!user?.id) {
+          setError("User not found");
+          return;
+        }
+        const response = await api.get(`/v1/operators?institutionId=${user.id}`);
+        setOperators(response.data.operators || []);
+      } catch (err) {
+        console.error("Failed to fetch operators:", err);
+        setError("Failed to fetch operators");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchOperators();
+  }, []);
+
+  // Modify simulateSearch to just handle the local state if needed
+  // For a real app, you'd apply filters to `operators` list.
   const simulateSearch = () => {
     setIsSearching(true);
-    setTimeout(() => setIsSearching(false), 800);
+    setTimeout(() => setIsSearching(false), 300); // reduced timeout
   };
 
   const handleSearchKeyDown = (e) => {
@@ -95,6 +87,18 @@ export default function ManageOperators() {
   };
 
   const hasActiveFilters = Object.keys(activeFilters).some(key => activeFilters[key] !== defaultFilters[key]);
+
+  // Filtering logic
+  const filteredOperators = operators.filter(op => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!op.fullName?.toLowerCase().includes(q) && !op.operatorId?.toLowerCase().includes(q)) return false;
+    }
+    if (activeFilters.status !== 'All Statuses') {
+      if (op.accountStatus !== activeFilters.status.toUpperCase()) return false;
+    }
+    return true;
+  });
 
   return (
     <div className="w-full flex flex-col items-center gap-6 pb-20">
@@ -246,26 +250,45 @@ export default function ManageOperators() {
               <thead className="bg-slate-950/80 sticky top-0 z-10 backdrop-blur-md">
                 <tr>
                   <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[180px]">Account Created At</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[205px] pl-[84px]">Photo</th>
+                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[160px] pl-[84px]">Photo</th>
                   <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[180px]">Operator</th>
                   <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[125px]">Status</th>
                   <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 w-[120px] text-left">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
-                {mockOperators.map((op) => (
-                  <tr key={op.id} className="hover:bg-slate-800/30 transition-colors">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="5" className="p-8 text-center text-slate-400">Loading operators...</td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan="5" className="p-8 text-center text-red-400 flex items-center justify-center gap-2">
+                      <AlertCircle className="w-5 h-5" /> {error}
+                    </td>
+                  </tr>
+                ) : filteredOperators.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="p-8 text-center text-slate-400">No operators found.</td>
+                  </tr>
+                ) : (
+                  filteredOperators.map((op) => (
+                  <tr key={op.operatorId} className="hover:bg-slate-800/30 transition-colors">
                     
                     {/* Created At */}
                     <td className="p-4 align-middle">
-                      <p className="text-xs text-slate-400 font-medium whitespace-nowrap">{op.createdAt}</p>
+                      <p className="text-xs text-slate-400 font-medium whitespace-nowrap">{formatDate(op.createdAt)}</p>
                     </td>
 
                     {/* Photo */}
                     <td className="p-4 align-middle">
                       <div className="flex ml-[30px]">
                         <div className="w-28 h-28 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-md">
-                          <User className="w-14 h-14 text-slate-500" />
+                          {op.profilePhotoUrl ? (
+                            <img src={op.profilePhotoUrl} alt="Operator" className="w-full h-full object-cover" />
+                          ) : (
+                            <User className="w-14 h-14 text-slate-500" />
+                          )}
                         </div>
                       </div>
                     </td>
@@ -273,22 +296,22 @@ export default function ManageOperators() {
                     {/* Operator */}
                     <td className="p-4 align-middle">
                       <div className="flex flex-col gap-1">
-                        <span className="text-sm font-bold text-white">{op.name}</span>
-                        <span className="text-xs text-slate-500 font-mono">{op.id}</span>
+                        <span className="text-sm font-bold text-white">{op.fullName}</span>
+                        <span className="text-xs text-slate-500 font-mono">{op.operatorId}</span>
                       </div>
                     </td>
 
                     {/* Status */}
                     <td className="p-4 align-middle text-left">
-                      <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider ${op.status === 'ACTIVE' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}>
-                        {op.status}
+                      <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider ${op.accountStatus === 'ACTIVE' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}>
+                        {op.accountStatus}
                       </span>
                     </td>
 
                     {/* Action */}
                     <td className="p-4 align-middle text-left">
                       <button 
-                        onClick={() => navigate(`/institution/manage-operators/${op.id}`)}
+                        onClick={() => navigate(`/institution/manage-operators/${op.operatorId}`)}
                         className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-700/50 text-xs font-bold text-emerald-400 hover:text-white hover:border-emerald-500/80 hover:bg-emerald-500/20 transition-all"
                       >
                         View / Edit <ArrowRight className="w-3.5 h-3.5" />
@@ -296,7 +319,8 @@ export default function ManageOperators() {
                     </td>
 
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>

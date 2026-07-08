@@ -31,17 +31,23 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final SuperAdminRepository superAdminRepository;
+    private final com.feirs.backend.repositories.InstitutionRepository institutionRepository;
+    private final com.feirs.backend.repositories.OperatorRepository operatorRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
 
     public AuthController(AuthenticationManager authenticationManager, 
                           JwtUtils jwtUtils, 
                           SuperAdminRepository superAdminRepository,
+                          com.feirs.backend.repositories.InstitutionRepository institutionRepository,
+                          com.feirs.backend.repositories.OperatorRepository operatorRepository,
                           EmailService emailService,
                           PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.superAdminRepository = superAdminRepository;
+        this.institutionRepository = institutionRepository;
+        this.operatorRepository = operatorRepository;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
     }
@@ -71,11 +77,26 @@ public class AuthController {
                 return ResponseEntity.badRequest().body("Selected role does not match user credentials.");
             }
             
+            // Block suspended operators
+            if (requestedRole.equals("operator") && "SUSPENDED".equalsIgnoreCase(userDetails.getAccountStatus())) {
+                return ResponseEntity.status(403).body("Your account is currently suspended. Please contact your Institution Admin for reactivation.");
+            }
+            
             // Update lastLoginAt based on role
             if (requestedRole.equals("super-admin")) {
                 superAdminRepository.findById(userDetails.getId()).ifPresent(sa -> {
                     sa.setLastLoginAt(LocalDateTime.now());
                     superAdminRepository.save(sa);
+                });
+            } else if (requestedRole.equals("institution")) {
+                institutionRepository.findById(userDetails.getId()).ifPresent(inst -> {
+                    inst.setLastLoginAt(LocalDateTime.now());
+                    institutionRepository.save(inst);
+                });
+            } else if (requestedRole.equals("operator")) {
+                operatorRepository.findById(userDetails.getId()).ifPresent(op -> {
+                    op.setLastLoginAt(LocalDateTime.now());
+                    operatorRepository.save(op);
                 });
             }
         }
@@ -83,7 +104,8 @@ public class AuthController {
         return ResponseEntity.ok(new JwtResponse(jwt, 
                                                  userDetails.getId(), 
                                                  userDetails.getEmail(), 
-                                                 roles));
+                                                 roles,
+                                                 userDetails.getAccountStatus()));
     }
 
     @PostMapping("/forgot-password/super-admin")
@@ -138,5 +160,55 @@ public class AuthController {
         superAdminRepository.save(admin);
 
         return ResponseEntity.ok("Your password has been successfully reset. You can now use your new password to securely access your portal.");
+    }
+
+    @PostMapping("/activate-account/institution")
+    public ResponseEntity<?> activateInstitutionAccount(@RequestBody ResetPasswordRequest request) {
+        String email = jwtUtils.validateActivationTokenAndGetEmail(request.getToken());
+        
+        if (email == null) {
+            return ResponseEntity.badRequest().body("This activation link is invalid, expired, or has already been used.");
+        }
+
+        Optional<com.feirs.backend.models.Institution> instOpt = institutionRepository.findByOfficialEmail(email);
+        if (instOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("Institution account not found.");
+        }
+
+        com.feirs.backend.models.Institution institution = instOpt.get();
+        institution.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        
+        if (!"ACTIVE".equals(institution.getAccountStatus())) {
+            institution.setAccountStatus("ACTIVE");
+        }
+        
+        institutionRepository.save(institution);
+
+        return ResponseEntity.ok("Account Activated Successfully! Your account is now active and secure. You can now log in to access your portal.");
+    }
+
+    @PostMapping("/activate-account/operator")
+    public ResponseEntity<?> activateOperatorAccount(@RequestBody ResetPasswordRequest request) {
+        String email = jwtUtils.validateActivationTokenAndGetEmail(request.getToken());
+        
+        if (email == null) {
+            return ResponseEntity.badRequest().body("This activation link is invalid, expired, or has already been used.");
+        }
+
+        Optional<com.feirs.backend.models.Operator> opOpt = operatorRepository.findByOfficialEmail(email);
+        if (opOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("Operator account not found.");
+        }
+
+        com.feirs.backend.models.Operator operator = opOpt.get();
+        operator.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        
+        if (!"ACTIVE".equals(operator.getAccountStatus())) {
+            operator.setAccountStatus("ACTIVE");
+        }
+        
+        operatorRepository.save(operator);
+  
+        return ResponseEntity.ok("Account Activated Successfully! Your account is now active and secure. You can now log in to access your portal.");
     }
 }

@@ -21,6 +21,11 @@ public interface OperatorRepository extends JpaRepository<Operator, String> {
      */
     Optional<Operator> findByOfficialEmail(String officialEmail);
 
+    Operator findFirstByOrderByOperatorIdDesc();
+
+    @org.springframework.data.jpa.repository.Query("SELECT o FROM Operator o WHERE LOWER(o.operatorId) = LOWER(:identifier) OR LOWER(o.officialEmail) = LOWER(:identifier)")
+    Optional<Operator> findByIdentifierIgnoreCase(@org.springframework.data.repository.query.Param("identifier") String identifier);
+
     /**
      * Prevents duplicate operator registrations within the platform.
      */

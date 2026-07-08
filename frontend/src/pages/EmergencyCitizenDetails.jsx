@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { 
   ChevronLeft, User, Calendar as CalendarIcon, Phone, Mail, MapPin, Activity, 
   Droplets, AlertTriangle, Stethoscope, Pill, FileText, Printer
@@ -39,41 +40,68 @@ const ReadOnlyTextArea = ({ label, value, icon: Icon }) => (
 );
 
 export default function EmergencyCitizenDetails() {
-  const { id } = useParams(); // Should be FEIRS-CIT-12459
+  const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   
   const [showBanner, setShowBanner] = useState(true);
+  const [citizen, setCitizen] = useState(location.state?.citizen || null);
+  const [contacts, setContacts] = useState(location.state?.contacts || []);
+  const [loading, setLoading] = useState(!location.state?.citizen);
 
   useEffect(() => {
-    // Hide banner after 3 seconds
     const timer = setTimeout(() => {
       setShowBanner(false);
     }, 5000);
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    if (!citizen) {
+      const fetchCitizen = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await axios.get(`http://localhost:8080/api/v1/citizens/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.data.success) {
+            setCitizen(res.data.citizen);
+            setContacts(res.data.contacts || []);
+          } else {
+            navigate('/operator/emergency-scan');
+          }
+        } catch (error) {
+          console.error("Failed to fetch citizen:", error);
+          navigate('/operator/emergency-scan');
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchCitizen();
+    }
+  }, [citizen, id, navigate]);
+
+  if (loading || !citizen) {
+    return <div className="w-full min-h-[80vh] flex items-center justify-center text-white">Retrieving Emergency Profile...</div>;
+  }
+
   const data = {
-    fullName: "Rajesh Kumar",
-    systemId: id || "FEIRS-CIT-12459",
-    accountCreated: "Oct 20, 2026",
-    dob: "15 June 1985",
-    gender: "Male",
-    mobile: "+91 98765 43210",
-    email: "rajesh.kumar@example.com",
-    location: "123 Main Street, Apt 4B, Mumbai, Maharashtra, 400001, India",
-    bloodGroup: "O+",
-    allergies: "Penicillin (Severe)",
-    chronicConditions: "Hypertension\nType 2 Diabetes",
-    medications: "Lisinopril 10mg daily\nMetformin 500mg twice daily"
+    fullName: citizen.fullName || "REDACTED",
+    systemId: citizen.citizenId,
+    accountCreated: citizen.accountStatus || "ACTIVE", // Or you can format a real date if you want
+    dob: citizen.dateOfBirth ? citizen.dateOfBirth : "Not Provided",
+    gender: citizen.gender || "Not Provided",
+    mobile: citizen.phoneNumber ? `+${citizen.phoneCountryCode} ${citizen.phoneNumber}` : "Not Provided",
+    email: citizen.emailAddress || "Not Provided",
+    location: [citizen.addressLine1, citizen.addressLine2, citizen.city, citizen.state, citizen.pinCode, citizen.country].filter(Boolean).join(", "),
+    bloodGroup: citizen.bloodGroup || "Not Provided",
+    allergies: citizen.severeAllergies || "None",
+    chronicConditions: citizen.chronicConditions || "None",
+    medications: citizen.currentMedications || "None"
   };
 
-  const contacts = [
-    { id: 1, name: 'Jane Doe', relationship: 'Spouse', mobile: '+91 99887 76655', email: 'jane.doe@example.com' },
-    { id: 2, name: 'Amit Kumar', relationship: 'Brother', mobile: '+91 98765 12345', email: 'amit.kumar@example.com' },
-    { id: 3, name: 'Priya Sharma', relationship: 'Doctor', mobile: '+91 99999 88888', email: 'priya.sharma@hospital.com' }
-  ];
-
   return (
-    <div className="w-full flex flex-col items-center pb-24 relative min-h-screen">
+    <div className="w-full flex flex-col items-center pb-24 relative min-h-screen print:bg-white print:text-black print:pb-0">
       
       {/* Automated Dispatch Banner */}
       <AnimatePresence>
@@ -94,10 +122,10 @@ export default function EmergencyCitizenDetails() {
         )}
       </AnimatePresence>
 
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[500px] rounded-[100%] bg-red-900/10 blur-[150px] pointer-events-none z-0" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[500px] rounded-[100%] bg-red-900/10 blur-[150px] pointer-events-none z-0 print:hidden" />
 
       {/* Page Header */}
-      <div className="relative z-10 w-full flex items-center justify-center mt-4 mb-8 max-w-[1400px] mx-auto px-6 lg:px-0 h-10">
+      <div className="relative z-10 w-full flex items-center justify-center mt-4 mb-8 max-w-[1400px] mx-auto px-6 lg:px-0 h-10 print:hidden">
         <div className="absolute left-6 lg:left-0 top-1/2 -translate-y-1/2">
           <Link to="/operator/emergency-scan" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors group">
             <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
@@ -128,7 +156,7 @@ export default function EmergencyCitizenDetails() {
               
               <div className="relative mb-6 mt-4 group cursor-default">
                 <div className="w-[220px] h-[220px] rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-xl">
-                  <User className="w-24 h-24 text-slate-500" />
+                  {citizen.livePhotoUrl ? <img src={`http://localhost:8080/${citizen.livePhotoUrl}`} alt="Citizen" className="w-full h-full object-cover" /> : <User className="w-24 h-24 text-slate-500" />}
                 </div>
               </div>
 
@@ -176,10 +204,10 @@ export default function EmergencyCitizenDetails() {
                 {contacts.map((c) => (
                   <div key={c.id} className="bg-slate-950/50 border border-slate-800 rounded-xl p-5 relative">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-2">
-                      <ReadOnlyField label="Name" icon={User} value={c.name} />
+                      <ReadOnlyField label="Name" icon={User} value={c.contactName} />
                       <ReadOnlyField label="Relationship" icon={User} value={c.relationship} />
-                      <ReadOnlyField label="Mobile Number" icon={Phone} value={c.mobile} />
-                      <ReadOnlyField label="Email Address" icon={Mail} value={c.email} />
+                      <ReadOnlyField label="Mobile Number" icon={Phone} value={c.phoneNumber ? `+${c.phoneCountryCode} ${c.phoneNumber}` : 'N/A'} />
+                      <ReadOnlyField label="Email Address" icon={Mail} value={c.emailAddress || 'N/A'} />
                     </div>
                   </div>
                 ))}
@@ -249,11 +277,11 @@ export default function EmergencyCitizenDetails() {
                   <div 
                     className="w-full flex-grow rounded-xl border-2 border-dashed border-slate-700 bg-slate-950/50 hover:border-red-500/50 flex flex-col items-center justify-center cursor-pointer transition-colors group p-4 text-center relative"
                     title="Double click to open this pdf"
-                    onDoubleClick={() => console.log('Simulating native PDF open in new tab...')}
+                    onDoubleClick={() => citizen.medicalDocumentsUrl ? window.open(`http://localhost:8080/${citizen.medicalDocumentsUrl}`, '_blank') : null}
                   >
                     <FileText className="w-8 h-8 text-slate-500 mb-2 group-hover:text-red-400 transition-colors" />
                     <p className="text-sm font-bold text-slate-400 group-hover:text-slate-200 transition-colors">
-                      Medical_Checkup_Report_2026.pdf
+                      {citizen.medicalDocumentsUrl ? citizen.medicalDocumentsUrl.split('/').pop() : 'No Medical Document'}
                     </p>
                     
                     {/* Hover Tooltip Hint */}
@@ -269,7 +297,7 @@ export default function EmergencyCitizenDetails() {
         </div>
 
         {/* Final Action Footer */}
-        <div className="w-full flex justify-center pt-8 pb-12">
+        <div className="w-full flex justify-center pt-8 pb-12 print:hidden">
           <button 
             onClick={() => window.print()}
             className="px-8 py-4 bg-red-600 hover:bg-red-500 text-white font-black text-lg rounded-2xl shadow-xl transition-all flex justify-center items-center gap-3"

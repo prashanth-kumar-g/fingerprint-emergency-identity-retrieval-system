@@ -21,14 +21,16 @@ public class UserDetailsImpl implements UserDetails {
     @JsonIgnore
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
+    private String accountStatus;
 
     public UserDetailsImpl(String id, String username, String email, String password,
-                           Collection<? extends GrantedAuthority> authorities) {
+                           Collection<? extends GrantedAuthority> authorities, String accountStatus) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.authorities = authorities;
+        this.accountStatus = accountStatus;
     }
 
     public static UserDetailsImpl build(SuperAdmin superAdmin) {
@@ -38,7 +40,8 @@ public class UserDetailsImpl implements UserDetails {
                 superAdmin.getSuperAdminId(), // Use ID as username for Spring Security
                 superAdmin.getMasterEmail(),
                 superAdmin.getPasswordHash(),
-                authorities);
+                authorities,
+                "ACTIVE"); // SuperAdmin does not have suspension status
     }
 
     public static UserDetailsImpl build(Institution institution) {
@@ -48,7 +51,8 @@ public class UserDetailsImpl implements UserDetails {
                 institution.getInstitutionId(),
                 institution.getOfficialEmail(),
                 institution.getPasswordHash(),
-                authorities);
+                authorities,
+                institution.getAccountStatus());
     }
 
     public static UserDetailsImpl build(Operator operator) {
@@ -58,7 +62,8 @@ public class UserDetailsImpl implements UserDetails {
                 operator.getOperatorId(),
                 operator.getOfficialEmail(),
                 operator.getPasswordHash(),
-                authorities);
+                authorities,
+                operator.getAccountStatus());
     }
 
     @Override
@@ -72,6 +77,10 @@ public class UserDetailsImpl implements UserDetails {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getAccountStatus() {
+        return accountStatus;
     }
 
     @Override

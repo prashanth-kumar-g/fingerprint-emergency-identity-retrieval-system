@@ -102,6 +102,12 @@ public class FingerprintService {
 
         int responseCode = conn.getResponseCode();
         InputStream is = (responseCode == 200) ? conn.getInputStream() : conn.getErrorStream();
+        
+        if (is == null) {
+            conn.disconnect();
+            throw new RuntimeException("MFS100 service returned HTTP " + responseCode + " with no error body.");
+        }
+
         StringBuilder sb = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
             String line;

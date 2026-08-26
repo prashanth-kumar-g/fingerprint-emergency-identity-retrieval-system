@@ -173,7 +173,7 @@ export default function EnrollOperator() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
     const institutionId = user.id;
 
     if (!institutionId) {
@@ -209,7 +209,7 @@ export default function EnrollOperator() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${sessionStorage.getItem('token')}`
           },
           body: JSON.stringify(payload)
         });
@@ -258,7 +258,7 @@ export default function EnrollOperator() {
         const res = await fetch(`http://localhost:8080/api/v1/operators/enroll/verify`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${sessionStorage.getItem('token')}`
           },
           body: formData
         });

@@ -126,7 +126,7 @@ const PasswordExpander = ({ isSaving, oldPassword, newPassword, confirmPassword,
       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Account Password</label>
       
       {!isExpanded ? (
-        <div className="relative group cursor-pointer" onClick={handleExpand}>
+        <div className="relative group">
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
             <KeyRound className="w-4 h-4" />
           </div>
@@ -134,11 +134,9 @@ const PasswordExpander = ({ isSaving, oldPassword, newPassword, confirmPassword,
             type="password"
             value="••••••••••••"
             readOnly
-            className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-300 cursor-pointer group-hover:border-slate-700 transition-colors outline-none"
+            className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-300 group-hover:border-slate-700 transition-colors outline-none"
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-500 group-hover:text-red-400 transition-colors">
-            <Pencil className="w-3.5 h-3.5" />
-          </div>
+          <button type="button" onClick={handleExpand} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-800 transition-colors cursor-pointer"><Pencil className="w-3.5 h-3.5" /></button>
         </div>
       ) : (
         <motion.div 
@@ -222,7 +220,7 @@ export default function OperatorProfile() {
   const fetchProfile = async () => {
     try {
       setIsLoading(true);
-      const user = JSON.parse(localStorage.getItem('user'));
+      const user = JSON.parse(sessionStorage.getItem('user'));
       const response = await api.get(`/v1/operators/profile?operatorId=${user.id}`);
       const data = response.data.operator;
       setOperator(data);
@@ -401,10 +399,14 @@ export default function OperatorProfile() {
             <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 blur-[50px] pointer-events-none transition-colors duration-500 ${operator?.accountStatus === 'ACTIVE' ? 'bg-red-500/10' : 'bg-orange-500/10'}`} />
             
             {/* Profile Photo */}
-            <div 
-              className="relative group cursor-pointer mb-6 mt-4"
-              onClick={() => fileInputRef.current?.click()}
-            >
+            <div className="relative group mb-6 mt-4">
+              <input 
+                type="file" 
+                className="hidden" 
+                ref={fileInputRef} 
+                accept="image/jpeg, image/png, image/jpg"
+                onChange={handlePhotoSelect}
+              />
               <div className="w-56 h-56 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-xl group-hover:border-red-500/50 transition-colors">
                 {displayPhoto ? (
                   <img src={displayPhoto} alt="Operator" className="w-full h-full object-cover" />
@@ -412,17 +414,12 @@ export default function OperatorProfile() {
                   <User className="w-20 h-20 text-slate-500 group-hover:text-red-400 transition-colors" />
                 )}
               </div>
-              <div className="absolute bottom-4 right-4 p-2 bg-slate-800 border border-slate-700 rounded-full shadow-lg text-slate-400 group-hover:text-red-400 group-hover:border-red-500/50 transition-all">
+              <div 
+                className="absolute bottom-4 right-4 p-2 bg-slate-800 border border-slate-700 rounded-full shadow-lg text-slate-400 group-hover:text-red-400 group-hover:border-red-500/50 transition-all cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
                 <Pencil className="w-4 h-4" />
               </div>
-              <input 
-                type="file" 
-                accept="image/jpeg, image/png, image/jpg"
-                className="hidden" 
-                ref={fileInputRef}
-                onChange={handlePhotoSelect}
-                disabled={isSaving}
-              />
             </div>
 
             {/* Role Badge */}
@@ -434,19 +431,19 @@ export default function OperatorProfile() {
             </div>
 
             {/* Operator Name (Managed) */}
-            <div className="w-full relative group mb-6 flex justify-center items-center">
+            <div className="w-full relative mb-6 flex justify-center items-center">
               <h2 className="text-2xl font-black text-white text-center">{operator?.fullName}</h2>
-              <div className="relative flex items-center ml-3">
+              <div className="relative group flex items-center ml-3">
                 <div className="text-slate-700 cursor-not-allowed">
                   <Pencil className="w-4 h-4" />
                 </div>
                 {/* Tooltip */}
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 bg-slate-800 text-white text-xs font-medium p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 pointer-events-none border border-slate-700 text-left">
+                <div className="absolute right-0 bottom-full mb-2 w-64 bg-slate-800 text-white text-xs font-medium p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 pointer-events-none border border-slate-700 text-left">
                   <div className="flex gap-2 items-start">
                     <Lock className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
                     <p className="leading-relaxed">{tooltipMsg}</p>
                   </div>
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
+                  <div className="absolute -bottom-1 right-2 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
                 </div>
               </div>
             </div>
@@ -619,3 +616,8 @@ export default function OperatorProfile() {
     </div>
   );
 }
+
+
+
+
+

@@ -123,7 +123,8 @@ public class AuthController {
         }
 
         SuperAdmin admin = adminOpt.get();
-        String token = jwtUtils.generatePasswordResetToken(admin.getMasterEmail());
+        // Append passwordHash to subject to invalidate token upon password change
+        String token = jwtUtils.generatePasswordResetToken(admin.getMasterEmail() + "|" + admin.getPasswordHash());
         String resetLink = "http://localhost:5173/reset-password/super-admin?token=" + token + "&id=" + admin.getSuperAdminId();
 
         try {
@@ -138,11 +139,15 @@ public class AuthController {
 
     @PostMapping("/reset-password/super-admin")
     public ResponseEntity<?> resetPasswordSuperAdmin(@RequestBody ResetPasswordRequest request) {
-        String email = jwtUtils.validatePasswordResetTokenAndGetEmail(request.getToken());
+        String subject = jwtUtils.validatePasswordResetTokenAndGetEmail(request.getToken());
         
-        if (email == null) {
+        if (subject == null) {
             return ResponseEntity.badRequest().body("This activation link is invalid, expired, or has already been used.");
         }
+
+        String[] parts = subject.split("\\|");
+        String email = parts[0];
+        String tokenHash = parts.length > 1 ? parts[1] : "";
 
         Optional<SuperAdmin> adminOpt = superAdminRepository.findById(request.getId());
         if (adminOpt.isEmpty() || !adminOpt.get().getMasterEmail().equals(email)) {
@@ -150,6 +155,11 @@ public class AuthController {
         }
 
         SuperAdmin admin = adminOpt.get();
+
+        // Validate the hash to ensure one-time use
+        if (!tokenHash.equals(admin.getPasswordHash())) {
+            return ResponseEntity.badRequest().body("This reset link has already been used. Please request a new one.");
+        }
         
         // Check if old password matches new password
         if (passwordEncoder.matches(request.getNewPassword(), admin.getPasswordHash())) {

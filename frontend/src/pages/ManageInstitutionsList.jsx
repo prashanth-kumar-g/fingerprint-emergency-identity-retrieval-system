@@ -33,7 +33,7 @@ export default function ManageInstitutionsList() {
         setIsLoading(true);
         const response = await api.get('/v1/super-admin/institutions');
         if (response.data.success) {
-          const userStr = localStorage.getItem('user');
+          const userStr = sessionStorage.getItem('user');
           const user = userStr ? JSON.parse(userStr) : null;
           const currentAdminId = user?.id;
 

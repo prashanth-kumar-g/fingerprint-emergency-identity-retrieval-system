@@ -15,7 +15,7 @@ export default function EmergencyScanGateway() {
   const [gatewayState, setGatewayState] = useState('READY');
   const [fingerprintQuality, setFingerprintQuality] = useState(0);
 
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
 
   const handleEmergencyScan = () => {
     setGatewayState('SCANNING');

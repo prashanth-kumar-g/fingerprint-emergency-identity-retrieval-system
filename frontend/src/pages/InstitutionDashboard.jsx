@@ -66,7 +66,7 @@ const cards = [
 export default function InstitutionDashboard() {
   const navigate = useNavigate();
 
-  const userStr = localStorage.getItem('user');
+  const userStr = sessionStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
   const isSuspended = user?.accountStatus === 'SUSPENDED';
 

@@ -44,7 +44,7 @@ export default function ManageOperators() {
     const fetchOperators = async () => {
       try {
         setIsLoading(true);
-        const userStr = localStorage.getItem('user');
+        const userStr = sessionStorage.getItem('user');
         const user = userStr ? JSON.parse(userStr) : null;
         if (!user?.id) {
           setError("User not found");

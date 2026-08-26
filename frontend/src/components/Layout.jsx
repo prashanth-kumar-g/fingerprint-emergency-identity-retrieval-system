@@ -77,7 +77,7 @@ export default function Layout() {
               <ul className="flex flex-col gap-2 text-slate-400 text-xs">
                 <li className="flex items-center justify-center gap-2 hover:text-cyan-400 cursor-pointer transition-colors">
                   <Mail className="w-3 h-3" />
-                  prashantkumarrrg777@gmail.com
+                  prashanthkumarg2004@gmail.com
                 </li>
                 <li className="flex items-center justify-center gap-2 hover:text-cyan-400 cursor-pointer transition-colors">
                   <Phone className="w-3 h-3" />

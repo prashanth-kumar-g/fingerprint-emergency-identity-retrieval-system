@@ -21,12 +21,12 @@ export default function InstitutionLayout() {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     navigate('/login/institution', { replace: true });
   };
 
-  const userStr = localStorage.getItem('user');
+  const userStr = sessionStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
   const isSuspended = user?.accountStatus === 'SUSPENDED';
 

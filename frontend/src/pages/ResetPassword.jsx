@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { Shield, Building2, Stethoscope, ArrowLeft, AlertCircle, CheckCircle2, Loader2, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -14,6 +14,7 @@ const roleConfigs = {
     buttonColor: 'bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_20px_rgba(8,145,178,0.4)]',
     mockId: 'FEIRS-SA-ROOT',
     mockEmail: 'admin.feirs@gmail.com',
+    successBg: 'bg-cyan-500/20',
   },
   'institution': {
     title: 'Set New Password',
@@ -25,6 +26,7 @@ const roleConfigs = {
     buttonColor: 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)]',
     mockId: 'FEIRS-INST-1011',
     mockEmail: 'apollo@hospital.com',
+    successBg: 'bg-emerald-500/20',
   },
   'operator': {
     title: 'Set New Password',
@@ -51,6 +53,17 @@ export default function ResetPassword() {
   const [status, setStatus] = useState('idle'); // idle, loading, error, success
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Auto-hide error message after 5 seconds
+  useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => {
+        setErrorMessage('');
+        if (status === 'error') setStatus('idle');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage, status]);
+
   const config = roleConfigs[role];
 
   if (!config) {
@@ -65,6 +78,24 @@ export default function ResetPassword() {
   const searchParams = new URLSearchParams(location.search);
   const token = searchParams.get('token');
   const id = searchParams.get('id');
+
+  const decodeJwt = (t) => {
+    try {
+      const base64Url = t.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch(e) {
+      return null;
+    }
+  };
+
+  const payload = token ? decodeJwt(token) : null;
+  const decodedEmail = payload && payload.sub ? payload.sub.split('|')[0] : '';
+  const displayId = id || config.mockId;
+  const displayEmail = decodedEmail || config.mockEmail;
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
@@ -158,8 +189,8 @@ export default function ResetPassword() {
               animate={{ opacity: 1, scale: 1 }}
               className="flex flex-col items-center text-center py-6"
             >
-              <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/50 mb-6">
-                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+              <div className={`w-16 h-16 rounded-full ${config.successBg} flex items-center justify-center border ${config.borderColor} mb-6`}>
+                <CheckCircle2 className={`w-8 h-8 ${config.color}`} />
               </div>
               <h3 className="text-xl font-bold text-white mb-3">Password Successfully Reset</h3>
               <p className="text-slate-400 text-sm leading-relaxed mb-8">
@@ -179,9 +210,9 @@ export default function ResetPassword() {
               <div className="flex flex-col items-center justify-center mb-4 gap-1.5">
                 <div className="px-4 py-2 rounded-full bg-slate-950 border border-slate-800 flex items-center gap-2">
                   <Icon className={`w-4 h-4 ${config.color}`} />
-                  <span className="text-sm font-medium text-slate-300">{config.mockId}</span>
+                  <span className="text-sm font-medium text-slate-300">{displayId}</span>
                 </div>
-                <span className="text-xs text-slate-500 font-medium">{config.mockEmail}</span>
+                <span className="text-xs text-slate-500 font-medium">{displayEmail}</span>
               </div>
 
               {status === 'error' && (

@@ -48,7 +48,7 @@ export default function PendingRegistrationDetails() {
   const handleApprove = async () => {
     try {
       setIsApproving(true);
-      const userStr = localStorage.getItem('user');
+      const userStr = sessionStorage.getItem('user');
       const user = userStr ? JSON.parse(userStr) : null;
       const superAdminId = user?.id;
 
@@ -75,7 +75,7 @@ export default function PendingRegistrationDetails() {
     if (!rejectionReason.trim()) return;
     try {
       setIsRejecting(true);
-      const userStr = localStorage.getItem('user');
+      const userStr = sessionStorage.getItem('user');
       const user = userStr ? JSON.parse(userStr) : null;
       const superAdminId = user?.id;
 

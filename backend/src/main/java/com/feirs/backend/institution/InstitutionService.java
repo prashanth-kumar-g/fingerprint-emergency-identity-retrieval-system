@@ -71,12 +71,12 @@ public class InstitutionService {
         registration.setRegistrationId(generateRegistrationId());
 
         if (logoFile != null && !logoFile.isEmpty()) {
-            String logoUrl = storageService.uploadFile(logoFile, "FEIRS-Bucket", "pending-logos/" + registration.getRegistrationId());
+            String logoUrl = storageService.uploadFile(logoFile, "FEIRS-Bucket", "institution-logos/" + registration.getRegistrationId());
             registration.setInstitutionLogoUrl(logoUrl);
         }
 
         if (licenseFile != null && !licenseFile.isEmpty()) {
-            String licenseUrl = storageService.uploadFile(licenseFile, "FEIRS-Bucket", "pending-licenses/" + registration.getRegistrationId());
+            String licenseUrl = storageService.uploadFile(licenseFile, "FEIRS-Bucket", "verification-documents/" + registration.getRegistrationId());
             registration.setVerificationDocumentUrl(licenseUrl);
         } else {
             throw new IllegalArgumentException("Verification document is required.");
@@ -199,9 +199,7 @@ public class InstitutionService {
         if (approved) {
             Institution institution = new Institution();
             
-            // Map FEIRS-REG-XXXX to FEIRS-INST-XXXX
-            String regNum = pending.getRegistrationId().replace("FEIRS-REG-", "");
-            institution.setInstitutionId("FEIRS-INST-" + regNum);
+            institution.setInstitutionId(generateInstitutionId());
             
             institution.setInstitutionName(pending.getInstitutionName());
             institution.setOfficialEmail(pending.getOfficialEmail());
@@ -217,8 +215,22 @@ public class InstitutionService {
             institution.setState(pending.getState());
             institution.setCountry(pending.getCountry());
             institution.setPinCode(pending.getPinCode());
-            institution.setInstitutionLogoUrl(pending.getInstitutionLogoUrl());
-            institution.setVerificationDocumentUrl(pending.getVerificationDocumentUrl());
+            try {
+                String newLogoUrl = storageService.moveFileByUrl(pending.getInstitutionLogoUrl(), "FEIRS-Bucket", "institution-logos/" + institution.getInstitutionId());
+                institution.setInstitutionLogoUrl(newLogoUrl);
+            } catch (Exception e) {
+                log.error("Failed to move logo for {}", institution.getInstitutionId(), e);
+                institution.setInstitutionLogoUrl(pending.getInstitutionLogoUrl());
+            }
+
+            try {
+                String newLicenseUrl = storageService.moveFileByUrl(pending.getVerificationDocumentUrl(), "FEIRS-Bucket", "verification-documents/" + institution.getInstitutionId());
+                institution.setVerificationDocumentUrl(newLicenseUrl);
+            } catch (Exception e) {
+                log.error("Failed to move license for {}", institution.getInstitutionId(), e);
+                institution.setVerificationDocumentUrl(pending.getVerificationDocumentUrl());
+            }
+            
             institution.setAccountStatus("ACTIVE");
 
             if (superAdminId != null) {

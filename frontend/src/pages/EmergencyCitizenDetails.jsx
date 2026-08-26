@@ -60,7 +60,7 @@ export default function EmergencyCitizenDetails() {
     if (!citizen) {
       const fetchCitizen = async () => {
         try {
-          const token = localStorage.getItem('token');
+          const token = sessionStorage.getItem('token');
           const res = await axios.get(`http://localhost:8080/api/v1/citizens/${id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });

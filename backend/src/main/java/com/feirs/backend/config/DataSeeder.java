@@ -38,10 +38,10 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     public void run(String... args) {
-        if (!superAdminRepository.existsByMasterEmail("admin.feirs@gmail.com")) {
+        if (!superAdminRepository.existsByMasterEmail("aditya.admin.feirs@gmail.com")) {
             SuperAdmin aditya = SuperAdmin.builder()
                     .superAdminId("FEIRS-SA-GLOBAL")
-                    .masterEmail("admin.feirs@gmail.com")
+                    .masterEmail("aditya.admin.feirs@gmail.com")
                     .passwordHash(passwordEncoder.encode("Admin@123"))
                     .adminName("Aditya Das")
                     .phoneCountryCode("+91")

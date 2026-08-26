@@ -373,7 +373,7 @@ export default function EnrollCitizens() {
       
       setIsSaving(true);
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         await axios.post('http://localhost:8080/api/v1/citizens/enroll/initiate', {
           email: email,
           fullName: fullName
@@ -394,7 +394,7 @@ export default function EnrollCitizens() {
       if (otpValue.length < 6) return;
       setIsOtpVerifying(true);
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const citizenData = {
           fullName,
           dateOfBirth: dob ? dob.toISOString().split('T')[0] : null,

@@ -23,8 +23,8 @@ export default function SuperAdminLayout() {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     navigate('/login/super-admin', { replace: true });
   };
 

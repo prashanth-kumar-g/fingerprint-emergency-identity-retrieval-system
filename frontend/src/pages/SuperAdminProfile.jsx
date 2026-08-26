@@ -250,7 +250,7 @@ export default function SuperAdminProfile() {
           <div className="h-full bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center text-center relative overflow-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-cyan-500/10 blur-[50px] pointer-events-none" />
             
-            <div className="relative group cursor-pointer mb-6 mt-4" onClick={() => fileInputRef.current?.click()}>
+            <div className="relative group mb-6 mt-4">
               <input 
                 type="file" 
                 className="hidden" 
@@ -265,7 +265,7 @@ export default function SuperAdminProfile() {
                    <User className="w-20 h-20 text-slate-500 group-hover:text-cyan-400 transition-colors" />
                 )}
               </div>
-              <div className="absolute bottom-4 right-4 p-2 bg-slate-800 border border-slate-700 rounded-full shadow-lg text-slate-400 group-hover:text-cyan-400 group-hover:border-cyan-500/50 transition-all">
+              <div className="absolute bottom-4 right-4 p-2 bg-slate-800 border border-slate-700 rounded-full shadow-lg text-slate-400 group-hover:text-cyan-400 group-hover:border-cyan-500/50 transition-all cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                 <Pencil className="w-4 h-4" />
               </div>
             </div>
@@ -394,19 +394,19 @@ export default function SuperAdminProfile() {
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1 mb-1.5">Master Email Address</label>
                 
                 {!isEmailExpanded ? (
-                  <div className="relative group cursor-pointer" onClick={() => { setIsEmailExpanded(true); setTimeout(() => emailInputRef.current?.focus(), 0); }}>
+                  <div className="relative group">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
                       <Mail className="w-4 h-4" />
                     </div>
                     <input 
-                      type="email"
-                      value={profile?.masterEmail || ''}
-                      readOnly
-                      className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-300 cursor-pointer group-hover:border-slate-700 transition-colors outline-none"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-500 group-hover:text-cyan-400 transition-colors">
-                      <Pencil className="w-3.5 h-3.5" />
-                    </div>
+                        type="email"
+                        value={profile?.masterEmail || ''}
+                        readOnly
+                        className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-300 group-hover:border-slate-700 transition-colors outline-none"
+                      />
+                    <button type="button" onClick={() => { setIsEmailExpanded(true); setTimeout(() => emailInputRef.current?.focus(), 0); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-500 hover:text-cyan-400 hover:bg-slate-800 transition-colors cursor-pointer">
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
                   </div>
                 ) : (
                   <motion.div 
@@ -444,7 +444,7 @@ export default function SuperAdminProfile() {
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1 mb-1.5">Account Password</label>
                 
                 {!isPasswordExpanded ? (
-                  <div className="relative group cursor-pointer" onClick={() => { setIsPasswordExpanded(true); setTimeout(() => passwordInputRef.current?.focus(), 0); }}>
+                  <div className="relative group">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
                       <KeyRound className="w-4 h-4" />
                     </div>
@@ -452,11 +452,11 @@ export default function SuperAdminProfile() {
                       type="password"
                       value="••••••••••••"
                       readOnly
-                      className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-300 cursor-pointer group-hover:border-slate-700 transition-colors outline-none"
+                      className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-300 group-hover:border-slate-700 transition-colors outline-none"
                     />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-500 group-hover:text-cyan-400 transition-colors">
+                    <button type="button" onClick={() => { setIsPasswordExpanded(true); setTimeout(() => passwordInputRef.current?.focus(), 0); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-500 hover:text-cyan-400 hover:bg-slate-800 transition-colors cursor-pointer">
                       <Pencil className="w-3.5 h-3.5" />
-                    </div>
+                    </button>
                   </div>
                 ) : (
                   <motion.div 
@@ -514,7 +514,7 @@ export default function SuperAdminProfile() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="flex items-center justify-center gap-2 text-emerald-400 bg-emerald-500/10 px-4 py-3 rounded-xl border border-emerald-500/20"
+              className="flex items-center justify-center gap-2 text-cyan-400 bg-cyan-500/10 px-4 py-3 rounded-xl border border-cyan-500/20"
             >
               <CheckCircle2 className="w-5 h-5" />
               <span className="text-sm font-bold">Profile Updated Successfully</span>

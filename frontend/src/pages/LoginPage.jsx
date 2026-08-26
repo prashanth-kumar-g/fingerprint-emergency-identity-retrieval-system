@@ -13,7 +13,7 @@ const roleConfigs = {
     bgGlow: 'bg-cyan-900/20',
     borderColor: 'border-cyan-500/50',
     buttonColor: 'bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_20px_rgba(8,145,178,0.4)]',
-    idPlaceholder: 'FEIRS-SA-ROOT',
+    idPlaceholder: 'FEIRS-SA-XXXX',
     idLabel: 'Super Admin ID / Official Email',
   },
   'institution': {
@@ -24,7 +24,7 @@ const roleConfigs = {
     bgGlow: 'bg-emerald-900/20',
     borderColor: 'border-emerald-500/50',
     buttonColor: 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)]',
-    idPlaceholder: 'FEIRS-INST-XXXXXX',
+    idPlaceholder: 'FEIRS-INST-XXXX',
     idLabel: 'Institution ID / Official Email',
   },
   'operator': {
@@ -35,7 +35,7 @@ const roleConfigs = {
     bgGlow: 'bg-red-900/20',
     borderColor: 'border-red-500/50',
     buttonColor: 'bg-red-600 hover:bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4)]',
-    idPlaceholder: 'FEIRS-OP-XXXXXX',
+    idPlaceholder: 'FEIRS-OP-XXXX',
     idLabel: 'Operator ID / Official Email',
   },
 };
@@ -65,12 +65,28 @@ export default function LoginPage() {
     // AGGRESSIVE SECURITY PROTOCOL:
     // If a user navigates to the login screen (e.g. by pressing the browser back button),
     // immediately terminate their session to prevent unauthorized forward navigation.
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (token) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
     }
   }, []);
+
+  // Clear credentials and errors when the role parameter changes (e.g., clicking top-right navbar options)
+  useEffect(() => {
+    setIdValue('');
+    setPasswordValue('');
+    setError('');
+    setShowPassword(false);
+  }, [role]);
+
+  // Auto-hide error message after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -90,9 +106,9 @@ export default function LoginPage() {
         role: role
       });
 
-      // Save token and user details to localStorage
-      localStorage.setItem('token', response.data.accessToken);
-      localStorage.setItem('user', JSON.stringify(response.data));
+      // Save token and user details to sessionStorage
+      sessionStorage.setItem('token', response.data.accessToken);
+      sessionStorage.setItem('user', JSON.stringify(response.data));
 
       setIsAuthenticating(false);
       
@@ -104,6 +120,12 @@ export default function LoginPage() {
 
     } catch (err) {
       setIsAuthenticating(false);
+      
+      // Clear credentials on failed login attempt
+      setIdValue('');
+      setPasswordValue('');
+      setShowPassword(false);
+      
       if (err.response && err.response.data && typeof err.response.data === 'string') {
         setError(err.response.data);
       } else {

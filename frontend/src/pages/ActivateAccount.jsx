@@ -175,10 +175,10 @@ export default function ActivateAccount() {
               )}
 
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold text-slate-400 tracking-wide uppercase">New Password</label>
+                <label className="text-xs font-bold text-slate-400 tracking-wide uppercase">Set Password</label>
                 <div className="relative w-full">
                   <input 
-                    type={showPassword ? "text" : "password"} 
+                    type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
@@ -196,7 +196,7 @@ export default function ActivateAccount() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold text-slate-400 tracking-wide uppercase">Confirm New Password</label>
+                <label className="text-xs font-bold text-slate-400 tracking-wide uppercase">Confirm Password</label>
                 <div className="relative w-full">
                   <input 
                     type={showConfirmPassword ? "text" : "password"} 

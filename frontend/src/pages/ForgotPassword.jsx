@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Shield, Building2, Stethoscope, ArrowLeft, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -12,9 +12,10 @@ const roleConfigs = {
     bgGlow: 'bg-cyan-900/20',
     borderColor: 'border-cyan-500/50',
     buttonColor: 'bg-cyan-600 hover:bg-cyan-500 shadow-[0_0_20px_rgba(8,145,178,0.4)]',
-    idPlaceholder: 'FEIRS-SA-ROOT or Email',
+    idPlaceholder: 'FEIRS-SA-XXXX or Email',
     idLabel: 'Super Admin ID / Official Email',
     errorPrefix: 'Super Admin ID / Email',
+    successBg: 'bg-cyan-500/20',
   },
   'institution': {
     title: 'Recover Institution Access',
@@ -24,9 +25,10 @@ const roleConfigs = {
     bgGlow: 'bg-emerald-900/20',
     borderColor: 'border-emerald-500/50',
     buttonColor: 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)]',
-    idPlaceholder: 'FEIRS-INST-XXXXXX or Email',
+    idPlaceholder: 'FEIRS-INST-XXXX or Email',
     idLabel: 'Institution ID / Official Email',
     errorPrefix: 'Institution ID / Email',
+    successBg: 'bg-emerald-500/20',
   },
   'operator': {
     title: 'Recover Operator Access',
@@ -36,9 +38,10 @@ const roleConfigs = {
     bgGlow: 'bg-red-900/20',
     borderColor: 'border-red-500/50',
     buttonColor: 'bg-red-600 hover:bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4)]',
-    idPlaceholder: 'FEIRS-OP-XXXXXX or Email',
+    idPlaceholder: 'FEIRS-OP-XXXX or Email',
     idLabel: 'Operator ID / Official Email',
     errorPrefix: 'Operator ID / Email',
+    successBg: 'bg-red-500/20',
   },
 };
 
@@ -49,6 +52,17 @@ export default function ForgotPassword() {
   const [idValue, setIdValue] = useState('');
   const [status, setStatus] = useState('idle'); // idle, loading, error, success
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Auto-hide error message after 5 seconds
+  useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => {
+        setErrorMessage('');
+        if (status === 'error') setStatus('idle');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage, status]);
 
   const config = roleConfigs[role];
 
@@ -136,8 +150,8 @@ export default function ForgotPassword() {
               animate={{ opacity: 1, scale: 1 }}
               className="flex flex-col items-center text-center py-6"
             >
-              <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/50 mb-6">
-                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+              <div className={`w-16 h-16 rounded-full ${config.successBg} flex items-center justify-center border ${config.borderColor} mb-6`}>
+                <CheckCircle2 className={`w-8 h-8 ${config.color}`} />
               </div>
               <h3 className="text-xl font-bold text-white mb-3">Email Sent Successfully</h3>
               <p className="text-slate-400 text-sm leading-relaxed mb-8">

@@ -70,7 +70,9 @@ public class SupabaseStorageService {
 
         try {
             String basePath = supabaseUrl + "/storage/v1/object/public/" + bucketName + "/";
-            String oldFilePath = publicUrl.substring(basePath.length());
+            String decodedUrl = java.net.URLDecoder.decode(publicUrl, java.nio.charset.StandardCharsets.UTF_8);
+            if (!decodedUrl.startsWith(basePath)) return publicUrl;
+            String oldFilePath = decodedUrl.substring(basePath.length());
             
             String fileName = oldFilePath;
             if (oldFilePath.contains("/")) {
@@ -110,9 +112,9 @@ public class SupabaseStorageService {
 
         try {
             String basePath = supabaseUrl + "/storage/v1/object/public/" + bucketName + "/";
-            if (!publicUrl.startsWith(basePath)) return;
-            
-            String filePath = publicUrl.substring(basePath.length());
+            String decodedUrl = java.net.URLDecoder.decode(publicUrl, java.nio.charset.StandardCharsets.UTF_8);
+            if (!decodedUrl.startsWith(basePath)) return;
+            String filePath = decodedUrl.substring(basePath.length());
             String endpoint = supabaseUrl + "/storage/v1/object/" + bucketName;
 
             String requestBody = "{\"prefixes\": [\"" + filePath + "\"]}";

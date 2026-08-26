@@ -6,6 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.URI;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
@@ -59,38 +63,43 @@ public class SupabaseStorageService {
     /**
      * Deletes a file from Supabase Storage given its public URL.
      */
-    public String moveFileByUrl(String publicUrl, String bucketName, String newPathPrefix) throws Exception {
+        public String moveFileByUrl(String publicUrl, String bucketName, String newPathPrefix) throws Exception {
         if (publicUrl == null || !publicUrl.contains(supabaseUrl)) {
             return publicUrl;
         }
 
-        String basePath = supabaseUrl + "/storage/v1/object/public/" + bucketName + "/";
-        if (!publicUrl.startsWith(basePath)) return publicUrl;
-        
-        String oldFilePath = publicUrl.substring(basePath.length());
-        
-        String fileName = oldFilePath;
-        if (oldFilePath.contains("/")) {
-            fileName = oldFilePath.substring(oldFilePath.lastIndexOf("/") + 1);
-        }
+        try {
+            String basePath = supabaseUrl + "/storage/v1/object/public/" + bucketName + "/";
+            String oldFilePath = publicUrl.substring(basePath.length());
+            
+            String fileName = oldFilePath;
+            if (oldFilePath.contains("/")) {
+                fileName = oldFilePath.substring(oldFilePath.lastIndexOf("/") + 1);
+            }
+            
+            String newFilePath = newPathPrefix + "/" + fileName;
 
-        String newFilePath = newPathPrefix + "/" + fileName;
+            String endpoint = supabaseUrl + "/storage/v1/object/move";
+            String requestBody = "{\"bucketId\": \"" + bucketName + "\", \"sourceKey\": \"" + oldFilePath + "\", \"destinationKey\": \"" + newFilePath + "\"}";
 
-        String endpoint = supabaseUrl + "/storage/v1/object/move";
-        
-        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.setBearerAuth(supabaseKey);
-        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(endpoint))
+                    .header("Authorization", "Bearer " + supabaseKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                    .build();
 
-        String requestBody = "{\"bucketId\": \"" + bucketName + "\", \"sourceKey\": \"" + oldFilePath + "\", \"destinationKey\": \"" + newFilePath + "\"}";
+            HttpClient client = HttpClient.newHttpClient();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        org.springframework.http.HttpEntity<String> requestEntity = new org.springframework.http.HttpEntity<>(requestBody, headers);
-        org.springframework.http.ResponseEntity<String> response = restTemplate.exchange(endpoint, org.springframework.http.HttpMethod.POST, requestEntity, String.class);
-        
-        if (response.getStatusCode().is2xxSuccessful()) {
-            return basePath + newFilePath;
-        } else {
-            throw new Exception("Failed to move file in Supabase. Status: " + response.getStatusCode());
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                return basePath + newFilePath;
+            } else {
+                throw new Exception("Failed to move file in Supabase. Status: " + response.statusCode() + " Body: " + response.body());
+            }
+        } catch (Exception e) {
+            log.error("Error in moveFileByUrl: ", e);
+            throw e;
         }
     }
 

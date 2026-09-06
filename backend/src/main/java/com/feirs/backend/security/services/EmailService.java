@@ -188,7 +188,7 @@ public class EmailService {
                     .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #020617; }
                     .logo-box { background-color: rgba(8, 145, 178, 0.1); border: 1px solid rgba(8, 145, 178, 0.5); border-radius: 8px; padding: 6px; margin-right: 12px; display: inline-flex; align-items: center; justify-content: center; }
                     .logo-svg { width: 24px; height: 24px; }
-                    .title { color: #ffffff; font-size: 15px; font-weight: 900; margin: 0; letter-spacing: -0.5px; white-space: normal; }
+                    .title { color: #ffffff; font-size: 14px; font-weight: 900; margin: 0; letter-spacing: -0.5px; white-space: normal; }
                     .card { background-color: rgba(15, 23, 42, 0.8); border: 1px solid #1e293b; border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
                     .message { color: #94a3b8; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
                     .button { white-space: nowrap; display: inline-block; background-color: #10b981; color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px; padding: 16px 32px; border-radius: 12px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); transition: background-color 0.3s ease; }
@@ -256,12 +256,12 @@ public class EmailService {
                     .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #020617; }
                     .logo-box { background-color: rgba(8, 145, 178, 0.1); border: 1px solid rgba(8, 145, 178, 0.5); border-radius: 8px; padding: 6px; margin-right: 12px; display: inline-flex; align-items: center; justify-content: center; }
                     .logo-svg { width: 24px; height: 24px; }
-                    .title { color: #ffffff; font-size: 13px; font-weight: 900; margin: 0; letter-spacing: -0.5px; white-space: normal; }
+					.title { color: #ffffff; font-size: 14px; font-weight: 900; margin: 0; letter-spacing: -0.5px; white-space: normal; }
                     .card { background-color: rgba(15, 23, 42, 0.8); border: 1px solid #1e293b; border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
                     .message { color: #94a3b8; font-size: 15px; line-height: 1.6; margin-bottom: 20px; }
                     .reason-box { background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 15px; border-radius: 8px; color: #fca5a5; font-size: 14px; text-align: left; margin-bottom: 30px; }
                     .footer { text-align: center; margin-top: 30px; color: #475569; font-size: 12px; }
-                @media only screen and (max-width: 600px) { .mobile-indent { border-left: 14.25px solid transparent !important; } }
+                @media only screen and (max-width: 600px) { .mobile-indent { border-left: 15.75px solid transparent !important; } }
                 </style>
             </head>
             <body>
@@ -326,7 +326,7 @@ public class EmailService {
                     .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #020617; }
                     .logo-box { background-color: rgba(8, 145, 178, 0.1); border: 1px solid rgba(8, 145, 178, 0.5); border-radius: 8px; padding: 6px; margin-right: 12px; display: inline-flex; align-items: center; justify-content: center; }
                     .logo-svg { width: 24px; height: 24px; }
-                    .title { color: #ffffff; font-size: 13px; font-weight: 900; margin: 0; letter-spacing: -0.5px; white-space: normal; }
+                    .title { color: #ffffff; font-size: 14px; font-weight: 900; margin: 0; letter-spacing: -0.5px; white-space: normal; }
                     .card { background-color: rgba(15, 23, 42, 0.8); border: 1px solid #1e293b; border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
                     .message { color: #94a3b8; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
                     .otp-box { display: inline-block; background-color: rgba(16, 185, 129, 0.1); border: 2px dashed rgba(16, 185, 129, 0.5); color: #10b981; font-size: 32px; font-weight: bold; padding: 15px 40px; border-radius: 12px; letter-spacing: 5px; margin-bottom: 20px; }
@@ -401,7 +401,7 @@ public class EmailService {
                     .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #020617; }
                     .logo-box { background-color: rgba(8, 145, 178, 0.1); border: 1px solid rgba(8, 145, 178, 0.5); border-radius: 8px; padding: 6px; margin-right: 12px; display: inline-flex; align-items: center; justify-content: center; }
                     .logo-svg { width: 24px; height: 24px; }
-                    .title { color: #ffffff; font-size: 13px; font-weight: 900; margin: 0; letter-spacing: -0.5px; white-space: normal; }
+                    .title { color: #ffffff; font-size: 14px; font-weight: 900; margin: 0; letter-spacing: -0.5px; white-space: normal; }
                     .card { background-color: rgba(15, 23, 42, 0.8); border: 1px solid #1e293b; border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
                     .message { color: #94a3b8; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
                     .button { white-space: nowrap; display: inline-block; background-color: #10b981; color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px; padding: 16px 32px; border-radius: 12px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); transition: background-color 0.3s ease; }
@@ -472,7 +472,7 @@ public class EmailService {
                     .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #020617; }
                     .logo-box { background-color: rgba(8, 145, 178, 0.1); border: 1px solid rgba(8, 145, 178, 0.5); border-radius: 8px; padding: 6px; margin-right: 12px; display: inline-flex; align-items: center; justify-content: center; }
                     .logo-svg { width: 24px; height: 24px; }
-                    .title { color: #ffffff; font-size: 13px; font-weight: 900; margin: 0; letter-spacing: -0.5px; white-space: normal; }
+                    .title { color: #ffffff; font-size: 14px; font-weight: 900; margin: 0; letter-spacing: -0.5px; white-space: normal; }
                     .card { background-color: rgba(15, 23, 42, 0.8); border: 1px solid #1e293b; border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
                     .message { color: #94a3b8; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
                     .otp-box { display: inline-block; background-color: rgba(16, 185, 129, 0.1); border: 2px dashed rgba(16, 185, 129, 0.5); color: #10b981; font-size: 32px; font-weight: bold; padding: 15px 40px; border-radius: 12px; letter-spacing: 5px; margin-bottom: 20px; }

@@ -52,6 +52,7 @@ export default function ResetPassword() {
   
   const [status, setStatus] = useState('idle'); // idle, loading, error, success
   const [errorMessage, setErrorMessage] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   // Auto-hide error message after 5 seconds
   useEffect(() => {
@@ -99,9 +100,17 @@ export default function ResetPassword() {
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
+    if (passwordError) return;
+
     if (!password || !confirmPassword) {
       setStatus('error');
       setErrorMessage('Please fill in both password fields.');
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,32}$/;
+    if (!passwordRegex.test(password)) {
+      setPasswordError('Password must be 8-32 characters long and include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.');
       return;
     }
 
@@ -114,7 +123,7 @@ export default function ResetPassword() {
     setStatus('loading');
     setErrorMessage('');
 
-    if (role === 'super-admin') {
+    if (role === 'super-admin' || role === 'institution') {
       if (!token || !id) {
         setStatus('error');
         setErrorMessage('Invalid reset link. Missing security tokens.');
@@ -122,7 +131,7 @@ export default function ResetPassword() {
       }
 
       try {
-        const response = await fetch('http://localhost:8080/api/auth/reset-password/super-admin', {
+        const response = await fetch(`http://localhost:8080/api/auth/reset-password/${role}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -215,27 +224,19 @@ export default function ResetPassword() {
                 <span className="text-xs text-slate-500 font-medium">{displayEmail}</span>
               </div>
 
-              {status === 'error' && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-4 rounded-xl bg-red-900/30 border border-red-500/50 flex items-center gap-3"
-                >
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                  <p className="text-sm font-medium text-red-200">{errorMessage}</p>
-                </motion.div>
-              )}
-
               <div className="flex flex-col gap-2">
                 <label className="text-xs font-bold text-slate-400 tracking-wide uppercase">New Password</label>
                 <div className="relative w-full">
                   <input 
                     type={showPassword ? "text" : "password"} 
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (passwordError) setPasswordError('');
+                    }}
                     placeholder="••••••••••••"
                     disabled={status === 'loading'}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-4 py-3 pr-12 text-white outline-none transition-colors disabled:opacity-50"
+                    className={`w-full bg-slate-950 border ${passwordError ? 'border-red-500' : 'border-slate-800'} focus:border-slate-600 rounded-xl px-4 py-3 pr-12 text-white outline-none transition-colors disabled:opacity-50`}
                   />
                   <button
                     type="button"
@@ -245,6 +246,12 @@ export default function ResetPassword() {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {passwordError && (
+                  <p className="text-red-400 text-xs font-semibold mt-1 flex items-start gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <span>{passwordError}</span>
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col gap-2">
@@ -267,6 +274,17 @@ export default function ResetPassword() {
                   </button>
                 </div>
               </div>
+
+              {status === 'error' && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 rounded-xl bg-red-900/30 border border-red-500/50 flex items-center gap-3"
+                >
+                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                  <p className="text-sm font-medium text-red-200">{errorMessage}</p>
+                </motion.div>
+              )}
 
               <button 
                 type="submit" 

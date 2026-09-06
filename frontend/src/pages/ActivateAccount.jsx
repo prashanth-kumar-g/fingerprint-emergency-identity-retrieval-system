@@ -12,8 +12,6 @@ const roleConfigs = {
     bgGlow: 'bg-emerald-900/20',
     borderColor: 'border-emerald-500/50',
     buttonColor: 'bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)]',
-    mockId: 'FEIRS-INST-1011',
-    mockEmail: 'apollo@hospital.com',
   },
   'operator': {
     title: 'Activate Account',
@@ -23,8 +21,6 @@ const roleConfigs = {
     bgGlow: 'bg-red-900/20',
     borderColor: 'border-red-500/50',
     buttonColor: 'bg-red-600 hover:bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4)]',
-    mockId: 'FEIRS-OP-8821',
-    mockEmail: 'subham@feirs.com',
   },
 };
 
@@ -52,26 +48,42 @@ export default function ActivateAccount() {
 
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
-  const id = searchParams.get('id') || config.mockId;
-  const email = searchParams.get('email') || config.mockEmail;
+  const id = searchParams.get('id') || 'Invalid ID';
+  const email = searchParams.get('email') || 'Invalid Email';
+
+  const [passwordError, setPasswordError] = useState('');
+
+  const showError = (msg) => {
+    setStatus('error');
+    setErrorMessage(msg);
+    setTimeout(() => {
+      setStatus('idle');
+      setErrorMessage('');
+    }, 5000);
+  };
 
   const handleActivateAccount = async (e) => {
     e.preventDefault();
+    if (passwordError) return;
+
     if (!password || !confirmPassword) {
-      setStatus('error');
-      setErrorMessage('Please fill in both password fields.');
+      showError('Please fill in both password fields.');
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,32}$/;
+    if (!passwordRegex.test(password)) {
+      setPasswordError('Password must be 8-32 characters long and include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setStatus('error');
-      setErrorMessage('Passwords do not match.');
+      showError('Passwords do not match.');
       return;
     }
 
     if (!token) {
-      setStatus('error');
-      setErrorMessage('Invalid or missing activation token.');
+      showError('Invalid or missing activation token.');
       return;
     }
 
@@ -98,8 +110,7 @@ export default function ActivateAccount() {
 
       setStatus('success');
     } catch (err) {
-      setStatus('error');
-      setErrorMessage(err.message || 'An error occurred during activation. Please try again.');
+      showError(err.message || 'An error occurred during activation. Please try again.');
     }
   };
 
@@ -163,27 +174,19 @@ export default function ActivateAccount() {
                 <span className="text-xs text-slate-500 font-medium">{email}</span>
               </div>
 
-              {status === 'error' && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-4 rounded-xl bg-red-900/30 border border-red-500/50 flex items-center gap-3"
-                >
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-                  <p className="text-sm font-medium text-red-200">{errorMessage}</p>
-                </motion.div>
-              )}
-
               <div className="flex flex-col gap-2">
                 <label className="text-xs font-bold text-slate-400 tracking-wide uppercase">Set Password</label>
                 <div className="relative w-full">
                   <input 
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (passwordError) setPasswordError('');
+                    }}
                     placeholder="••••••••••••"
                     disabled={status === 'loading'}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-4 py-3 pr-12 text-white outline-none transition-colors disabled:opacity-50"
+                    className={`w-full bg-slate-950 border ${passwordError ? 'border-red-500' : 'border-slate-800'} focus:border-slate-600 rounded-xl px-4 py-3 pr-12 text-white outline-none transition-colors disabled:opacity-50`}
                   />
                   <button
                     type="button"
@@ -193,6 +196,12 @@ export default function ActivateAccount() {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {passwordError && (
+                  <p className="text-red-400 text-xs font-semibold mt-1 flex items-start gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <span>{passwordError}</span>
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col gap-2">
@@ -215,6 +224,17 @@ export default function ActivateAccount() {
                   </button>
                 </div>
               </div>
+
+              {status === 'error' && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 rounded-xl bg-red-900/30 border border-red-500/50 flex items-center gap-3"
+                >
+                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                  <p className="text-sm font-medium text-red-200">{errorMessage}</p>
+                </motion.div>
+              )}
 
               <button 
                 type="submit" 
@@ -244,3 +264,4 @@ export default function ActivateAccount() {
     </div>
   );
 }
+

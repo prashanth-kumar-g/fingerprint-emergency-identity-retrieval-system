@@ -81,9 +81,9 @@ export default function ForgotPassword() {
     setStatus('loading');
     setErrorMessage('');
 
-    if (role === 'super-admin') {
+    if (role === 'super-admin' || role === 'institution') {
       try {
-        const response = await fetch('http://localhost:8080/api/auth/forgot-password/super-admin', {
+        const response = await fetch(`http://localhost:8080/api/auth/forgot-password/${role}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

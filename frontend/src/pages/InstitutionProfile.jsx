@@ -101,13 +101,13 @@ const ManagedField = ({ label, value, icon: Icon, tooltipMessage }) => {
           </div>
           
           {/* Tooltip */}
-          <div className="absolute right-0 bottom-full mb-2 w-64 bg-slate-800 text-white text-xs font-medium p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 pointer-events-none border border-slate-700 text-left">
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 bg-slate-800 text-white text-xs font-medium p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 pointer-events-none border border-slate-700 text-left">
             <div className="flex gap-2 items-start">
               <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
               <p className="leading-relaxed">{tooltipMessage}</p>
             </div>
             {/* Arrow */}
-            <div className="absolute -bottom-1 right-5 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
           </div>
         </div>
       </div>
@@ -242,7 +242,11 @@ export default function InstitutionProfile() {
 
     // Save password
     if (!anyApiFailed && isPasswordExpanded && newPassword && currentPassword) {
-      if (newPassword !== confirmPassword) {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,32}$/;
+      if (!passwordRegex.test(newPassword)) {
+        setPasswordError("Password must be 8-32 characters long and include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.");
+        anyApiFailed = true;
+      } else if (newPassword !== confirmPassword) {
         setPasswordError("New passwords do not match");
         anyApiFailed = true;
       } else if (newPassword === currentPassword) {
@@ -339,9 +343,9 @@ export default function InstitutionProfile() {
         
         {/* Left Column: Identity Plate */}
         <div className="lg:col-span-1 flex flex-col gap-6 h-full">
-          <div className="h-full bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center text-center relative overflow-hidden">
+          <div className="h-full bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center text-center relative">
             {/* Background Glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-emerald-500/10 blur-[50px] pointer-events-none" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-emerald-500/10 blur-[50px] pointer-events-none rounded-t-2xl" />
             
             {/* Facility Logo */}
             <div 
@@ -382,12 +386,12 @@ export default function InstitutionProfile() {
                   <Pencil className="w-4 h-4" />
                 </div>
                 {/* Tooltip */}
-                <div className="absolute right-0 bottom-full mb-2 w-64 bg-slate-800 text-white text-xs font-medium p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 pointer-events-none border border-slate-700 text-left">
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 bg-slate-800 text-white text-xs font-medium p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 pointer-events-none border border-slate-700 text-left">
                   <div className="flex gap-2 items-start">
                     <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
                     <p className="leading-relaxed">{tooltipMsg}</p>
                   </div>
-                  <div className="absolute -bottom-1 right-2 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
                 </div>
               </div>
             </div>

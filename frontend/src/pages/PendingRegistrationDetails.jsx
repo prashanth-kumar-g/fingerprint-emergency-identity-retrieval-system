@@ -62,8 +62,7 @@ export default function PendingRegistrationDetails() {
       setShowApproveSuccess(true);
       setTimeout(() => {
         setShowApproveSuccess(false);
-        navigate('/super-admin/pending-registrations');
-      }, 3000);
+      }, 5000);
     } catch (err) {
       console.error(err);
     } finally {
@@ -90,8 +89,7 @@ export default function PendingRegistrationDetails() {
       setShowRejectSuccess(true);
       setTimeout(() => {
         setShowRejectSuccess(false);
-        navigate('/super-admin/pending-registrations');
-      }, 3000);
+      }, 5000);
     } catch (err) {
       console.error(err);
     } finally {

@@ -120,6 +120,9 @@ export default function InstitutionRegistrationPage() {
   const [officialEmail, setOfficialEmail] = useState('');
   const [selectedPhoneCode, setSelectedPhoneCode] = useState(null);
   const [phoneNumber, setPhoneNumber] = useState('');
+  
+  const [emailError, setEmailError] = useState('');
+  const emailInputRef = useRef(null);
 
   // ── File Upload State ──
   const [licenseFile, setLicenseFile] = useState(null);
@@ -144,7 +147,7 @@ export default function InstitutionRegistrationPage() {
   const triggerAlert = (type, message) => {
     setAlertInfo({ show: true, type, message });
     if (type === 'success') {
-      setTimeout(() => setAlertInfo({ show: false, type: '', message: '' }), 4000);
+      setTimeout(() => setAlertInfo({ show: false, type: '', message: '' }), 5000);
     } else {
       setTimeout(() => setAlertInfo({ show: false, type: '', message: '' }), 5000);
     }
@@ -173,19 +176,9 @@ export default function InstitutionRegistrationPage() {
     e.preventDefault();
     if (isSubmitting) return;
 
-    // Validation
-    if (!institutionName || !institutionType || !sectorType || !addressLine1 || !selectedCity || !selectedState || !selectedCountry || !pinCode || !primaryOfficerName || !officerDesignation || !officialEmail || !selectedPhoneCode || !phoneNumber) {
-      triggerAlert('error', 'Please fill in all required fields.');
-      return;
-    }
-
-    if (!licenseFile) {
-      triggerAlert('error', 'Please upload the registration license/verification document.');
-      return;
-    }
-
     setIsSubmitting(true);
     setAlertInfo({ show: false, type: '', message: '' });
+    setEmailError('');
 
     try {
       const formData = new FormData();
@@ -239,7 +232,16 @@ export default function InstitutionRegistrationPage() {
       }
     } catch (error) {
       console.error("Registration error:", error);
-      triggerAlert('error', error.response?.data?.error || 'An error occurred during submission. Please try again.');
+      const errorMessage = error.response?.data?.error || '';
+      
+      if (errorMessage.toLowerCase().includes('already registered or pending') || errorMessage.toLowerCase().includes('already in use')) {
+        setEmailError('This email address is already registered or pending approval. Please use a different email.');
+        if (emailInputRef.current) {
+          emailInputRef.current.focus();
+        }
+      } else {
+        triggerAlert('error', errorMessage || 'An error occurred during submission. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -318,9 +320,7 @@ export default function InstitutionRegistrationPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="col-span-1 md:col-span-2">
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Legally Registered Institution Name *</label>
-                <input 
-                  type="text" 
-                  value={institutionName}
+                <input type="text" required value={institutionName}
                   onChange={(e) => setInstitutionName(e.target.value)}
                   placeholder="Enter full registered name" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
@@ -329,8 +329,7 @@ export default function InstitutionRegistrationPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Institution Type *</label>
-                <select 
-                  value={institutionType}
+                <select required value={institutionType}
                   onChange={(e) => setInstitutionType(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors appearance-none cursor-pointer"
                 >
@@ -343,8 +342,7 @@ export default function InstitutionRegistrationPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sector Type *</label>
-                <select 
-                  value={sectorType}
+                <select required value={sectorType}
                   onChange={(e) => setSectorType(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors appearance-none cursor-pointer"
                 >
@@ -367,9 +365,7 @@ export default function InstitutionRegistrationPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="col-span-1 md:col-span-2">
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Address Line 1 (Building & Street) *</label>
-                <input 
-                  type="text" 
-                  value={addressLine1}
+                <input type="text" required value={addressLine1}
                   onChange={(e) => setAddressLine1(e.target.value)}
                   placeholder="Enter building number and street" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
@@ -390,8 +386,7 @@ export default function InstitutionRegistrationPage() {
               {/* Advanced Cascading Searchable Dropdowns */}
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">City / District *</label>
-                <Select
-                  options={cityOptions}
+                <Select required options={cityOptions}
                   styles={customStyles}
                   placeholder="Search city..."
                   value={selectedCity}
@@ -403,8 +398,7 @@ export default function InstitutionRegistrationPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">State / Province *</label>
-                <Select
-                  options={stateOptions}
+                <Select required options={stateOptions}
                   styles={customStyles}
                   placeholder="Search state..."
                   value={selectedState}
@@ -419,9 +413,7 @@ export default function InstitutionRegistrationPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Postal / Pin Code *</label>
-                <input 
-                  type="text" 
-                  value={pinCode}
+                <input type="text" required value={pinCode}
                   onChange={(e) => setPinCode(e.target.value)}
                   placeholder="Enter pin code" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
@@ -430,8 +422,7 @@ export default function InstitutionRegistrationPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Country *</label>
-                <Select
-                  options={allCountries}
+                <Select required options={allCountries}
                   styles={customStyles}
                   placeholder="Search country..."
                   value={selectedCountry}
@@ -457,9 +448,7 @@ export default function InstitutionRegistrationPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Primary Officer Name *</label>
-                <input 
-                  type="text" 
-                  value={primaryOfficerName}
+                <input type="text" required value={primaryOfficerName}
                   onChange={(e) => setPrimaryOfficerName(e.target.value)}
                   placeholder="Enter officer's full name" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
@@ -468,9 +457,7 @@ export default function InstitutionRegistrationPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Officer Designation *</label>
-                <input 
-                  type="text" 
-                  value={officerDesignation}
+                <input type="text" required value={officerDesignation}
                   onChange={(e) => setOfficerDesignation(e.target.value)}
                   placeholder="Enter official designation" 
                   className="w-full bg-slate-950 border border-slate-800 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
@@ -481,22 +468,31 @@ export default function InstitutionRegistrationPage() {
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Official Email (Used for Login) *</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                  <input 
-                    type="email" 
+                  <input type="email" required ref={emailInputRef}
                     value={officialEmail}
-                    onChange={(e) => setOfficialEmail(e.target.value)}
+                    onChange={(e) => {
+                      setOfficialEmail(e.target.value);
+                      if (emailError) setEmailError('');
+                    }}
                     placeholder="admin@hospital.org" 
-                    className="w-full bg-slate-950 border border-slate-800 text-white pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
+                    className={`w-full bg-slate-950 border text-white pl-12 pr-4 py-3 rounded-xl focus:outline-none transition-colors ${
+                      emailError ? 'border-red-500 focus:border-red-500' : 'border-slate-800 focus:border-emerald-500'
+                    }`}
                   />
                 </div>
+                {emailError && (
+                  <p className="text-red-400 text-xs font-semibold mt-2 flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {emailError}
+                  </p>
+                )}
               </div>
 
               <div className="col-span-1 md:col-span-2">
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Facility Phone Number *</label>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="w-full sm:w-[220px]">
-                    <Select
-                      options={allPhoneCodes}
+                    <Select required options={allPhoneCodes}
                       styles={customStyles}
                       placeholder="Search code..."
                       value={selectedPhoneCode}
@@ -505,9 +501,7 @@ export default function InstitutionRegistrationPage() {
                     />
                   </div>
                   <div className="flex-grow">
-                    <input 
-                      type="text" 
-                      value={phoneNumber}
+                    <input type="text" required value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="Enter phone number" 
                       className="w-full h-[42px] bg-slate-950 border border-slate-800 text-white px-4 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
@@ -556,10 +550,7 @@ export default function InstitutionRegistrationPage() {
                     <p className="text-xs text-slate-400 max-w-sm">JPG, PNG, or PDF (Max 5MB)</p>
                   </>
                 )}
-                <input 
-                  type="file" 
-                  className="hidden" 
-                  ref={licenseInputRef}
+                <input type="file" required className="absolute opacity-0 w-px h-px pointer-events-none" ref={licenseInputRef}
                   accept=".jpg,.jpeg,.png,.pdf"
                   onChange={(e) => handleFileUpload(e, setLicenseFile)}
                 />
@@ -615,3 +606,4 @@ export default function InstitutionRegistrationPage() {
     </div>
   );
 }
+

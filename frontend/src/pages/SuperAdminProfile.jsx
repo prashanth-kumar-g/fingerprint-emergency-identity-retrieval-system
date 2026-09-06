@@ -158,23 +158,33 @@ export default function SuperAdminProfile() {
     }
 
     if (!anyApiFailed && isEmailExpanded && newEmail && emailPassword) {
-      try {
-        await api.put('/super-admin/profile/email', {
-          password: emailPassword,
-          newEmail: newEmail
-        });
-        successCount++;
-        setIsEmailExpanded(false);
-        setNewEmail('');
-        setEmailPassword('');
-      } catch(err) {
-        setEmailError(err.response?.data || "Failed to update email");
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(newEmail)) {
+        setEmailError("Please enter a valid professional email address.");
         anyApiFailed = true;
+      } else {
+        try {
+          await api.put('/super-admin/profile/email', {
+            password: emailPassword,
+            newEmail: newEmail
+          });
+          successCount++;
+          setIsEmailExpanded(false);
+          setNewEmail('');
+          setEmailPassword('');
+        } catch(err) {
+          setEmailError(err.response?.data || "Failed to update email");
+          anyApiFailed = true;
+        }
       }
     }
 
     if (!anyApiFailed && isPasswordExpanded && newPassword && currentPassword) {
-      if (newPassword !== confirmPassword) {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,32}$/;
+      if (!passwordRegex.test(newPassword)) {
+        setPasswordError("Password must be 8-32 characters long and include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.");
+        anyApiFailed = true;
+      } else if (newPassword !== confirmPassword) {
         setPasswordError("New passwords do not match");
         anyApiFailed = true;
       } else if (newPassword === currentPassword) {

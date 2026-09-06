@@ -287,6 +287,17 @@ public class InstitutionService {
             pendingRepo.delete(pending);
 
             try {
+                if (pending.getInstitutionLogoUrl() != null) {
+                    storageService.deleteFileByUrl(pending.getInstitutionLogoUrl(), "FEIRS-Bucket");
+                }
+                if (pending.getVerificationDocumentUrl() != null) {
+                    storageService.deleteFileByUrl(pending.getVerificationDocumentUrl(), "FEIRS-Bucket");
+                }
+            } catch (Exception e) {
+                log.error("Failed to delete storage files for rejected institution {}", pending.getRegistrationId(), e);
+            }
+
+            try {
                 emailService.sendInstitutionRejectionEmail(pending.getOfficialEmail(), pending.getInstitutionName(), rejectionReason);
             } catch (Exception e) {
                 log.error("Failed to send rejection email to {}", pending.getOfficialEmail(), e);

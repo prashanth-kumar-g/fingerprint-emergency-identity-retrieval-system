@@ -48,7 +48,7 @@ export default function ManageInstitutionDetails() {
         setStatus(newStatus);
         setSuccessMessage(newStatus === 'ACTIVE' ? 'Facility access restored.' : 'Facility access suspended.');
         setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
+        setTimeout(() => setShowSuccess(false), 5000);
       }
     } catch (err) {
       console.error("Failed to update status", err);
@@ -244,42 +244,44 @@ export default function ManageInstitutionDetails() {
 
         <div className="w-full flex flex-col items-center justify-center mt-2">
           
-          {status === 'ACTIVE' ? (
-            <button 
-              onClick={handleToggleStatus}
-              disabled={isProcessing}
-              className="w-full max-w-md flex items-center justify-center gap-2 bg-transparent border border-red-500 hover:bg-red-500/10 text-red-500 hover:text-red-400 px-6 py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Ban className="w-5 h-5" />
-                  Suspend Network Access
-                </>
-              )}
-            </button>
-          ) : (
-            <button 
-              onClick={handleToggleStatus}
-              disabled={isProcessing}
-              className="w-full max-w-md flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="w-5 h-5" />
-                  Activate Network Access
-                </>
-              )}
-            </button>
+          {!showSuccess && (
+            status === 'ACTIVE' ? (
+              <button 
+                onClick={handleToggleStatus}
+                disabled={isProcessing}
+                className="w-full max-w-md flex items-center justify-center gap-2 bg-transparent border border-red-500 hover:bg-red-500/10 text-red-500 hover:text-red-400 px-6 py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Ban className="w-5 h-5" />
+                    Suspend Network Access
+                  </>
+                )}
+              </button>
+            ) : (
+              <button 
+                onClick={handleToggleStatus}
+                disabled={isProcessing}
+                className="w-full max-w-md flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-5 h-5" />
+                    Activate Network Access
+                  </>
+                )}
+              </button>
+            )
           )}
         </div>
       </div>

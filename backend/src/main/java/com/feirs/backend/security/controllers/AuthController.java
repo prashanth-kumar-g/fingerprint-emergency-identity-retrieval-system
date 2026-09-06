@@ -172,6 +172,66 @@ public class AuthController {
         return ResponseEntity.ok("Your password has been successfully reset. You can now use your new password to securely access your portal.");
     }
 
+    @PostMapping("/forgot-password/institution")
+    public ResponseEntity<?> forgotPasswordInstitution(@RequestBody ForgotPasswordRequest request) {
+        String identifier = request.getIdentifier();
+        
+        Optional<com.feirs.backend.models.Institution> instOpt = institutionRepository.findByIdentifierIgnoreCase(identifier);
+
+        if (instOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("ID/Email does not exist in our system.");
+        }
+
+        com.feirs.backend.models.Institution inst = instOpt.get();
+        // Append passwordHash to subject to invalidate token upon password change
+        String token = jwtUtils.generatePasswordResetToken(inst.getOfficialEmail() + "|" + inst.getPasswordHash());
+        String resetLink = "http://localhost:5173/reset-password/institution?token=" + token + "&id=" + inst.getInstitutionId();
+
+        try {
+            emailService.sendPasswordResetEmail(inst.getOfficialEmail(), resetLink);
+            return ResponseEntity.ok("An email has been sent with a secure link to reset your password. Please check your inbox.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Email sending failed: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Failed to send reset email.");
+        }
+    }
+
+    @PostMapping("/reset-password/institution")
+    public ResponseEntity<?> resetPasswordInstitution(@RequestBody ResetPasswordRequest request) {
+        String subject = jwtUtils.validatePasswordResetTokenAndGetEmail(request.getToken());
+        
+        if (subject == null) {
+            return ResponseEntity.badRequest().body("This reset link is invalid, expired, or has already been used.");
+        }
+
+        String[] parts = subject.split("\\|");
+        String email = parts[0];
+        String tokenHash = parts.length > 1 ? parts[1] : "";
+
+        Optional<com.feirs.backend.models.Institution> instOpt = institutionRepository.findById(request.getId());
+        if (instOpt.isEmpty() || !instOpt.get().getOfficialEmail().equals(email)) {
+            return ResponseEntity.badRequest().body("Invalid reset request for this user.");
+        }
+
+        com.feirs.backend.models.Institution inst = instOpt.get();
+
+        // Validate the hash to ensure one-time use
+        if (!tokenHash.equals(inst.getPasswordHash())) {
+            return ResponseEntity.badRequest().body("This reset link has already been used. Please request a new one.");
+        }
+        
+        // Check if old password matches new password
+        if (passwordEncoder.matches(request.getNewPassword(), inst.getPasswordHash())) {
+            return ResponseEntity.badRequest().body("You cannot use your old password, please enter a new one.");
+        }
+
+        inst.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        institutionRepository.save(inst);
+
+        return ResponseEntity.ok("Your password has been successfully reset. You can now use your new password to securely access your portal.");
+    }
+
     @PostMapping("/activate-account/institution")
     public ResponseEntity<?> activateInstitutionAccount(@RequestBody ResetPasswordRequest request) {
         String email = jwtUtils.validateActivationTokenAndGetEmail(request.getToken());

@@ -260,10 +260,18 @@ export default function OperatorProfile() {
     setPhoneError("");
     setAddressError("");
     
-    if (newPassword && newPassword !== confirmPassword) {
-      setMessage({ show: true, type: 'error', text: 'New passwords do not match.' });
-      setTimeout(() => setMessage({ show: false, type: '', text: '' }), 3000);
-      return;
+    if (newPassword) {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,32}$/;
+      if (!passwordRegex.test(newPassword)) {
+        setMessage({ show: true, type: 'error', text: 'Password must be 8-32 characters long and include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.' });
+        setTimeout(() => setMessage({ show: false, type: '', text: '' }), 6000);
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setMessage({ show: true, type: 'error', text: 'New passwords do not match.' });
+        setTimeout(() => setMessage({ show: false, type: '', text: '' }), 3000);
+        return;
+      }
     }
 
     let finalCountryCode = "";

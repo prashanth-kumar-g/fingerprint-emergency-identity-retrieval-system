@@ -49,6 +49,24 @@ function App() {
   const [bfCacheKey, setBfCacheKey] = useState(0);
 
   useEffect(() => {
+    // Check if the tab was restored after a long time (e.g. browser closed and reopened)
+    const lastUnload = sessionStorage.getItem('last_unload_time');
+    if (lastUnload) {
+      const timeDiff = Date.now() - parseInt(lastUnload, 10);
+      // If it's been more than 10 seconds since the last unload, it means the browser was likely closed and reopened
+      if (timeDiff > 10000) {
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+      }
+      sessionStorage.removeItem('last_unload_time');
+    }
+
+    const handleUnload = () => {
+      sessionStorage.setItem('last_unload_time', Date.now().toString());
+    };
+    window.addEventListener('beforeunload', handleUnload);
+    window.addEventListener('unload', handleUnload);
+
     // Defeat Back-Forward Cache (BFCache) without a white screen flash!
     // Instead of forcing a hard browser reload, we just force React to completely re-render
     // the routing tree. This wakes up ProtectedRoute instantly.
@@ -58,7 +76,11 @@ function App() {
       }
     };
     window.addEventListener('pageshow', handlePageShow);
-    return () => window.removeEventListener('pageshow', handlePageShow);
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('beforeunload', handleUnload);
+      window.removeEventListener('unload', handleUnload);
+    };
   }, []);
 
   return (

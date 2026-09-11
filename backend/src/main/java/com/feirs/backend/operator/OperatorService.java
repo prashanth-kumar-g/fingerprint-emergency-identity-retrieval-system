@@ -106,6 +106,57 @@ public class OperatorService {
         log.info("OTP sent to {} for enrollment", operator.getOfficialEmail());
     }
 
+    public void initiateHrUpdate(String operatorId, Operator updates) throws Exception {
+        Operator existing = operatorRepository.findById(operatorId)
+                .orElseThrow(() -> new IllegalArgumentException("Operator not found: " + operatorId));
+
+        if (updates.getOfficialEmail() != null && !updates.getOfficialEmail().equalsIgnoreCase(existing.getOfficialEmail())) {
+            if (operatorRepository.existsByOfficialEmail(updates.getOfficialEmail())) {
+                throw new IllegalArgumentException("An operator with this official email already exists.");
+            }
+        }
+
+        String targetEmail = updates.getOfficialEmail() != null ? updates.getOfficialEmail() : existing.getOfficialEmail();
+        String targetName = updates.getFullName() != null ? updates.getFullName() : existing.getFullName();
+
+        Institution institution = existing.getInstitution();
+        String institutionName = institution != null ? institution.getInstitutionName() : "Institution";
+
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        operatorEnrollmentOtps.put(targetEmail, otp);
+        
+        emailService.sendOperatorHrUpdateOtp(
+            targetEmail, 
+            otp, 
+            targetName, 
+            institutionName
+        );
+        log.info("OTP sent to {} for HR update verification", targetEmail);
+    }
+
+    public Operator verifyHrUpdate(String otp, String operatorId, Operator updates) throws Exception {
+        Operator existing = operatorRepository.findById(operatorId)
+                .orElseThrow(() -> new IllegalArgumentException("Operator not found: " + operatorId));
+
+        String targetEmail = updates.getOfficialEmail() != null ? updates.getOfficialEmail() : existing.getOfficialEmail();
+
+        String savedOtp = operatorEnrollmentOtps.get(targetEmail);
+        if (savedOtp == null || !savedOtp.equals(otp)) {
+            throw new IllegalArgumentException("Invalid or expired OTP.");
+        }
+        operatorEnrollmentOtps.remove(targetEmail);
+
+        if (updates.getFullName() != null) existing.setFullName(updates.getFullName());
+        if (updates.getDateOfBirth() != null) existing.setDateOfBirth(updates.getDateOfBirth());
+        if (updates.getGender() != null) existing.setGender(updates.getGender());
+        if (updates.getOfficialEmail() != null) existing.setOfficialEmail(updates.getOfficialEmail());
+        if (updates.getDepartment() != null) existing.setDepartment(updates.getDepartment());
+        if (updates.getDesignationTitle() != null) existing.setDesignationTitle(updates.getDesignationTitle());
+
+        log.info("✅ Operator HR records updated: {}", operatorId);
+        return operatorRepository.save(existing);
+    }
+
     public Operator verifyEnrollment(String otp, Operator operator, String institutionId, org.springframework.web.multipart.MultipartFile photoFile) throws Exception {
         String savedOtp = operatorEnrollmentOtps.get(operator.getOfficialEmail());
         if (savedOtp == null || !savedOtp.equals(otp)) {
@@ -119,7 +170,7 @@ public class OperatorService {
         operator.setOperatorId(generateOperatorId());
         operator.setInstitution(institution);
         operator.setPasswordHash(null);
-        operator.setAccountStatus("ACTIVE");
+        operator.setAccountStatus("PENDING");
         operator.setLastLoginAt(null);
 
         Operator saved = operatorRepository.save(operator);
@@ -157,7 +208,7 @@ public class OperatorService {
         operator.setOperatorId(generateOperatorId());
         operator.setInstitution(institution);
         operator.setPasswordHash(null);     // Operator sets password after activation
-        operator.setAccountStatus("ACTIVE");
+        operator.setAccountStatus("PENDING");
         operator.setLastLoginAt(null);
 
         Operator saved = operatorRepository.save(operator);
@@ -299,3 +350,4 @@ public class OperatorService {
         }
     }
 }
+

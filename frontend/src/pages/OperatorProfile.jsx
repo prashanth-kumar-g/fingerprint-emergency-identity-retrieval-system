@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Stethoscope, 
@@ -18,7 +18,8 @@ import {
   Eye,
   EyeOff,
   MapPin,
-  Upload
+  Upload,
+  AlertCircle
 } from 'lucide-react';
 import api from '../api/axiosConfig';
 
@@ -187,8 +188,17 @@ export default function OperatorProfile() {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const [isSaving, setIsSaving] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [message, setMessage] = useState({ show: false, type: '', text: '' });
+  const [alertInfo, setAlertInfo] = useState({ show: false, type: '', message: '' });
+  
+  const alertTimeoutRef = useRef(null);
+
+  const triggerAlert = (type, message, duration = 5000) => {
+    if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
+    setAlertInfo({ show: true, type, message });
+    alertTimeoutRef.current = setTimeout(() => {
+      setAlertInfo({ show: false, type: '', message: '' });
+    }, duration);
+  };
   
   const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState(null);
@@ -243,7 +253,7 @@ export default function OperatorProfile() {
       });
     } catch (err) {
       console.error(err);
-      setMessage({ show: true, type: 'error', text: 'Failed to load profile data.' });
+      triggerAlert('error', 'Failed to load profile data.');
     } finally {
       setIsLoading(false);
     }
@@ -259,17 +269,36 @@ export default function OperatorProfile() {
   const handleSave = async () => {
     setPhoneError("");
     setAddressError("");
+
+    const originalPhone = operator?.phoneCountryCode && operator?.phoneNumber ? `${operator.phoneCountryCode} ${operator.phoneNumber}` : (operator?.phoneNumber || '');
+    let originalCombinedAddress = operator?.addressLine1 || '';
+    if (operator?.city && !originalCombinedAddress.includes(operator.city)) {
+      originalCombinedAddress = [
+        operator.addressLine1,
+        operator.addressLine2,
+        operator.city,
+        operator.state && operator.pinCode ? `${operator.state} - ${operator.pinCode}` : (operator.state || operator.pinCode),
+        operator.country
+      ].filter(Boolean).join(', ');
+    }
+
+    const hasInfoChanges = formData.phoneNumber !== originalPhone || formData.addressLine1 !== originalCombinedAddress;
+    const hasPasswordChanges = !!newPassword;
+    const hasPhotoChanges = !!selectedPhotoFile;
+
+    if (!hasInfoChanges && !hasPasswordChanges && !hasPhotoChanges) {
+      triggerAlert('error', 'No changes detected to save.');
+      return;
+    }
     
     if (newPassword) {
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,32}$/;
       if (!passwordRegex.test(newPassword)) {
-        setMessage({ show: true, type: 'error', text: 'Password must be 8-32 characters long and include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.' });
-        setTimeout(() => setMessage({ show: false, type: '', text: '' }), 6000);
+        triggerAlert('error', 'Password must be 8-32 characters long and include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.', 6000);
         return;
       }
       if (newPassword !== confirmPassword) {
-        setMessage({ show: true, type: 'error', text: 'New passwords do not match.' });
-        setTimeout(() => setMessage({ show: false, type: '', text: '' }), 3000);
+        triggerAlert('error', 'New passwords do not match.');
         return;
       }
     }
@@ -355,16 +384,14 @@ export default function OperatorProfile() {
         setPhotoPreviewUrl(null);
       }
 
-      setShowSuccess(true);
+      triggerAlert('success', 'Profile Updated Successfully');
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
       
-      setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
       console.error(err);
-      setMessage({ show: true, type: 'error', text: err.response?.data?.error || 'Failed to update profile.' });
-      setTimeout(() => setMessage({ show: false, type: '', text: '' }), 3000);
+      triggerAlert('error', err.response?.data?.error || 'Failed to update profile.');
     } finally {
       setIsSaving(false);
     }
@@ -578,54 +605,44 @@ export default function OperatorProfile() {
       {/* Global Action Bar (Expanded Full Width) */}
       <div className="w-full max-w-[1400px] mx-auto px-4 lg:px-0 mt-2 flex flex-col gap-4">
         <AnimatePresence>
-          {showSuccess && (
+          {alertInfo.show && (
             <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="flex items-center justify-center gap-2 text-red-400 bg-red-500/10 px-4 py-3 rounded-xl border border-red-500/20"
-            >
-              <CheckCircle2 className="w-5 h-5" />
-              <span className="text-sm font-bold">Profile Updated Successfully</span>
-            </motion.div>
-          )}
-          {message.show && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: -10, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto', marginTop: 16 }}
+              exit={{ opacity: 0, y: -10, height: 0, marginTop: 0, paddingBottom: 0, paddingTop: 0, overflow: 'hidden' }}
               className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border ${
-                message.type === 'error' ? 'text-red-400 bg-red-500/10 border-red-500/20' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                alertInfo.type === 'success' 
+                  ? 'bg-red-500/10 text-red-400 border-red-500/20' 
+                  : 'bg-red-500/10 text-red-400 border-red-500/20'
               }`}
             >
-              <span className="text-sm font-bold">{message.text}</span>
+              {alertInfo.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+              <span className="text-sm font-bold">{alertInfo.message}</span>
             </motion.div>
           )}
         </AnimatePresence>
         
-        <button 
-          onClick={handleSave}
-          disabled={isSaving}
-          className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)] disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Saving Global Changes...
-            </>
-          ) : (
-            <>
-              <Save className="w-5 h-5" />
-              Save Global Changes
-            </>
-          )}
-        </button>
+        {!alertInfo.show && (
+          <button 
+            onClick={handleSave}
+            disabled={isSaving}
+            className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)] disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Saving Changes...
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                Save Profile Updates
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
+
 }
-
-
-
-
-

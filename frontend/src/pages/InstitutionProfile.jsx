@@ -15,7 +15,8 @@ import {
   MapPin,
   Building,
   Eye,
-  EyeOff
+  EyeOff,
+  AlertCircle
 } from 'lucide-react';
 import api from '../api/axiosConfig';
 
@@ -118,10 +119,20 @@ const ManagedField = ({ label, value, icon: Icon, tooltipMessage }) => {
 export default function InstitutionProfile() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [alertInfo, setAlertInfo] = useState({ show: false, type: '', message: '' });
   const [globalError, setGlobalError] = useState("");
 
   const [profile, setProfile] = useState(null);
+  
+  const alertTimeoutRef = useRef(null);
+
+  const triggerAlert = (type, message, duration = 5000) => {
+    if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
+    setAlertInfo({ show: true, type, message });
+    alertTimeoutRef.current = setTimeout(() => {
+      setAlertInfo({ show: false, type: '', message: '' });
+    }, duration);
+  };
   
   // Editable fields state
   const [phoneInput, setPhoneInput] = useState("");
@@ -205,6 +216,22 @@ export default function InstitutionProfile() {
         finalCountryCode = parts[0];
         finalPhoneNumber = parts.slice(1).join("").replace(/\D/g, ''); 
       }
+    }
+
+    const currentPhone = (profile.phoneCountryCode && profile.phoneNumber) 
+      ? `${profile.phoneCountryCode} ${profile.phoneNumber}` 
+      : "";
+    const hasInfoChanges = 
+      phoneInput !== currentPhone ||
+      officerName !== (profile.primaryOfficerName || "") ||
+      officerDesignation !== (profile.officerDesignation || "");
+
+    const hasPasswordChanges = isPasswordExpanded && currentPassword && newPassword;
+    const hasPhotoChanges = !!selectedPhotoFile;
+
+    if (!hasInfoChanges && !hasPasswordChanges && !hasPhotoChanges) {
+      triggerAlert('error', 'No changes detected to save.');
+      return;
     }
 
     if (isPasswordExpanded && (newPassword || currentPassword)) {
@@ -291,18 +318,13 @@ export default function InstitutionProfile() {
     setIsSaving(false);
     
     if (!anyApiFailed && successCount > 0) {
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      triggerAlert('success', 'Profile Updated Successfully');
       fetchProfile();
     }
   };
 
   if (isLoadingProfile || !profile) {
-    return (
-      <div className="w-full flex justify-center items-center py-20">
-        <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
-      </div>
-    );
+    return null;
   }
 
   const displayPhoto = photoPreviewUrl || profile?.institutionLogoUrl;
@@ -565,36 +587,42 @@ export default function InstitutionProfile() {
       {/* Global Action Bar */}
       <div className="w-full max-w-[1400px] mx-auto px-4 lg:px-0 mt-2 flex flex-col gap-4">
         <AnimatePresence>
-          {showSuccess && (
+          {alertInfo.show && (
             <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="flex items-center justify-center gap-2 text-emerald-400 bg-emerald-500/10 px-4 py-3 rounded-xl border border-emerald-500/20"
+              initial={{ opacity: 0, y: -10, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto', marginTop: 16 }}
+              exit={{ opacity: 0, y: -10, height: 0, marginTop: 0, paddingBottom: 0, paddingTop: 0, overflow: 'hidden' }}
+              className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border ${
+                alertInfo.type === 'success' 
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                  : 'bg-red-500/10 text-red-400 border-red-500/20'
+              }`}
             >
-              <CheckCircle2 className="w-5 h-5" />
-              <span className="text-sm font-bold">Profile Updated Successfully</span>
+              {alertInfo.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+              <span className="text-sm font-bold">{alertInfo.message}</span>
             </motion.div>
           )}
         </AnimatePresence>
         
-        <button 
-          onClick={handleSave}
-          disabled={isSaving}
-          className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Saving Global Changes...
-            </>
-          ) : (
-            <>
-              <Save className="w-5 h-5" />
-              Save Global Changes
-            </>
-          )}
-        </button>
+        {!alertInfo.show && (
+          <button 
+            onClick={handleSave}
+            disabled={isSaving}
+            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Saving Global Changes...
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                Save Global Changes
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

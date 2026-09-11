@@ -300,10 +300,11 @@ export default function InstitutionRegistrationPage() {
                 <Upload className="w-5 h-5" />
               </div>
             </div>
-            {!logoFile && <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-3">Upload Facility Logo</span>}
+            {!logoFile && <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-3">Upload Facility Logo *</span>}
             <input 
               type="file" 
-              className="hidden" 
+              required
+              className="absolute opacity-0 w-px h-px pointer-events-none" 
               ref={logoInputRef}
               accept=".jpg,.jpeg,.png"
               onChange={(e) => handleFileUpload(e, setLogoFile)}
@@ -560,13 +561,13 @@ export default function InstitutionRegistrationPage() {
           </section>
 
           {/* Alerts Display above submit */}
-          <div className="w-full flex justify-center mt-2">
+          <div className="w-full flex justify-center">
             <AnimatePresence>
               {alertInfo.show && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  initial={{ opacity: 0, y: -10, scale: 0.95, height: 0, marginTop: 0 }}
+                  animate={{ opacity: 1, y: 0, scale: 1, height: 'auto', marginTop: 8 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95, height: 0, marginTop: 0, paddingBottom: 0, paddingTop: 0, overflow: 'hidden' }}
                   className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold shadow-lg max-w-xl text-center ${
                     alertInfo.type === 'error' 
                       ? 'bg-red-500/20 text-red-400 border border-red-500/50' 
@@ -581,25 +582,27 @@ export default function InstitutionRegistrationPage() {
           </div>
 
           {/* Submit Action */}
-          <div className="pt-2 border-t border-slate-800 flex flex-col items-center">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`w-full md:w-[380px] py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all duration-300 flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  Submit Application
-                  <ChevronRight className="w-5 h-5" />
-                </>
-              )}
-            </button>
-          </div>
+          {!alertInfo.show && (
+            <div className="pt-2 border-t border-slate-800 flex flex-col items-center">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full md:w-[380px] py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all duration-300 flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    Submit Application
+                    <ChevronRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+            </div>
+          )}
 
         </form>
       </motion.div>

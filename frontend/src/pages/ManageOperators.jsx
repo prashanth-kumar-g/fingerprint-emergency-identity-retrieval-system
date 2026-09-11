@@ -51,7 +51,8 @@ export default function ManageOperators() {
           return;
         }
         const response = await api.get(`/v1/operators?institutionId=${user.id}`);
-        setOperators(response.data.operators || []);
+        const sortedOperators = (response.data.operators || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setOperators(sortedOperators);
       } catch (err) {
         console.error("Failed to fetch operators:", err);
         setError("Failed to fetch operators");
@@ -184,6 +185,7 @@ export default function ManageOperators() {
                       >
                         <option>All Statuses</option>
                         <option>Active</option>
+                        <option>Pending</option>
                         <option>Suspended</option>
                       </select>
                     </div>
@@ -303,7 +305,13 @@ export default function ManageOperators() {
 
                     {/* Status */}
                     <td className="p-4 align-middle text-left">
-                      <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider ${op.accountStatus === 'ACTIVE' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}>
+                      <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider ${
+                        op.accountStatus === 'ACTIVE' 
+                          ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' 
+                          : op.accountStatus === 'PENDING'
+                          ? 'text-amber-400 bg-amber-500/10 border-amber-500/30'
+                          : 'text-red-400 bg-red-500/10 border-red-500/30'
+                      }`}>
                         {op.accountStatus}
                       </span>
                     </td>

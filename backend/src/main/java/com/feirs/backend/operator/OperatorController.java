@@ -65,6 +65,53 @@ public class OperatorController {
         }
     }
 
+    @PostMapping("/{operatorId}/hr-records/initiate")
+    public ResponseEntity<?> initiateHrUpdate(@PathVariable String operatorId, @RequestBody Operator updates) {
+        try {
+            operatorService.initiateHrUpdate(operatorId, updates);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "OTP sent successfully."
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "error", e.getMessage()
+            ));
+        } catch (Exception e) {
+            log.error("Error initiating HR update: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "error", "Failed to initiate HR update."
+            ));
+        }
+    }
+
+    @PostMapping("/{operatorId}/hr-records/verify")
+    public ResponseEntity<?> verifyHrUpdate(@PathVariable String operatorId, 
+                                            @RequestParam("otp") String otp,
+                                            @RequestBody Operator updates) {
+        try {
+            Operator saved = operatorService.verifyHrUpdate(otp, operatorId, updates);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Operator HR records updated successfully.",
+                "operator", saved
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "error", e.getMessage()
+            ));
+        } catch (Exception e) {
+            log.error("Error verifying HR update: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "error", "Failed to verify HR update."
+            ));
+        }
+    }
+
     @PostMapping("/enroll/initiate")
     public ResponseEntity<?> initiateEnrollment(@RequestParam String institutionId,
                                                 @RequestBody Operator operator) {

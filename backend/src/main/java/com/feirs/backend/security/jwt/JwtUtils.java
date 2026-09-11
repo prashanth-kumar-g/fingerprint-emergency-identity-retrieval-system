@@ -88,7 +88,6 @@ public class JwtUtils {
                 .subject(email)
                 .claim("purpose", "ACTIVATE_ACCOUNT")
                 .issuedAt(new Date())
-                .expiration(new Date((new Date()).getTime() + 7L * 24 * 60 * 60 * 1000)) // 7 days
                 .signWith(key())
                 .compact();
     }

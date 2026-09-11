@@ -81,37 +81,25 @@ export default function ForgotPassword() {
     setStatus('loading');
     setErrorMessage('');
 
-    if (role === 'super-admin' || role === 'institution') {
-      try {
-        const response = await fetch(`http://localhost:8080/api/auth/forgot-password/${role}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ identifier: idValue }),
-        });
+    try {
+      const response = await fetch(`http://localhost:8080/api/auth/forgot-password/${role}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ identifier: idValue }),
+      });
 
-        if (response.ok) {
-          setStatus('success');
-        } else {
-          const errorData = await response.text();
-          setStatus('error');
-          setErrorMessage(errorData || 'Failed to process request.');
-        }
-      } catch (error) {
+      if (response.ok) {
+        setStatus('success');
+      } else {
+        const errorData = await response.text();
         setStatus('error');
-        setErrorMessage('Network error. Please try again.');
+        setErrorMessage(errorData || 'Failed to process request.');
       }
-    } else {
-      // Simulate network delay for other roles
-      setTimeout(() => {
-        if (idValue === '0') {
-          setStatus('error');
-          setErrorMessage(`${config.errorPrefix} does not exist in our system.`);
-        } else {
-          setStatus('success');
-        }
-      }, 1200);
+    } catch (error) {
+      setStatus('error');
+      setErrorMessage('Network error. Please try again.');
     }
   };
 

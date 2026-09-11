@@ -128,7 +128,7 @@ public class AuthController {
         String resetLink = "http://localhost:5173/reset-password/super-admin?token=" + token + "&id=" + admin.getSuperAdminId();
 
         try {
-            emailService.sendPasswordResetEmail(admin.getMasterEmail(), resetLink);
+            emailService.sendPasswordResetEmail(admin.getMasterEmail(), resetLink, "Super Admin");
             return ResponseEntity.ok("An email has been sent with a secure link to reset your password. Please check your inbox.");
         } catch (Exception e) {
             e.printStackTrace();
@@ -188,7 +188,7 @@ public class AuthController {
         String resetLink = "http://localhost:5173/reset-password/institution?token=" + token + "&id=" + inst.getInstitutionId();
 
         try {
-            emailService.sendPasswordResetEmail(inst.getOfficialEmail(), resetLink);
+            emailService.sendPasswordResetEmail(inst.getOfficialEmail(), resetLink, "Institution");
             return ResponseEntity.ok("An email has been sent with a secure link to reset your password. Please check your inbox.");
         } catch (Exception e) {
             e.printStackTrace();
@@ -232,6 +232,65 @@ public class AuthController {
         return ResponseEntity.ok("Your password has been successfully reset. You can now use your new password to securely access your portal.");
     }
 
+    @PostMapping("/forgot-password/operator")
+    public ResponseEntity<?> forgotPasswordOperator(@RequestBody ForgotPasswordRequest request) {
+        String identifier = request.getIdentifier();
+        
+        Optional<com.feirs.backend.models.Operator> opOpt = operatorRepository.findByIdentifierIgnoreCase(identifier);
+
+        if (opOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("ID/Email does not exist in our system.");
+        }
+
+        com.feirs.backend.models.Operator op = opOpt.get();
+        String currentHash = op.getPasswordHash() == null ? "" : op.getPasswordHash();
+        String token = jwtUtils.generatePasswordResetToken(op.getOfficialEmail() + "|" + currentHash);
+        String resetLink = "http://localhost:5173/reset-password/operator?token=" + token + "&id=" + op.getOperatorId();
+
+        try {
+            emailService.sendPasswordResetEmail(op.getOfficialEmail(), resetLink, "Operator");
+            return ResponseEntity.ok("An email has been sent with a secure link to reset your password. Please check your inbox.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Email sending failed: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Failed to send reset email.");
+        }
+    }
+
+    @PostMapping("/reset-password/operator")
+    public ResponseEntity<?> resetPasswordOperator(@RequestBody ResetPasswordRequest request) {
+        String subject = jwtUtils.validatePasswordResetTokenAndGetEmail(request.getToken());
+        
+        if (subject == null) {
+            return ResponseEntity.badRequest().body("This reset link is invalid, expired, or has already been used.");
+        }
+
+        String[] parts = subject.split("\\|");
+        String email = parts[0];
+        String tokenHash = parts.length > 1 ? parts[1] : "";
+
+        Optional<com.feirs.backend.models.Operator> opOpt = operatorRepository.findById(request.getId());
+        if (opOpt.isEmpty() || !opOpt.get().getOfficialEmail().equals(email)) {
+            return ResponseEntity.badRequest().body("Invalid reset request for this user.");
+        }
+
+        com.feirs.backend.models.Operator op = opOpt.get();
+
+        String currentHash = op.getPasswordHash() == null ? "" : op.getPasswordHash();
+        if (!tokenHash.equals(currentHash)) {
+            return ResponseEntity.badRequest().body("This reset link has already been used. Please request a new one.");
+        }
+        
+        if (op.getPasswordHash() != null && passwordEncoder.matches(request.getNewPassword(), op.getPasswordHash())) {
+            return ResponseEntity.badRequest().body("You cannot use your old password, please enter a new one.");
+        }
+
+        op.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        operatorRepository.save(op);
+
+        return ResponseEntity.ok("Your password has been successfully reset. You can now use your new password to securely access your portal.");
+    }
+
     @PostMapping("/activate-account/institution")
     public ResponseEntity<?> activateInstitutionAccount(@RequestBody ResetPasswordRequest request) {
         String email = jwtUtils.validateActivationTokenAndGetEmail(request.getToken());
@@ -246,11 +305,12 @@ public class AuthController {
         }
 
         com.feirs.backend.models.Institution institution = instOpt.get();
-        institution.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
-        
-        if (!"ACTIVE".equals(institution.getAccountStatus())) {
-            institution.setAccountStatus("ACTIVE");
+        if (institution.getPasswordHash() != null && !institution.getPasswordHash().isEmpty()) {
+            return ResponseEntity.badRequest().body("This activation link has already been used. Your account is already active.");
         }
+
+        institution.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        institution.setAccountStatus("ACTIVE");
         
         institutionRepository.save(institution);
 
@@ -271,11 +331,12 @@ public class AuthController {
         }
 
         com.feirs.backend.models.Operator operator = opOpt.get();
-        operator.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
-        
-        if (!"ACTIVE".equals(operator.getAccountStatus())) {
-            operator.setAccountStatus("ACTIVE");
+        if (operator.getPasswordHash() != null && !operator.getPasswordHash().isEmpty()) {
+            return ResponseEntity.badRequest().body("This activation link has already been used. Your account is already active.");
         }
+
+        operator.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        operator.setAccountStatus("ACTIVE");
         
         operatorRepository.save(operator);
   

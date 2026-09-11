@@ -40,7 +40,7 @@ export default function ManageInstitutionDetails() {
   const handleToggleStatus = async () => {
     setIsProcessing(true);
     try {
-      const newStatus = status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+      const newStatus = (status === 'ACTIVE' || status === 'PENDING') ? 'SUSPENDED' : 'ACTIVE';
       const response = await api.put(`/v1/super-admin/institutions/${id}/status`, {
         status: newStatus
       });
@@ -89,7 +89,7 @@ export default function ManageInstitutionDetails() {
           
           {/* Card 1: Identity Plate */}
           <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center text-center relative overflow-hidden">
-            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 blur-[50px] pointer-events-none transition-colors duration-500 ${status === 'ACTIVE' ? 'bg-cyan-500/10' : 'bg-red-500/10'}`} />
+            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 blur-[50px] pointer-events-none transition-colors duration-500 ${status === 'ACTIVE' ? 'bg-cyan-500/10' : status === 'PENDING' ? 'bg-amber-500/10' : 'bg-red-500/10'}`} />
             
             <div className="relative mb-6 mt-4 group">
               <div className="w-56 h-56 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-xl">
@@ -101,8 +101,8 @@ export default function ManageInstitutionDetails() {
               </div>
             </div>
             
-            <div className={`px-4 py-1.5 rounded-full border mb-6 transition-colors duration-500 flex items-center gap-2 ${status === 'ACTIVE' ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
-              <span className={`w-2 h-2 rounded-full animate-pulse ${status === 'ACTIVE' ? 'bg-cyan-400' : 'bg-red-400'}`}></span>
+            <div className={`px-4 py-1.5 rounded-full border mb-6 transition-colors duration-500 flex items-center gap-2 ${status === 'ACTIVE' ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' : status === 'PENDING' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+              <span className={`w-2 h-2 rounded-full animate-pulse ${status === 'ACTIVE' ? 'bg-cyan-400' : status === 'PENDING' ? 'bg-amber-400' : 'bg-red-400'}`}></span>
               <span className="text-[11px] font-black tracking-widest uppercase">
                 Status: {status}
               </span>
@@ -233,6 +233,8 @@ export default function ManageInstitutionDetails() {
               className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border ${
                 status === 'ACTIVE' 
                   ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' 
+                  : status === 'PENDING'
+                  ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
                   : 'text-red-400 bg-red-500/10 border-red-500/20'
               }`}
             >
@@ -245,7 +247,7 @@ export default function ManageInstitutionDetails() {
         <div className="w-full flex flex-col items-center justify-center mt-2">
           
           {!showSuccess && (
-            status === 'ACTIVE' ? (
+            (status === 'ACTIVE' || status === 'PENDING') ? (
               <button 
                 onClick={handleToggleStatus}
                 disabled={isProcessing}

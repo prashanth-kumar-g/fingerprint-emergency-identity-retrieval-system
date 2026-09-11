@@ -49,7 +49,17 @@ export default function ActivateAccount() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const id = searchParams.get('id') || 'Invalid ID';
-  const email = searchParams.get('email') || 'Invalid Email';
+  
+  let email = searchParams.get('email');
+  if (!email && token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      email = payload.email || payload.sub || 'Invalid Email';
+    } catch (e) {
+      email = 'Invalid Email';
+    }
+  }
+  if (!email) email = 'Invalid Email';
 
   const [passwordError, setPasswordError] = useState('');
 
@@ -148,8 +158,8 @@ export default function ActivateAccount() {
               animate={{ opacity: 1, scale: 1 }}
               className="flex flex-col items-center text-center py-6"
             >
-              <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/50 mb-6">
-                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center border mb-6 ${role === 'operator' ? 'bg-red-500/20 border-red-500/50' : 'bg-emerald-500/20 border-emerald-500/50'}`}>
+                <CheckCircle2 className={`w-8 h-8 ${role === 'operator' ? 'text-red-400' : 'text-emerald-400'}`} />
               </div>
               <h3 className="text-xl font-bold text-white mb-3">Account Activated Successfully!</h3>
               <p className="text-slate-400 text-sm leading-relaxed mb-8">

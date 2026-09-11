@@ -172,6 +172,7 @@ export default function ManageInstitutionsList() {
                       >
                         <option>All Statuses</option>
                         <option>Active</option>
+                        <option>Pending</option>
                         <option>Suspended</option>
                       </select>
                     </div>
@@ -276,7 +277,13 @@ export default function ManageInstitutionsList() {
 
                     {/* Status */}
                     <td className="p-4 align-middle text-left">
-                      <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider ${inst.accountStatus === 'ACTIVE' ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30' : 'text-red-400 bg-red-500/10 border-red-500/30'}`}>
+                      <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider ${
+                          inst.accountStatus === 'ACTIVE' 
+                            ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30' 
+                            : inst.accountStatus === 'PENDING'
+                            ? 'text-amber-400 bg-amber-500/10 border-amber-500/30'
+                            : 'text-red-400 bg-red-500/10 border-red-500/30'
+                        }`}>
                         {inst.accountStatus}
                       </span>
                     </td>

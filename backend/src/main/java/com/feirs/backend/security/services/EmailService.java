@@ -17,13 +17,27 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    public void sendPasswordResetEmail(String toEmail, String resetLink) throws MessagingException {
+    public void sendPasswordResetEmail(String toEmail, String resetLink, String roleName) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setFrom(fromEmail);
         helper.setTo(toEmail);
         helper.setSubject("FEIRS - Reset Your Password");
+
+        String buttonColor = "#0891b2";
+        String buttonHover = "#06b6d4";
+        String buttonShadow = "rgba(8, 145, 178, 0.4)";
+
+        if ("Institution".equalsIgnoreCase(roleName)) {
+            buttonColor = "#059669";
+            buttonHover = "#10b981";
+            buttonShadow = "rgba(16, 185, 129, 0.4)";
+        } else if ("Operator".equalsIgnoreCase(roleName)) {
+            buttonColor = "#dc2626";
+            buttonHover = "#ef4444";
+            buttonShadow = "rgba(239, 68, 68, 0.4)";
+        }
 
         // Professional HTML Template with Cyan branding and Fingerprint theme
         String htmlContent = """
@@ -98,18 +112,12 @@ public class EmailService {
                     .button {
                         white-space: nowrap;
                         display: inline-block;
-                        background-color: #0891b2;
                         color: #ffffff !important;
                         text-decoration: none;
                         font-weight: bold;
                         font-size: 16px;
                         padding: 16px 32px;
                         border-radius: 12px;
-                        box-shadow: 0 0 20px rgba(8, 145, 178, 0.4);
-                        transition: background-color 0.3s ease;
-                    }
-                    .button:hover {
-                        background-color: #06b6d4;
                     }
                     .footer {
                         text-align: center;
@@ -149,10 +157,10 @@ public class EmailService {
                     <div class="card">
                         <h2 style="color: #ffffff; font-size: 20px; margin-top: 0;">Password Reset Request</h2>
                         <p class="message">
-                            We received a request to reset the password for your Super Admin account. 
+                            We received a request to reset the password for your {ROLE_NAME} account. 
                             If you initiated this request, please click the secure button below to set a new password.
                         </p>
-                        <a href="{RESET_LINK}" class="button">Reset Password</a>
+                        <a href="{RESET_LINK}" class="button" style="background-color: {BUTTON_COLOR}; box-shadow: 0 0 20px {BUTTON_SHADOW};">Reset Password</a>
                         <p class="warning">
                             If you did not request this, please ignore this email. This link will expire in 10 minutes.
                         </p>
@@ -165,7 +173,11 @@ public class EmailService {
                 </div>
             </body>
             </html>
-            """.replace("{RESET_LINK}", resetLink);
+            """
+            .replace("{RESET_LINK}", resetLink)
+            .replace("{ROLE_NAME}", roleName)
+            .replace("{BUTTON_COLOR}", buttonColor)
+            .replace("{BUTTON_SHADOW}", buttonShadow);
 
         helper.setText(htmlContent, true);
         mailSender.send(message);
@@ -328,8 +340,7 @@ public class EmailService {
                     .logo-svg { width: 24px; height: 24px; }
                     .title { color: #ffffff; font-size: 14px; font-weight: 900; margin: 0; letter-spacing: -0.5px; white-space: normal; }
                     .card { background-color: rgba(15, 23, 42, 0.8); border: 1px solid #1e293b; border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-                    .message { color: #94a3b8; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
-                    .otp-box { display: inline-block; background-color: rgba(16, 185, 129, 0.1); border: 2px dashed rgba(16, 185, 129, 0.5); color: #10b981; font-size: 32px; font-weight: bold; padding: 15px 40px; border-radius: 12px; letter-spacing: 5px; margin-bottom: 20px; }
+                    .message { color: #94a3b8; font-size: 12px; line-height: 1.6; margin-bottom: 30px; }
                     .footer { text-align: center; margin-top: 30px; color: #475569; font-size: 12px; }
                 @media only screen and (max-width: 600px) { .mobile-indent { border-left: 15.75px solid transparent !important; } }
                 </style>
@@ -357,14 +368,98 @@ public class EmailService {
                     
                     <div class="card">
                         <h2 style="color: #ffffff; font-size: 20px; margin-top: 0;">Operator Enrollment OTP</h2>
-                        <p class="message">
-                            Hello <strong>{OPERATOR_NAME}</strong>,<br/><br/>
-                            An Institution Admin from <strong>{INSTITUTION_NAME}</strong> is attempting to enroll you as an operator in the FEIRS network. Please provide the OTP below to the admin to complete your enrollment.
+                        <p class="message" style="font-size: 15px; margin-bottom: 28px;">
+                            Hello <strong>{OPERATOR_NAME}</strong>,
                         </p>
-                        <div class="otp-box">
-                            {OTP_CODE}
-                        </div>
-                        <p class="message" style="margin-top: 10px; font-size: 13px;">
+                        <p class="message" style="font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+                            An Institution Admin from <strong>{INSTITUTION_NAME}</strong> is attempting to enroll you as an operator in the FEIRS network.<br/>
+                            Please provide the OTP below to the admin to complete your enrollment.
+                        </p>
+                        <center>
+                            <div class="otp-box" style="display: inline-block; background-color: rgba(16, 185, 129, 0.1); border: 2px dashed rgba(16, 185, 129, 0.5); color: #10b981; font-size: 30px; font-weight: bold; padding: 15px 16px; border-radius: 12px; letter-spacing: 5px; margin-bottom: 18px;">
+                                {OTP_CODE}
+                            </div>
+                        </center>
+                        <p class="message" style="margin-top: 6px; font-size: 13px;">
+                            This OTP is valid for 10 minutes. Do not share it with anyone other than your Institution Admin.
+                        </p>
+                    </div>
+                    <div class="footer">
+                        &copy; 2026 FEIRS. All rights reserved. <br/>
+                        This is an automated message. Do not reply to this email.
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            .replace("{OPERATOR_NAME}", operatorName != null ? operatorName : "Operator")
+            .replace("{INSTITUTION_NAME}", institutionName != null ? institutionName : "Institution")
+            .replace("{OTP_CODE}", otp);
+
+        helper.setText(htmlContent, true);
+        mailSender.send(message);
+    }
+
+    public void sendOperatorHrUpdateOtp(String toEmail, String otp, String operatorName, String institutionName) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setFrom(fromEmail);
+        helper.setTo(toEmail);
+        helper.setSubject("FEIRS - Operator Profile Update Verification OTP");
+
+        String htmlContent = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #020617; color: #f8fafc; margin: 0; padding: 0; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #020617; }
+                    .logo-box { background-color: rgba(8, 145, 178, 0.1); border: 1px solid rgba(8, 145, 178, 0.5); border-radius: 8px; padding: 6px; margin-right: 12px; display: inline-flex; align-items: center; justify-content: center; }
+                    .logo-svg { width: 24px; height: 24px; }
+                    .title { color: #ffffff; font-size: 14px; font-weight: 900; margin: 0; letter-spacing: -0.5px; white-space: normal; }
+                    .card { background-color: rgba(15, 23, 42, 0.8); border: 1px solid #1e293b; border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+                    .message { color: #94a3b8; font-size: 12px; line-height: 1.6; margin-bottom: 30px; }
+                    .footer { text-align: center; margin-top: 30px; color: #475569; font-size: 12px; }
+                @media only screen and (max-width: 600px) { .mobile-indent { border-left: 15.75px solid transparent !important; } }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 30px;">
+                        <tr>
+                            <td align="center">
+                                <table cellpadding="0" cellspacing="0" border="0">
+                                    <tr>
+                                        <td valign="middle" style="padding-right: 12px;">
+                                            <div class="logo-box" style="margin: 0;">
+                                                <img src="https://img.icons8.com/ios-filled/96/22d3ee/fingerprint.png" alt="Fingerprint Logo" class="logo-svg" style="display: block;" />
+                                            </div>
+                                        </td>
+                                        <td valign="middle">
+                                            <h1 class="title" style="margin: 0; padding: 0; line-height: 1.3; vertical-align: middle;">Fingerprint-based Emergency <span class="mobile-indent">Identity</span> Retrieval System</h1>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <div class="card">
+                        <h2 style="color: #ffffff; font-size: 20px; margin-top: 0;">Operator Profile Update OTP</h2>
+                        <p class="message" style="font-size: 15px; margin-bottom: 28px;">
+                            Hello <strong>{OPERATOR_NAME}</strong>,
+                        </p>
+                        <p class="message" style="font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+                            An Institution Admin from <strong>{INSTITUTION_NAME}</strong> is attempting to update your official profile information.<br/>
+                            Please provide the OTP below to the admin to authorize and complete this update.
+                        </p>
+                        <center>
+                            <div class="otp-box" style="display: inline-block; background-color: rgba(16, 185, 129, 0.1); border: 2px dashed rgba(16, 185, 129, 0.5); color: #10b981; font-size: 30px; font-weight: bold; padding: 15px 16px; border-radius: 12px; letter-spacing: 5px; margin-bottom: 18px;">
+                                {OTP_CODE}
+                            </div>
+                        </center>
+                        <p class="message" style="margin-top: 6px; font-size: 13px;">
                             This OTP is valid for 10 minutes. Do not share it with anyone other than your Institution Admin.
                         </p>
                     </div>
@@ -474,8 +569,7 @@ public class EmailService {
                     .logo-svg { width: 24px; height: 24px; }
                     .title { color: #ffffff; font-size: 14px; font-weight: 900; margin: 0; letter-spacing: -0.5px; white-space: normal; }
                     .card { background-color: rgba(15, 23, 42, 0.8); border: 1px solid #1e293b; border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-                    .message { color: #94a3b8; font-size: 15px; line-height: 1.6; margin-bottom: 30px; }
-                    .otp-box { display: inline-block; background-color: rgba(16, 185, 129, 0.1); border: 2px dashed rgba(16, 185, 129, 0.5); color: #10b981; font-size: 32px; font-weight: bold; padding: 15px 40px; border-radius: 12px; letter-spacing: 5px; margin-bottom: 20px; }
+                    .message { color: #94a3b8; font-size: 12px; line-height: 1.6; margin-bottom: 30px; }
                     .footer { text-align: center; margin-top: 30px; color: #475569; font-size: 12px; }
                 @media only screen and (max-width: 600px) { .mobile-indent { border-left: 15.75px solid transparent !important; } }
                 </style>
@@ -503,14 +597,19 @@ public class EmailService {
                     
                     <div class="card">
                         <h2 style="color: #ffffff; font-size: 20px; margin-top: 0;">Citizen Enrollment OTP</h2>
-                        <p class="message">
-                            Hello <strong>{CITIZEN_NAME}</strong>,<br/><br/>
-                            An Operator is attempting to enroll you into the FEIRS network. Please provide the OTP below to the operator to verify your email address and complete your enrollment.
+                        <p class="message" style="font-size: 15px; margin-bottom: 28px;">
+                            Hello <strong>{CITIZEN_NAME}</strong>,
                         </p>
-                        <div class="otp-box">
-                            {OTP_CODE}
-                        </div>
-                        <p class="message" style="margin-top: 10px; font-size: 13px;">
+                        <p class="message" style="font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+                            An Operator is attempting to enroll you into the FEIRS network.<br/>
+                            Please provide the OTP below to the operator to verify your email address and complete your enrollment.
+                        </p>
+                        <center>
+                            <div class="otp-box" style="display: inline-block; background-color: rgba(16, 185, 129, 0.1); border: 2px dashed rgba(16, 185, 129, 0.5); color: #10b981; font-size: 30px; font-weight: bold; padding: 15px 16px; border-radius: 12px; letter-spacing: 5px; margin-bottom: 18px;">
+                                {OTP_CODE}
+                            </div>
+                        </center>
+                        <p class="message" style="margin-top: 6px; font-size: 13px;">
                             This OTP is valid for 10 minutes. Do not share it with anyone other than the Operator.
                         </p>
                     </div>
@@ -571,3 +670,8 @@ public class EmailService {
         mailSender.send(message);
     }
 }
+
+
+
+
+

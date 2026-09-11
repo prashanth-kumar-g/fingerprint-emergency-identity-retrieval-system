@@ -12,7 +12,8 @@ import {
   Mail,
   Phone,
   Eye,
-  EyeOff
+  EyeOff,
+  AlertCircle
 } from 'lucide-react';
 import api from '../api/axiosConfig';
 
@@ -32,8 +33,18 @@ const formatDate = (dateString) => {
 export default function SuperAdminProfile() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [alertInfo, setAlertInfo] = useState({ show: false, type: '', message: '' });
   const [globalError, setGlobalError] = useState("");
+  
+  const alertTimeoutRef = useRef(null);
+
+  const triggerAlert = (type, message, duration = 5000) => {
+    if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
+    setAlertInfo({ show: true, type, message });
+    alertTimeoutRef.current = setTimeout(() => {
+      setAlertInfo({ show: false, type: '', message: '' });
+    }, duration);
+  };
   
   const [profile, setProfile] = useState(null);
   const [adminName, setAdminName] = useState("");
@@ -117,6 +128,22 @@ export default function SuperAdminProfile() {
         finalCountryCode = parts[0];
         finalPhoneNumber = parts.slice(1).join("").replace(/\D/g, ''); 
       }
+    }
+
+    const currentPhone = (profile.phoneCountryCode && profile.phoneNumber) 
+      ? `${profile.phoneCountryCode} ${profile.phoneNumber}` 
+      : "";
+    const hasInfoChanges = 
+      phoneInput !== currentPhone ||
+      adminName !== (profile.adminName || "");
+
+    const hasEmailChanges = isEmailExpanded && newEmail && emailPassword;
+    const hasPasswordChanges = isPasswordExpanded && currentPassword && newPassword;
+    const hasPhotoChanges = !!selectedPhotoFile;
+
+    if (!hasInfoChanges && !hasEmailChanges && !hasPasswordChanges && !hasPhotoChanges) {
+      triggerAlert('error', 'No changes detected to save.');
+      return;
     }
 
     if (isPasswordExpanded && (newPassword || currentPassword)) {
@@ -228,8 +255,7 @@ export default function SuperAdminProfile() {
     setIsSaving(false);
     
     if (!anyApiFailed && successCount > 0) {
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      triggerAlert('success', 'Profile Updated Successfully');
       setIsNameEditing(false);
       setIsPhoneEditing(false);
       fetchProfile();
@@ -519,15 +545,19 @@ export default function SuperAdminProfile() {
       <div className="w-full max-w-[1400px] mx-auto px-4 lg:px-0 mt-2 flex flex-col gap-4">
         
         <AnimatePresence>
-          {showSuccess && (
+          {alertInfo.show && (
             <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="flex items-center justify-center gap-2 text-cyan-400 bg-cyan-500/10 px-4 py-3 rounded-xl border border-cyan-500/20"
+              initial={{ opacity: 0, y: -10, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto', marginTop: 16 }}
+              exit={{ opacity: 0, y: -10, height: 0, marginTop: 0, paddingBottom: 0, paddingTop: 0, overflow: 'hidden' }}
+              className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border ${
+                alertInfo.type === 'success' 
+                  ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' 
+                  : 'bg-red-500/10 text-red-400 border-red-500/20'
+              }`}
             >
-              <CheckCircle2 className="w-5 h-5" />
-              <span className="text-sm font-bold">Profile Updated Successfully</span>
+              {alertInfo.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+              <span className="text-sm font-bold">{alertInfo.message}</span>
             </motion.div>
           )}
           {globalError && (
@@ -542,17 +572,19 @@ export default function SuperAdminProfile() {
           )}
         </AnimatePresence>
 
-        <button 
-          onClick={handleSave}
-          disabled={isSaving}
-          className="w-full flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          {isSaving ? (
-            <><Loader2 className="w-5 h-5 animate-spin" />Saving Global Changes...</>
-          ) : (
-            <><Save className="w-5 h-5" />Save Global Changes</>
-          )}
-        </button>
+        {!alertInfo.show && (
+          <button 
+            onClick={handleSave}
+            disabled={isSaving}
+            className="w-full flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {isSaving ? (
+              <><Loader2 className="w-5 h-5 animate-spin" />Saving Global Changes...</>
+            ) : (
+              <><Save className="w-5 h-5" />Save Global Changes</>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

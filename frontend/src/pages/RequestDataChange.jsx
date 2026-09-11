@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2,
@@ -18,6 +18,7 @@ import {
   X,
   Lock
 } from 'lucide-react';
+import api from '../api/axiosConfig';
 
 const EditableField = ({ label, value, oldData, onChange, onCancel, icon: Icon, isEditing, onEdit }) => {
   if (!isEditing) {
@@ -125,23 +126,61 @@ const DiffField = ({ label, icon: Icon, oldData, newData }) => {
 
 export default function RequestDataChange() {
   const fileInputRef = useRef(null);
-  const toggleRef = useRef(true);
 
   // States: READY, PENDING, REJECTED, APPROVED
   const [requestState, setRequestState] = useState('READY');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [uploadedFile, setUploadedFile] = useState(null);
 
   const [originalData, setOriginalData] = useState({
-    name: 'Apollo Hospital',
-    type: 'Clinic',
-    sector: 'Private',
-    email: 'contact@apollo.com',
-    address: '154/11, Bannerghatta Road, Bangalore, Karnataka - 560076, India'
+    name: '',
+    type: '',
+    sector: '',
+    email: '',
+    address: ''
   });
 
   const [formData, setFormData] = useState({ ...originalData });
   const [editingFields, setEditingFields] = useState({});
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const userStr = sessionStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        if (!user?.id) return;
+        
+        const response = await api.get(`/v1/institutions/profile?institutionId=${user.id}`);
+        const inst = response.data.institution;
+        
+        const fullAddress = `${inst.addressLine1 || ""}${inst.addressLine2 ? ', ' + inst.addressLine2 : ''}, ${inst.city || ""}, ${inst.state || ""} - ${inst.pinCode || ""}, ${inst.country || ""}`;
+        const phone = (inst.phoneCountryCode && inst.phoneNumber) ? `${inst.phoneCountryCode} ${inst.phoneNumber}` : (inst.phoneNumber || '');
+        
+        const data = {
+          name: inst.institutionName || '',
+          type: inst.institutionType || '',
+          sector: inst.sectorType || '',
+          email: inst.officialEmail || '',
+          address: fullAddress,
+          institutionId: inst.institutionId || '',
+          createdAt: inst.createdAt || '',
+          contactNumber: phone,
+          officerName: inst.primaryOfficerName || '',
+          officerDesignation: inst.officerDesignation || '',
+          photoUrl: inst.institutionLogoUrl || ''
+        };
+        
+        setOriginalData(data);
+        setFormData(data);
+      } catch (err) {
+        console.error("Failed to load profile data", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const hasChanges = JSON.stringify(originalData) !== JSON.stringify(formData);
   const canSubmit = requestState === 'READY' && hasChanges;
@@ -191,6 +230,10 @@ export default function RequestDataChange() {
     setEditingFields({});
   };
 
+  if (isLoading) {
+    return null;
+  }
+
   return (
     <div className="w-full flex flex-col items-center gap-6 pb-24 relative">
       
@@ -219,22 +262,28 @@ export default function RequestDataChange() {
           <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center text-center relative overflow-hidden h-full">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-emerald-500/10 blur-[50px] pointer-events-none" />
             
-            <div className="relative group cursor-pointer mb-6 mt-4">
-              <div className="w-56 h-56 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-xl group-hover:border-slate-600 transition-colors">
-                <Building2 className="w-20 h-20 text-slate-500" />
-              </div>
-              <div className="absolute bottom-4 right-4 p-2 bg-slate-800 border border-slate-700 rounded-full shadow-lg text-slate-600 cursor-not-allowed">
-                <Pencil className="w-4 h-4" />
-              </div>
-              {/* Tooltip */}
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 bg-slate-800 text-white text-xs font-medium p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-20 pointer-events-none border border-slate-700 text-left">
-                <div className="flex gap-2 items-start">
-                  <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                  <p leading-relaxed>You can change this from Profile Settings.</p>
+              <div className="relative mb-6 mt-4">
+                <div className="w-56 h-56 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-xl">
+                  {originalData.photoUrl ? (
+                    <img src={originalData.photoUrl} alt="Institution Photo" className="w-full h-full object-cover" />
+                  ) : (
+                    <Building2 className="w-20 h-20 text-slate-500" />
+                  )}
                 </div>
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
+                <div className="absolute bottom-4 right-4 p-2 bg-slate-800 border border-slate-700 rounded-full shadow-lg group">
+                  <div className="text-slate-700 cursor-not-allowed">
+                    <Pencil className="w-4 h-4" />
+                  </div>
+                  {/* Tooltip */}
+                  <div className="absolute right-full bottom-0 mb-2 mr-2 w-48 bg-slate-800 text-white text-xs font-medium p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 pointer-events-none border border-slate-700 text-left">
+                    <div className="flex gap-2 items-start">
+                      <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <p className="leading-relaxed">You can change this from Profile Settings.</p>
+                    </div>
+                    <div className="absolute -bottom-1 right-2 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
+                  </div>
+                </div>
               </div>
-            </div>
 
             {requestState === 'READY' ? (
               <div className="w-full px-4 mb-4">
@@ -269,17 +318,19 @@ export default function RequestDataChange() {
               </div>
             )}
 
-            <div className="w-full flex flex-col gap-3 pt-6 border-t border-slate-800/50 text-center items-center">
-              <div className="flex flex-wrap justify-center gap-1.5 text-sm">
-                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Institution ID:</span>
-                <span className="font-medium text-slate-300 font-mono text-center">FEIRS-INST-1011</span>
-              </div>
-              <div className="flex flex-wrap justify-center gap-1.5 text-sm">
-                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Account Created:</span>
-                <span className="font-medium text-slate-300 text-center">Oct 24, 2026</span>
+              <div className="w-full flex flex-col gap-3 pt-6 border-t border-slate-800/50 text-center items-center">
+                <div className="flex flex-wrap justify-center gap-1.5 text-sm">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Institution ID:</span>
+                  <span className="font-medium text-slate-300 font-mono text-center">{originalData.institutionId || 'N/A'}</span>
+                </div>
+                <div className="flex flex-wrap justify-center gap-1.5 text-sm">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px] mt-0.5">Account Created:</span>
+                  <span className="font-medium text-slate-300 text-center">
+                    {originalData.createdAt ? new Date(originalData.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
 
           {/* Card 2: Administrative Details */}
           <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col">
@@ -296,17 +347,17 @@ export default function RequestDataChange() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-1.5 w-full">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Contact Number</label>
-                <div className="relative flex items-center group">
+                <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><Phone className="w-4 h-4" /></div>
-                  <input type="text" value="+91 98765 43210" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-400 outline-none cursor-not-allowed" />
-                  <div className="absolute right-3">
+                  <input type="text" value={originalData.contactNumber || ''} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <div className="absolute right-3 group">
                     <div className="p-1.5 rounded-lg text-slate-700 cursor-not-allowed">
-                      <Pencil className="w-3.5 h-3.5" />
+                      <Lock className="w-3.5 h-3.5" />
                     </div>
                     <div className="absolute right-0 bottom-full mb-2 w-64 bg-slate-800 text-white text-xs font-medium p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 pointer-events-none border border-slate-700 text-left">
                       <div className="flex gap-2 items-start">
                         <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                        <p leading-relaxed>You can change this from Profile Settings.</p>
+                        <p className="leading-relaxed">You can change this from Profile Settings.</p>
                       </div>
                       <div className="absolute -bottom-1 right-5 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
                     </div>
@@ -316,17 +367,17 @@ export default function RequestDataChange() {
               <div className="hidden md:block"></div>
               <div className="flex flex-col gap-1.5 w-full">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Primary Officer Name</label>
-                <div className="relative flex items-center group">
+                <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><User className="w-4 h-4" /></div>
-                  <input type="text" value="Dr. Rakesh Sharma" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-400 outline-none cursor-not-allowed" />
-                  <div className="absolute right-3">
+                  <input type="text" value={originalData.officerName || ''} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <div className="absolute right-3 group">
                     <div className="p-1.5 rounded-lg text-slate-700 cursor-not-allowed">
-                      <Pencil className="w-3.5 h-3.5" />
+                      <Lock className="w-3.5 h-3.5" />
                     </div>
                     <div className="absolute right-0 bottom-full mb-2 w-64 bg-slate-800 text-white text-xs font-medium p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 pointer-events-none border border-slate-700 text-left">
                       <div className="flex gap-2 items-start">
                         <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                        <p leading-relaxed>You can change this from Profile Settings.</p>
+                        <p className="leading-relaxed">You can change this from Profile Settings.</p>
                       </div>
                       <div className="absolute -bottom-1 right-5 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
                     </div>
@@ -335,17 +386,17 @@ export default function RequestDataChange() {
               </div>
               <div className="flex flex-col gap-1.5 w-full">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Officer Designation</label>
-                <div className="relative flex items-center group">
+                <div className="relative flex items-center">
                   <div className="absolute left-3 text-slate-500"><Briefcase className="w-4 h-4" /></div>
-                  <input type="text" value="Chief Medical Administrator" readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-400 outline-none cursor-not-allowed" />
-                  <div className="absolute right-3">
+                  <input type="text" value={originalData.officerDesignation || ''} readOnly className="w-full bg-slate-950/50 border border-slate-800/80 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-300 outline-none cursor-default" />
+                  <div className="absolute right-3 group">
                     <div className="p-1.5 rounded-lg text-slate-700 cursor-not-allowed">
-                      <Pencil className="w-3.5 h-3.5" />
+                      <Lock className="w-3.5 h-3.5" />
                     </div>
                     <div className="absolute right-0 bottom-full mb-2 w-64 bg-slate-800 text-white text-xs font-medium p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10 pointer-events-none border border-slate-700 text-left">
                       <div className="flex gap-2 items-start">
                         <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                        <p leading-relaxed>You can change this from Profile Settings.</p>
+                        <p className="leading-relaxed">You can change this from Profile Settings.</p>
                       </div>
                       <div className="absolute -bottom-1 right-5 w-2 h-2 bg-slate-800 border-b border-r border-slate-700 rotate-45" />
                     </div>

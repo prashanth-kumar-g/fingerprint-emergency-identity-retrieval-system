@@ -22,7 +22,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-const EditableField = ({ label, value, onChange, icon: Icon, type = "text", placeholder, isSaving }) => {
+const EditableField = ({ label, value, onChange, icon: Icon, type = "text", placeholder, isSaving, error }) => {
   const [isEditing, setIsEditing] = useState(false);
   const inputRef = useRef(null);
 
@@ -54,7 +54,8 @@ const EditableField = ({ label, value, onChange, icon: Icon, type = "text", plac
           readOnly={!isEditing}
           placeholder={placeholder}
           className={`w-full bg-slate-950/50 border rounded-xl pl-10 pr-10 py-3 text-sm transition-all duration-300 outline-none
-            ${isEditing 
+            ${error ? 'border-red-500 focus:border-red-500 text-white' :
+              isEditing 
               ? 'border-emerald-500/50 text-white shadow-[0_0_15px_rgba(16,185,129,0.1)]' 
               : 'border-slate-800/80 text-slate-300 focus:border-slate-700'
             }`}
@@ -67,6 +68,12 @@ const EditableField = ({ label, value, onChange, icon: Icon, type = "text", plac
           <Pencil className="w-3.5 h-3.5" />
         </button>
       </div>
+      {error && (
+        <p className="text-red-400 text-[11px] font-semibold flex items-center gap-1.5 pl-1">
+          <AlertCircle className="w-3 h-3" />
+          {error}
+        </p>
+      )}
     </div>
   );
 };
@@ -183,48 +190,101 @@ export default function OperatorConfiguration() {
   // Simulation alert state
   const [alertInfo, setAlertInfo] = useState({ show: false, type: '', message: '' });
 
-  const triggerAlert = (type, message) => {
+  const alertTimeoutRef = useRef(null);
+
+  const triggerAlert = (type, message, duration = 5000) => {
+    if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
     setAlertInfo({ show: true, type, message });
-    setTimeout(() => {
+    alertTimeoutRef.current = setTimeout(() => {
       setAlertInfo({ show: false, type: '', message: '' });
-    }, 3500);
+    }, duration);
   };
 
-  const handleSave = () => {
-    const sensitiveChanged = 
+  const [emailError, setEmailError] = useState('');
+
+  const handleSave = async () => {
+    const anyChanged = 
       formData.fullName !== originalData.fullName ||
       formData.dob !== originalData.dob ||
       formData.gender !== originalData.gender ||
-      formData.email !== originalData.email;
+      formData.email !== originalData.email ||
+      formData.department !== originalData.department ||
+      formData.title !== originalData.title;
 
-    if (sensitiveChanged && !showOtpBox) {
+    if (!anyChanged) {
+      triggerAlert('error', 'No changes detected to save.');
+      return;
+    }
+
+    if (formData.email !== originalData.email) {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(formData.email)) {
+        setEmailError('Please enter a valid professional email address.');
+        return;
+      }
+    }
+
+    if (!showOtpBox) {
       setIsSaving(true);
-      // Simulate sending OTP
-      setTimeout(() => {
+      try {
+        const payload = {
+          fullName: formData.fullName,
+          dateOfBirth: formData.dob,
+          gender: formData.gender,
+          officialEmail: formData.email,
+          department: formData.department,
+          designationTitle: formData.title
+        };
+
+        const response = await api.post(`/v1/operators/${id}/hr-records/initiate`, payload);
+        
+        if (response.data.success) {
+          setShowOtpBox(true);
+          triggerAlert('warning', "Modifying HR records requires Operator verification. An OTP has been sent to the Operator's email.", 5000);
+        }
+      } catch (err) {
+        const errorMessage = err.response?.data?.error || '';
+        if (
+          errorMessage.toLowerCase().includes('already registered') || 
+          errorMessage.toLowerCase().includes('already exists') ||
+          errorMessage.toLowerCase().includes('duplicate')
+        ) {
+          setEmailError('This email address is already registered. Please use a different email.');
+        } else {
+          triggerAlert('error', errorMessage || 'Failed to initiate update.');
+        }
+      } finally {
         setIsSaving(false);
-        setShowOtpBox(true);
-        triggerAlert('warning', "Modifying sensitive demographic data requires Operator consent. An OTP has been sent to the Operator's official email.");
-      }, 1000);
-    } else if (sensitiveChanged && showOtpBox) {
+      }
+    } else {
       // Verify OTP
       setIsOtpVerifying(true);
-      setTimeout(() => {
-        setIsOtpVerifying(false);
-        if (otpValue === '111111') {
+      try {
+        const payload = {
+          fullName: formData.fullName,
+          dateOfBirth: formData.dob,
+          gender: formData.gender,
+          officialEmail: formData.email,
+          department: formData.department,
+          designationTitle: formData.title
+        };
+
+        const [response] = await Promise.all([
+          api.post(`/v1/operators/${id}/hr-records/verify?otp=${otpValue}`, payload),
+          new Promise(resolve => setTimeout(resolve, 1000))
+        ]);
+
+        if (response.data.success) {
           setShowOtpBox(false);
           setOtpValue('');
-          triggerAlert('success', 'OTP Verified! Profile updated successfully.');
-        } else {
-          triggerAlert('error', 'Invalid OTP. Please check the code and try again.');
+          setOriginalData(formData);
+          triggerAlert('success', 'OTP Verified! Profile updated successfully.', 5000);
         }
-      }, 1200);
-    } else {
-      // Direct Save (only department/title changed)
-      setIsSaving(true);
-      setTimeout(() => {
-        setIsSaving(false);
-        triggerAlert('success', 'Profile updated successfully!');
-      }, 1200);
+      } catch (err) {
+        triggerAlert('error', err.response?.data?.error || 'Invalid OTP. Please check the code and try again.');
+      } finally {
+        setIsOtpVerifying(false);
+      }
     }
   };
 
@@ -233,7 +293,7 @@ export default function OperatorConfiguration() {
     try {
       await api.put(`/v1/operators/${id}/status`, { status: 'SUSPENDED' });
       setOperatorStatus('SUSPENDED');
-      triggerAlert('warning', 'Operator account has been suspended.');
+      triggerAlert('suspend', 'Operator account has been suspended.', 5000);
     } catch (err) {
       triggerAlert('error', 'Failed to suspend operator account.');
     } finally {
@@ -246,7 +306,7 @@ export default function OperatorConfiguration() {
     try {
       await api.put(`/v1/operators/${id}/status`, { status: 'ACTIVE' });
       setOperatorStatus('ACTIVE');
-      triggerAlert('success', 'Operator account has been activated.');
+      triggerAlert('success', 'Operator account has been activated.', 5000);
     } catch (err) {
       triggerAlert('error', 'Failed to activate operator account.');
     } finally {
@@ -284,10 +344,14 @@ export default function OperatorConfiguration() {
         <div className="lg:col-span-1 flex flex-col gap-6 h-full">
           <div className="h-full bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center text-center relative overflow-hidden">
             {/* Background Glow */}
-            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 blur-[50px] pointer-events-none transition-colors duration-500 ${operatorStatus === 'ACTIVE' ? 'bg-emerald-500/10' : 'bg-red-500/10'}`} />
+            <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 blur-[50px] pointer-events-none transition-colors duration-500 ${
+                operatorStatus === 'ACTIVE' ? 'bg-emerald-500/10' : 
+                operatorStatus === 'PENDING' ? 'bg-amber-500/10' : 
+                'bg-red-500/10'
+              }`} />
             
             {/* Profile Photo */}
-            <div className="relative mb-6 mt-4 group">
+            <div className="relative mb-6 mt-4">
               <div className="w-56 h-56 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shadow-xl">
                 {operator?.profilePhotoUrl ? (
                   <img src={operator.profilePhotoUrl} alt="Operator" className="w-full h-full object-cover" />
@@ -295,7 +359,7 @@ export default function OperatorConfiguration() {
                   <User className="w-20 h-20 text-slate-500" />
                 )}
               </div>
-              <div className="absolute bottom-4 right-4 p-2 bg-slate-800 border border-slate-700 rounded-full shadow-lg">
+              <div className="absolute bottom-4 right-4 p-2 bg-slate-800 border border-slate-700 rounded-full shadow-lg group">
                 <div className="text-slate-700 cursor-not-allowed">
                   <Pencil className="w-4 h-4" />
                 </div>
@@ -311,8 +375,16 @@ export default function OperatorConfiguration() {
             </div>
 
             {/* Status Badge */}
-            <div className={`px-4 py-1.5 rounded-full border mb-6 transition-colors duration-500 flex items-center gap-2 ${operatorStatus === 'ACTIVE' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
-              <span className={`w-2 h-2 rounded-full animate-pulse ${operatorStatus === 'ACTIVE' ? 'bg-emerald-400' : 'bg-red-400'}`}></span>
+            <div className={`px-4 py-1.5 rounded-full border mb-6 transition-colors duration-500 flex items-center gap-2 ${
+              operatorStatus === 'ACTIVE' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 
+              operatorStatus === 'PENDING' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
+              'bg-red-500/10 border-red-500/30 text-red-400'
+            }`}>
+              <span className={`w-2 h-2 rounded-full animate-pulse ${
+                operatorStatus === 'ACTIVE' ? 'bg-emerald-400' : 
+                operatorStatus === 'PENDING' ? 'bg-amber-400' :
+                'bg-red-400'
+              }`}></span>
               <span className="text-[11px] font-black tracking-widest uppercase">
                 Status: {operatorStatus}
               </span>
@@ -421,9 +493,13 @@ export default function OperatorConfiguration() {
                 <EditableField 
                   label="Official Email Address" 
                   value={formData.email} 
-                  onChange={(val) => setFormData({...formData, email: val})}
+                  onChange={(val) => {
+                    setFormData({...formData, email: val});
+                    if (emailError) setEmailError('');
+                  }}
                   icon={Mail} 
                   isSaving={isSaving || isOtpVerifying}
+                  error={emailError}
                 />
               </div>
               <EditableField 
@@ -449,117 +525,130 @@ export default function OperatorConfiguration() {
       {/* Global Action Footer */}
       <div className="w-full max-w-[1400px] mx-auto px-4 lg:px-0 mt-2 flex flex-col gap-4">
         
-        {/* Simulation Alert */}
+        {/* Simulation Alert - Spans full width independently */}
         <AnimatePresence>
           {alertInfo.show && (
             <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: -10, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto', marginTop: 16 }}
+              exit={{ opacity: 0, y: -10, height: 0, marginTop: 0, paddingBottom: 0, paddingTop: 0, overflow: 'hidden' }}
               className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border ${
                 alertInfo.type === 'success' 
                   ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                  : alertInfo.type === 'error'
+                  : (alertInfo.type === 'error' || alertInfo.type === 'suspend')
                   ? 'bg-red-500/10 text-red-400 border-red-500/20'
                   : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
               }`}
             >
-              {alertInfo.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+              {alertInfo.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : (alertInfo.type === 'suspend' ? <Ban className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />)}
               <span className="text-sm font-bold">{alertInfo.message}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Inline OTP Box */}
-        <AnimatePresence>
-          {showOtpBox && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="w-full bg-slate-900/80 backdrop-blur-md border border-amber-500/30 rounded-xl p-5 overflow-hidden shadow-xl"
-            >
-              <div className="flex flex-col sm:flex-row items-center gap-4 justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                    <ShieldCheck className="w-5 h-5 text-amber-400" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-white">Mutual Agreement Verification</h4>
-                    <p className="text-xs text-slate-400">Enter the 6-digit OTP sent to the Operator's email.</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <input
-                    type="text"
-                    maxLength={6}
-                    value={otpValue}
-                    onChange={(e) => setOtpValue(e.target.value.replace(/[^0-9]/g, ''))}
-                    placeholder="000000"
-                    className="w-full sm:w-32 bg-slate-950/50 border border-slate-700 rounded-lg text-center font-mono text-lg tracking-widest text-white py-2 focus:border-amber-500/50 focus:outline-none transition-colors"
-                  />
-                  <button
-                    onClick={() => setShowOtpBox(false)}
-                    className="px-3 py-2 text-slate-400 hover:text-white transition-colors text-sm font-bold"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        <div className="flex flex-col sm:flex-row gap-4 mt-2">
+        {/* Action Buttons Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {operatorStatus === 'ACTIVE' ? (
-            <button 
-              onClick={handleSuspend}
-              disabled={isActionLoading || isSaving}
-              className="flex-1 flex items-center justify-center gap-2 bg-transparent border border-red-500 text-red-400 hover:bg-red-500/10 px-6 py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Ban className="w-5 h-5" />}
-              Suspend Account
-            </button>
-          ) : (
-            <button 
-              onClick={handleActivate}
-              disabled={isActionLoading || isSaving}
-              className="flex-1 flex items-center justify-center gap-2 bg-transparent border border-emerald-500 text-emerald-400 hover:bg-emerald-500/10 px-6 py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
-              Activate Account
-            </button>
+          {/* Render Left Column (Suspend Button) ONLY if OTP box is hidden and there is no success/suspend alert */}
+          {(!showOtpBox && !(alertInfo.show && (alertInfo.type === 'success' || alertInfo.type === 'suspend'))) && (
+            <div className="lg:col-span-1 flex flex-col justify-end">
+              {operatorStatus === 'ACTIVE' || operatorStatus === 'PENDING' ? (
+                <button 
+                  onClick={handleSuspend}
+                  disabled={isActionLoading || isSaving}
+                  className="w-full h-[60px] flex items-center justify-center gap-2 bg-transparent border border-red-500 text-red-400 hover:bg-red-500/10 px-6 py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Ban className="w-5 h-5" />}
+                  Suspend Account
+                </button>
+              ) : (
+                <button 
+                  onClick={handleActivate}
+                  disabled={isActionLoading || isSaving}
+                  className="w-full h-[60px] flex items-center justify-center gap-2 bg-transparent border border-emerald-500 text-emerald-400 hover:bg-emerald-500/10 px-6 py-4 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isActionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
+                  Activate Account
+                </button>
+              )}
+            </div>
           )}
 
-          <button 
-            onClick={handleSave}
-            disabled={isSaving || isActionLoading || isOtpVerifying || (showOtpBox && otpValue.length < 6)}
-            className={`flex-[2] flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-xl disabled:opacity-70 disabled:cursor-not-allowed ${
-              showOtpBox 
-                ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.3)]' 
-                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)]'
-            }`}
-          >
-            {isSaving || isOtpVerifying ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                {isOtpVerifying ? 'Verifying OTP...' : 'Processing...'}
-              </>
-            ) : showOtpBox ? (
-              <>
-                <ShieldCheck className="w-5 h-5" />
-                Verify OTP & Save
-              </>
-            ) : (
-              <>
-                <Save className="w-5 h-5" />
-                Save Profile Updates
-              </>
+          {/* Right Column Content - Becomes full width (col-span-3) if OTP box is showing or success/suspend alert is showing */}
+          <div className={`${(showOtpBox || (alertInfo.show && (alertInfo.type === 'success' || alertInfo.type === 'suspend'))) ? 'lg:col-span-3' : 'lg:col-span-2'} flex flex-col gap-4 justify-end`}>
+
+          {/* Inline OTP Box */}
+          <AnimatePresence>
+            {showOtpBox && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="w-full bg-slate-900/80 backdrop-blur-md border border-amber-500/30 rounded-xl p-5 overflow-hidden shadow-xl"
+              >
+                <div className="flex flex-col sm:flex-row items-center gap-4 justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                      <ShieldCheck className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <div className="text-left">
+                      <h4 className="text-sm font-bold text-white">Mutual Agreement Verification</h4>
+                      <p className="text-xs text-slate-400">Enter the 6-digit OTP sent to the Operator's email.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={otpValue}
+                      onChange={(e) => setOtpValue(e.target.value.replace(/[^0-9]/g, ''))}
+                      placeholder="000000"
+                      className="w-full sm:w-32 bg-slate-950/50 border border-slate-700 rounded-lg text-center font-mono text-lg tracking-widest text-white py-2 focus:border-amber-500/50 focus:outline-none transition-colors"
+                    />
+                    <button
+                      onClick={() => setShowOtpBox(false)}
+                      className="px-3 py-2 text-slate-400 hover:text-white transition-colors text-sm font-bold"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
             )}
-          </button>
+          </AnimatePresence>
+
+          {/* Render Save/Verify Buttons ONLY if there is no success or suspend alert */}
+          {!(alertInfo.show && (alertInfo.type === 'success' || alertInfo.type === 'suspend')) && (
+            <button 
+              onClick={handleSave}
+              disabled={isSaving || isActionLoading || isOtpVerifying || (showOtpBox && otpValue.length < 6)}
+              className={`w-full h-[60px] flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-xl disabled:opacity-70 disabled:cursor-not-allowed ${
+                showOtpBox 
+                  ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.3)]' 
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+              }`}
+            >
+              {isSaving || isOtpVerifying ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  {isOtpVerifying ? 'Verifying OTP...' : 'Processing...'}
+                </>
+              ) : showOtpBox ? (
+                <>
+                  <ShieldCheck className="w-5 h-5" />
+                  Verify OTP & Save
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5" />
+                  Save Profile Updates
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>
+  </div>
   );
 }

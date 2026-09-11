@@ -114,6 +114,8 @@ export default function EnrollOperator() {
   const [department, setDepartment] = useState('');
   const [position, setPosition] = useState('');
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const emailInputRef = useRef(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
@@ -138,11 +140,14 @@ export default function EnrollOperator() {
   const [isSaving, setIsSaving] = useState(false);
   const [alertInfo, setAlertInfo] = useState({ show: false, type: '', message: '' });
 
-  const triggerAlert = (type, message) => {
+  const alertTimeoutRef = useRef(null);
+
+  const triggerAlert = (type, message, duration = 5000) => {
+    if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
     setAlertInfo({ show: true, type, message });
-    setTimeout(() => {
+    alertTimeoutRef.current = setTimeout(() => {
       setAlertInfo({ show: false, type: '', message: '' });
-    }, 3500);
+    }, duration);
   };
 
   const stateOptions = selectedCountry 
@@ -182,10 +187,16 @@ export default function EnrollOperator() {
     }
 
     if (!showOtpBox) {
-      if (!photoFile) {
-        triggerAlert('error', 'Operator photo is required.');
+
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(email)) {
+        setEmailError('Please enter a valid professional email address.');
+        if (emailInputRef.current) {
+          emailInputRef.current.focus();
+        }
         return;
       }
+
       setIsSaving(true);
       try {
         const payload = {
@@ -219,9 +230,22 @@ export default function EnrollOperator() {
 
         if (res.ok) {
           setShowOtpBox(true);
-          triggerAlert('warning', "Operator Enrollment requires Admin consent. An OTP has been sent to the operator's official email.");
+          triggerAlert('warning', "Enrollment requires Operators consent. An OTP has been sent to the operator's official email.", 5000);
         } else {
-          triggerAlert('error', data.error || 'Failed to initiate enrollment.');
+          const errorMessage = data.error || '';
+          if (
+            errorMessage.toLowerCase().includes('already registered') || 
+            errorMessage.toLowerCase().includes('already in use') ||
+            errorMessage.toLowerCase().includes('already exists') ||
+            errorMessage.toLowerCase().includes('duplicate')
+          ) {
+            setEmailError('This email address is already registered. Please use a different email.');
+            if (emailInputRef.current) {
+              emailInputRef.current.focus();
+            }
+          } else {
+            triggerAlert('error', errorMessage || 'Failed to initiate enrollment.');
+          }
         }
       } catch (err) {
         setIsSaving(false);
@@ -269,10 +293,10 @@ export default function EnrollOperator() {
         if (res.ok) {
           setShowOtpBox(false);
           setOtpValue('');
-          triggerAlert('success', 'OTP Verified! Operator added successfully and an account activation link is sent to operator.');
+          triggerAlert('success', 'OTP Verified! Operator added successfully and an account activation link is sent to operator.', 5000);
           setTimeout(() => {
             handleReset();
-          }, 3000);
+          }, 5000);
         } else {
           triggerAlert('error', data.error || 'Invalid OTP. Please check the code and try again.');
         }
@@ -325,10 +349,11 @@ export default function EnrollOperator() {
                 <Upload className="w-5 h-5" />
               </div>
             </div>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-3">Upload Operator Photo</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-3">Upload Operator Photo *</span>
             <input 
               type="file" 
-              className="hidden" 
+              required
+              className="absolute opacity-0 w-px h-px pointer-events-none" 
               ref={photoInputRef}
               accept=".jpg,.jpeg,.png"
               onChange={handlePhotoUpload}
@@ -344,7 +369,7 @@ export default function EnrollOperator() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="col-span-1 md:col-span-2">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Full Name</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Full Name *</label>
                 <input 
                   type="text" 
                   required
@@ -356,10 +381,11 @@ export default function EnrollOperator() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Date of Birth (DOB)</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Date of Birth (DOB) *</label>
                 <div className="relative flex items-center">
                   <Calendar className="absolute left-4 w-5 h-5 text-slate-500 pointer-events-none z-10" />
                   <DatePicker 
+                    required
                     selected={dob} 
                     onChange={(date) => setDob(date)} 
                     placeholderText="Select birth date"
@@ -376,8 +402,9 @@ export default function EnrollOperator() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Gender</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Gender *</label>
                 <Select
+                  required
                   options={genderOptions}
                   styles={customStyles}
                   placeholder="Select gender..."
@@ -398,7 +425,7 @@ export default function EnrollOperator() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Department / Ward</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Department / Ward *</label>
                 <input 
                   type="text" 
                   required
@@ -410,7 +437,7 @@ export default function EnrollOperator() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Position / Title</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Position / Title *</label>
                 <input 
                   type="text" 
                   required
@@ -422,19 +449,32 @@ export default function EnrollOperator() {
               </div>
 
               <div className="col-span-1 md:col-span-2">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Official Email Address (Used for Login)</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Official Email Address (Used for Login) *</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                   <input 
                     type="email" 
                     required
+                    ref={emailInputRef}
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailError) setEmailError('');
+                    }}
                     placeholder="operator@hospital.org" 
-                    className="w-full bg-slate-950 border border-slate-800 text-white pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:border-emerald-500 transition-colors"
+                    className={`w-full bg-slate-950 border text-white pl-12 pr-4 py-3 rounded-xl focus:outline-none transition-colors ${
+                      emailError ? 'border-red-500 focus:border-red-500' : 'border-slate-800 focus:border-emerald-500'
+                    }`}
                   />
                 </div>
-                <p className="text-xs text-slate-500 mt-2 ml-1">The secure account activation link will be sent here.</p>
+                {emailError ? (
+                  <p className="text-red-400 text-xs font-semibold mt-2 flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {emailError}
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-500 mt-2 ml-1">The secure account activation link will be sent here.</p>
+                )}
               </div>
 
               <div className="col-span-1 md:col-span-2">
@@ -473,9 +513,10 @@ export default function EnrollOperator() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="col-span-1 md:col-span-2">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Address Line 1 (Building & Street)</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Address Line 1 (Building & Street) *</label>
                 <input 
                   type="text" 
+                  required
                   value={addressLine1}
                   onChange={(e) => setAddressLine1(e.target.value)}
                   placeholder="Enter building number and street" 
@@ -495,8 +536,9 @@ export default function EnrollOperator() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">City / District</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">City / District *</label>
                 <Select
+                  required
                   options={cityOptions}
                   styles={customStyles}
                   placeholder="Search city..."
@@ -508,8 +550,9 @@ export default function EnrollOperator() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">State / Province</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">State / Province *</label>
                 <Select
+                  required
                   options={stateOptions}
                   styles={customStyles}
                   placeholder="Search state..."
@@ -524,9 +567,10 @@ export default function EnrollOperator() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Postal / Pin Code</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Postal / Pin Code *</label>
                 <input 
                   type="text" 
+                  required
                   value={pinCode}
                   onChange={(e) => setPinCode(e.target.value)}
                   placeholder="Enter pin code" 
@@ -535,8 +579,9 @@ export default function EnrollOperator() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Country</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Country *</label>
                 <Select
+                  required
                   options={allCountries}
                   styles={customStyles}
                   placeholder="Search country..."
@@ -592,8 +637,8 @@ export default function EnrollOperator() {
                         <ShieldCheck className="w-5 h-5 text-amber-400" />
                       </div>
                       <div className="text-left">
-                        <h4 className="text-sm font-bold text-white">Admin Identity Verification</h4>
-                        <p className="text-xs text-slate-400">Enter the 6-digit OTP sent to your admin email.</p>
+                        <h4 className="text-sm font-bold text-white">Operator Identity Verification</h4>
+                        <p className="text-xs text-slate-400">Enter the 6-digit OTP sent to the operators email.</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -618,23 +663,25 @@ export default function EnrollOperator() {
               )}
             </AnimatePresence>
 
-            <button
-              type="submit"
-              disabled={isSaving || isOtpVerifying || (showOtpBox && otpValue.length < 6)}
-              className="w-full md:w-[380px] py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSaving || isOtpVerifying ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  {isOtpVerifying ? 'Verifying OTP...' : 'Processing...'}
-                </>
-              ) : (
-                <>
-                  {showOtpBox ? 'Verify & Enroll Operator' : 'Enroll Operator'}
-                  <ChevronRight className="w-5 h-5" />
-                </>
-              )}
-            </button>
+            {!(alertInfo.show && alertInfo.type === 'success') && (
+              <button
+                type="submit"
+                disabled={isSaving || isOtpVerifying || (showOtpBox && otpValue.length < 6)}
+                className="w-full md:w-[380px] py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSaving || isOtpVerifying ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    {isOtpVerifying ? 'Verifying OTP...' : 'Processing...'}
+                  </>
+                ) : (
+                  <>
+                    {showOtpBox ? 'Verify & Enroll Operator' : 'Enroll Operator'}
+                    <ChevronRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
         </form>

@@ -231,7 +231,7 @@ public class InstitutionService {
                 institution.setVerificationDocumentUrl(pending.getVerificationDocumentUrl());
             }
             
-            institution.setAccountStatus("ACTIVE");
+            institution.setAccountStatus("PENDING");
 
             if (superAdminId != null) {
                 SuperAdmin admin = superAdminRepository.findById(superAdminId).orElse(null);

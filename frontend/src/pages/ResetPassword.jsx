@@ -123,43 +123,31 @@ export default function ResetPassword() {
     setStatus('loading');
     setErrorMessage('');
 
-    if (role === 'super-admin' || role === 'institution') {
-      if (!token || !id) {
-        setStatus('error');
-        setErrorMessage('Invalid reset link. Missing security tokens.');
-        return;
-      }
+    if (!token || !id) {
+      setStatus('error');
+      setErrorMessage('Invalid reset link. Missing security tokens.');
+      return;
+    }
 
-      try {
-        const response = await fetch(`http://localhost:8080/api/auth/reset-password/${role}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ token, id, newPassword: password }),
-        });
+    try {
+      const response = await fetch(`http://localhost:8080/api/auth/reset-password/${role}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token, id, newPassword: password }),
+      });
 
-        if (response.ok) {
-          setStatus('success');
-        } else {
-          const errorData = await response.text();
-          setStatus('error');
-          setErrorMessage(errorData || 'Failed to process request.');
-        }
-      } catch (error) {
+      if (response.ok) {
+        setStatus('success');
+      } else {
+        const errorData = await response.text();
         setStatus('error');
-        setErrorMessage('Network error. Please try again.');
+        setErrorMessage(errorData || 'Failed to process request.');
       }
-    } else {
-      // Simulate network delay for other roles
-      setTimeout(() => {
-        if (password === '0') {
-          setStatus('error');
-          setErrorMessage('You cannot use your old password, please enter a new one.');
-        } else {
-          setStatus('success');
-        }
-      }, 1200);
+    } catch (error) {
+      setStatus('error');
+      setErrorMessage('Network error. Please try again.');
     }
   };
 

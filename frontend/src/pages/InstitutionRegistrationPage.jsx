@@ -153,9 +153,9 @@ export default function InstitutionRegistrationPage() {
     }
   };
 
-  const handleFileUpload = (e, setFile) => {
+  const handleFileUpload = (e, setFile, droppedFile = null) => {
     setFileError('');
-    const file = e.target.files[0];
+    const file = droppedFile || e.target.files[0];
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
@@ -170,6 +170,17 @@ export default function InstitutionRegistrationPage() {
     }
 
     setFile(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, setFile) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileUpload(null, setFile, e.dataTransfer.files[0]);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -532,6 +543,8 @@ export default function InstitutionRegistrationPage() {
               {/* License Upload */}
               <div 
                 onClick={() => licenseInputRef.current?.click()}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, setLicenseFile)}
                 className={`bg-slate-950 border border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer group ${licenseFile ? 'border-emerald-500 bg-emerald-900/10' : 'border-slate-700 hover:border-emerald-500/50 hover:bg-slate-900/50'}`}
               >
                 {licenseFile ? (
@@ -548,7 +561,8 @@ export default function InstitutionRegistrationPage() {
                       <Upload className="w-6 h-6 text-emerald-400" />
                     </div>
                     <h3 className="text-sm font-bold text-white mb-1">Upload Registration License</h3>
-                    <p className="text-xs text-slate-400 max-w-sm">JPG, PNG, or PDF (Max 5MB)</p>
+                    <p className="text-xs text-slate-400 max-w-sm">Click to browse or drag document here</p>
+                    <p className="text-xs text-slate-500 mt-1">JPG, PNG, or PDF (Max 5MB)</p>
                   </>
                 )}
                 <input type="file" required className="absolute opacity-0 w-px h-px pointer-events-none" ref={licenseInputRef}

@@ -132,6 +132,7 @@ export default function RequestDataChange() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [fileError, setFileError] = useState('');
 
   const [originalData, setOriginalData] = useState({
     name: '',
@@ -194,10 +195,33 @@ export default function RequestDataChange() {
     toggleEdit(field, false);
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type === 'application/pdf') {
-      setUploadedFile(file);
+  const handleFileUpload = (e, droppedFile = null) => {
+    setFileError('');
+    const file = droppedFile || e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setFileError(`File "${file.name}" is too large. Maximum size is 5MB.`);
+      return;
+    }
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      setFileError(`Invalid file type for "${file.name}". Please upload JPG, PNG, or PDF.`);
+      return;
+    }
+
+    setUploadedFile(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileUpload(null, e.dataTransfer.files[0]);
     }
   };
 
@@ -459,7 +483,7 @@ export default function RequestDataChange() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white">Supporting Document</h3>
-                <p className="text-xs text-slate-400 mt-0.5">Upload a new Institute License PDF to verify these changes</p>
+                <p className="text-xs text-slate-400 mt-0.5">Upload a new Institute License to verify these changes</p>
               </div>
             </div>
 
@@ -467,17 +491,21 @@ export default function RequestDataChange() {
               {requestState === 'READY' ? (
                 <div 
                   onClick={() => fileInputRef.current?.click()}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
                   className={`w-full h-full min-h-[160px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-6 transition-all cursor-pointer ${
                     uploadedFile 
                       ? 'border-emerald-500/50 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10' 
-                      : 'border-slate-700 bg-slate-950/50 text-slate-500 hover:border-emerald-500/50 hover:text-emerald-400'
+                      : fileError 
+                        ? 'border-red-500/50 bg-red-500/5 text-red-400 hover:bg-red-500/10'
+                        : 'border-slate-700 bg-slate-950/50 text-slate-500 hover:border-emerald-500/50 hover:text-emerald-400'
                   }`}
                 >
                   <input 
                     type="file" 
                     ref={fileInputRef} 
                     onChange={handleFileUpload}
-                    accept="application/pdf"
+                    accept=".jpg,.jpeg,.png,.pdf"
                     className="hidden" 
                   />
                   {uploadedFile ? (
@@ -485,13 +513,16 @@ export default function RequestDataChange() {
                       <FileCheck className="w-10 h-10 mb-3" />
                       <p className="font-bold text-sm">{uploadedFile.name}</p>
                       <p className="text-xs opacity-70 mt-1">{(uploadedFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                      <p className="text-xs mt-3 underline underline-offset-2">Click to replace document</p>
+                      <p className="text-xs mt-3 underline underline-offset-2">Click or drag to replace document</p>
                     </>
                   ) : (
                     <>
                       <UploadCloud className="w-10 h-10 mb-3" />
-                      <p className="font-bold text-sm mb-1">Click to browse or drag PDF here</p>
-                      <p className="text-xs text-slate-500">Maximum file size: 10MB</p>
+                      <p className="font-bold text-sm mb-1">Click to browse or drag document here</p>
+                      <p className="text-xs text-slate-500 mb-2">JPG, PNG, or PDF (Max 5MB)</p>
+                      {fileError && (
+                        <p className="text-xs text-red-400 font-medium px-2 py-1 bg-red-400/10 rounded">{fileError}</p>
+                      )}
                     </>
                   )}
                 </div>

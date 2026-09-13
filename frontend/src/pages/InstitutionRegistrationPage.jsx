@@ -17,6 +17,7 @@ import {
   AlertCircle,
   Loader2,
   FileText,
+  FileCheck,
   Image
 } from 'lucide-react';
 import api from '../api/axiosConfig';
@@ -545,15 +546,18 @@ export default function InstitutionRegistrationPage() {
                 onClick={() => licenseInputRef.current?.click()}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, setLicenseFile)}
-                className={`bg-slate-950 border border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-colors cursor-pointer group ${licenseFile ? 'border-emerald-500 bg-emerald-900/10' : 'border-slate-700 hover:border-emerald-500/50 hover:bg-slate-900/50'}`}
+                className={`w-full min-h-[160px] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center transition-all cursor-pointer group ${
+                  licenseFile 
+                    ? 'border-emerald-500/50 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10' 
+                    : 'bg-slate-950 border-slate-700 hover:border-emerald-500/50 hover:bg-slate-900/50'
+                }`}
               >
                 {licenseFile ? (
                   <>
-                    <div className="p-3 bg-red-900/50 border border-red-500/50 rounded-2xl mb-3 shadow-lg flex items-center justify-center">
-                      <FileText className="w-8 h-8 text-red-400" />
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-200 mb-1">Document Attached</h3>
-                    <p className="text-xs text-emerald-400 max-w-[200px] truncate px-4 bg-emerald-900/20 py-1 rounded-full border border-emerald-500/20">{licenseFile.name}</p>
+                    <FileCheck className="w-10 h-10 mb-3" />
+                    <p className="font-bold text-sm">{licenseFile.name}</p>
+                    <p className="text-xs opacity-70 mt-1">{(licenseFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p className="text-xs mt-3 underline underline-offset-2">Click or drag to replace document</p>
                   </>
                 ) : (
                   <>
